@@ -1178,6 +1178,15 @@
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
     <script>
+        // Configuration - Update this with your deployed backend URL
+        const CONFIG = {
+            BACKEND_URL: 'https://sales-tracker-backend.onrender.com', // Replace with your Render URL
+            LIFF_ID: '2007539402',
+            ENABLE_BACKEND_SYNC: true
+        };
+    </script>
+    
+    <script>
         class SalesTrackerApp {
             constructor() {
                 this.activities = JSON.parse(localStorage.getItem('salesActivities') || '[]');
@@ -1185,6 +1194,9 @@
                 this.currentTab = 'activities';
                 this.dailyGoal = 500;
                 this.darkMode = localStorage.getItem('darkMode') === 'true';
+                this.apiBaseUrl = CONFIG.BACKEND_URL;
+                this.enableBackendSync = CONFIG.ENABLE_BACKEND_SYNC;
+                this.isOnline = navigator.onLine;
                 
                 this.activityTypes = [
                     { id: 'cold_prospect', title: 'New Prospect: Cold', subtitle: 'ผู้มุ่งหวังรายใหม่: หาไม่ร้อน', points: 10, icon: '🥶' },
@@ -1221,6 +1233,14 @@
                 this.updateGoalsTab();
                 this.updateTeamTab();
                 
+                // Setup online/offline detection
+                this.setupNetworkListeners();
+                
+                // Sync with backend if online
+                if (this.isOnline) {
+                    this.syncWithBackend();
+                }
+                
                 // Force hide loading and show activities immediately
                 this.renderActivities();
                 this.updateAllStats();
@@ -1240,7 +1260,7 @@
                     if (typeof liff !== 'undefined') {
                         console.log('LIFF SDK loaded, initializing...');
                         // Initialize LIFF with your actual LIFF ID
-                        await liff.init({ liffId: '2007539402' });
+                        await liff.init({ liffId: CONFIG.LIFF_ID });
                         console.log('LIFF initialized successfully');
                         
                         if (!liff.isLoggedIn()) {
@@ -1699,10 +1719,10 @@
             }
 
             // Quick Action Method
-            quickAction(activityId) {
+            async quickAction(activityId) {
                 const activityType = this.activityTypes.find(type => type.id === activityId);
                 if (activityType) {
-                    this.logActivity(activityType);
+                    await this.logActivityWithSync(activityType);
                     this.showToast(`⚡ ${activityType.icon} ${activityType.title} logged!`);
                 }
             }
@@ -1875,17 +1895,159 @@
             }
 
             // Use activity template
-            useTemplate(activityIds) {
+            async useTemplate(activityIds) {
                 let totalPoints = 0;
-                activityIds.forEach(activityId => {
+                for (const activityId of activityIds) {
                     const activityType = this.activityTypes.find(type => type.id === activityId);
                     if (activityType) {
-                        this.logActivity(activityType);
+                        await this.logActivityWithSync(activityType);
                         totalPoints += activityType.points;
                     }
-                });
+                }
                 
                 this.showToast(`🚀 Template completed! +${totalPoints} points`);
+            }
+
+            // Network and API Methods
+            setupNetworkListeners() {
+                window.addEventListener('online', () => {
+                    this.isOnline = true;
+                    console.log('Back online - syncing with backend...');
+                    this.syncWithBackend();
+                    this.showToast('🌐 Back online - syncing data...');
+                });
+
+                window.addEventListener('offline', () => {
+                    this.isOnline = false;
+                    console.log('Gone offline - using local storage...');
+                    this.showToast('📱 Offline mode - data saved locally');
+                });
+            }
+
+            async syncWithBackend() {
+                if (!this.enableBackendSync || !this.isOnline || !this.lineUserId) return;
+
+                try {
+                    // Sync activities to backend
+                    await this.syncActivitiesToBackend();
+                    
+                    // Get team data from backend
+                    await this.loadTeamDataFromBackend();
+                    
+                    console.log('Backend sync completed');
+                } catch (error) {
+                    console.log('Backend sync failed:', error);
+                    // Continue with local data
+                }
+            }
+
+            async syncActivitiesToBackend() {
+                if (!this.lineUserId) return;
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/api/activities/sync`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: this.lineUserId,
+                            activities: this.activities
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Activities synced to backend:', data);
+                    }
+                } catch (error) {
+                    console.log('Failed to sync activities:', error);
+                }
+            }
+
+            async loadTeamDataFromBackend() {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/api/team/stats`);
+                    if (response.ok) {
+                        const teamData = await response.json();
+                        this.updateTeamTabWithRealData(teamData);
+                        console.log('Team data loaded from backend:', teamData);
+                    }
+                } catch (error) {
+                    console.log('Failed to load team data:', error);
+                }
+            }
+
+            updateTeamTabWithRealData(teamData) {
+                if (teamData.totalPoints) {
+                    document.getElementById('teamTotalPoints').textContent = teamData.totalPoints.toLocaleString();
+                }
+                if (teamData.totalActivities) {
+                    document.getElementById('teamTotalActivities').textContent = teamData.totalActivities;
+                }
+                if (teamData.salesCount) {
+                    document.getElementById('teamSalesCount').textContent = teamData.salesCount;
+                }
+                if (teamData.goalAchievement) {
+                    document.getElementById('teamAverage').textContent = teamData.goalAchievement + '%';
+                }
+            }
+
+            async sendToLINEGroup(activity) {
+                if (!this.isOnline || !this.lineUserId) return;
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/api/line/notify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userId: this.lineUserId,
+                            activity: activity,
+                            userProfile: await this.getLINEProfile()
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('Notification sent to LINE group');
+                        this.showToast('📢 Shared to LINE group!');
+                    }
+                } catch (error) {
+                    console.log('Failed to send LINE notification:', error);
+                }
+            }
+
+            async getLINEProfile() {
+                try {
+                    if (typeof liff !== 'undefined' && liff.isLoggedIn()) {
+                        return await liff.getProfile();
+                    }
+                } catch (error) {
+                    console.log('Failed to get LINE profile:', error);
+                }
+                return { displayName: 'Sales Team Member' };
+            }
+
+            // Update logActivity to include backend sync
+            async logActivityWithSync(activityType, count = 1) {
+                // Log locally first
+                this.logActivity(activityType, count);
+                
+                // Sync to backend if online
+                if (this.isOnline && this.lineUserId) {
+                    await this.syncActivitiesToBackend();
+                    
+                    // Send notification for important activities
+                    if (['sale_closed', 'new_appointment', 'fact_finder'].includes(activityType.id)) {
+                        await this.sendToLINEGroup({
+                            type: activityType.id,
+                            title: activityType.title,
+                            points: activityType.points * count,
+                            count: count
+                        });
+                    }
+                }
             }
         }
 
