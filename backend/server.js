@@ -32,6 +32,7 @@ db.serialize(() => {
         line_user_id TEXT UNIQUE NOT NULL,
         display_name TEXT NOT NULL,
         picture_url TEXT,
+        settings TEXT DEFAULT '{}',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
@@ -223,6 +224,116 @@ app.post('/api/groups/register', (req, res) => {
         }
 
         res.json({ success: true, message: 'Group registered for notifications' });
+    });
+});
+
+// User settings endpoints
+app.get('/api/user/:lineUserId/settings', (req, res) => {
+    const { lineUserId } = req.params;
+    
+    const query = `SELECT settings FROM users WHERE line_user_id = ?`;
+    
+    db.get(query, [lineUserId], (err, row) => {
+        if (err) {
+            console.error('Error fetching settings:', err);
+            return res.status(500).json({ error: 'Failed to fetch settings' });
+        }
+        
+        const defaultSettings = {
+            userName: '',
+            userEmail: '',
+            dailyGoal: 50,
+            weeklyGoal: 300,
+            notifications: true,
+            lineNotifications: true,
+            soundEffects: true
+        };
+        
+        const settings = row?.settings ? JSON.parse(row.settings) : defaultSettings;
+        res.json(settings);
+    });
+});
+
+app.post('/api/user/:lineUserId/settings', (req, res) => {
+    const { lineUserId } = req.params;
+    const settings = req.body;
+    
+    const query = `UPDATE users SET settings = ?, updated_at = CURRENT_TIMESTAMP WHERE line_user_id = ?`;
+    
+    db.run(query, [JSON.stringify(settings), lineUserId], function(err) {
+        if (err) {
+            console.error('Error saving settings:', err);
+            return res.status(500).json({ error: 'Failed to save settings' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Settings saved successfully'
+        });
+    });
+});
+
+// Dashboard statistics endpoint
+app.get('/api/user/:lineUserId/dashboard', (req, res) => {
+    const { lineUserId } = req.params;
+    
+    // Get user's total points and activity stats
+    const statsQuery = `
+        SELECT 
+            SUM(points * count) as totalPoints,
+            COUNT(*) as totalActivities,
+            MAX(date) as lastActivityDate
+        FROM activities 
+        WHERE line_user_id = ?
+    `;
+    
+    // Get today's points
+    const todayQuery = `
+        SELECT SUM(points * count) as todayPoints
+        FROM activities 
+        WHERE line_user_id = ? AND date = date('now')
+    `;
+    
+    // Get this week's points
+    const weekQuery = `
+        SELECT SUM(points * count) as weekPoints
+        FROM activities 
+        WHERE line_user_id = ? AND date >= date('now', '-7 days')
+    `;
+    
+    db.get(statsQuery, [lineUserId], (err, stats) => {
+        if (err) {
+            console.error('Error fetching dashboard stats:', err);
+            return res.status(500).json({ error: 'Failed to fetch dashboard data' });
+        }
+        
+        db.get(todayQuery, [lineUserId], (err, todayData) => {
+            if (err) {
+                console.error('Error fetching today stats:', err);
+                return res.status(500).json({ error: 'Failed to fetch today data' });
+            }
+            
+            db.get(weekQuery, [lineUserId], (err, weekData) => {
+                if (err) {
+                    console.error('Error fetching week stats:', err);
+                    return res.status(500).json({ error: 'Failed to fetch week data' });
+                }
+                
+                const totalPoints = stats?.totalPoints || 0;
+                const currentLevel = Math.floor(totalPoints / 100) + 1;
+                
+                const dashboardData = {
+                    totalPoints,
+                    currentLevel,
+                    todayPoints: todayData?.todayPoints || 0,
+                    weekPoints: weekData?.weekPoints || 0,
+                    totalActivities: stats?.totalActivities || 0,
+                    lastActivityDate: stats?.lastActivityDate
+                };
+                
+                res.json(dashboardData);
+            });
+        });
     });
 });
 

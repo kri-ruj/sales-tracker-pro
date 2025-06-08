@@ -38,6 +38,10 @@ app.get('/', (req, res) => {
             'GET /api/team/stats', 
             'POST /api/activities/sync',
             'POST /api/line/notify',
+            'GET /api/user/:userId/settings',
+            'POST /api/user/:userId/settings',
+            'GET /api/user/:userId/dashboard',
+            'GET /api/leaderboard',
             'POST /webhook'
         ]
     });
@@ -96,6 +100,109 @@ app.post('/api/line/notify', (req, res) => {
         success: true, 
         message: 'Notification sent to LINE group' 
     });
+});
+
+// User settings endpoints
+app.get('/api/user/:userId/settings', (req, res) => {
+    const { userId } = req.params;
+    
+    // In production, get from database
+    const defaultSettings = {
+        userName: '',
+        userEmail: '',
+        dailyGoal: 50,
+        weeklyGoal: 300,
+        notifications: true,
+        lineNotifications: true,
+        soundEffects: true
+    };
+    
+    res.json(defaultSettings);
+});
+
+app.post('/api/user/:userId/settings', (req, res) => {
+    const { userId } = req.params;
+    const settings = req.body;
+    
+    console.log('Saving settings for user:', userId, settings);
+    
+    // In production, save to database
+    res.json({ 
+        success: true, 
+        message: 'Settings saved successfully' 
+    });
+});
+
+// Dashboard statistics endpoint
+app.get('/api/user/:userId/dashboard', (req, res) => {
+    const { userId } = req.params;
+    
+    // Mock dashboard data
+    const dashboardData = {
+        totalPoints: 2450,
+        currentLevel: 24,
+        todayPoints: 150,
+        weekPoints: 680,
+        totalActivities: 48,
+        bestDay: '340 pts',
+        achievements: [
+            {
+                title: 'First Steps',
+                description: 'Log your first activity',
+                achieved: true,
+                icon: '🎯'
+            },
+            {
+                title: 'Dedicated',
+                description: 'Log activities for 7 days',
+                achieved: true,
+                icon: '⭐'
+            },
+            {
+                title: 'High Achiever',
+                description: 'Reach 1000 total points',
+                achieved: true,
+                icon: '🏆'
+            },
+            {
+                title: 'Master Seller',
+                description: 'Close 10 sales',
+                achieved: false,
+                icon: '💎'
+            }
+        ]
+    };
+    
+    res.json(dashboardData);
+});
+
+// Leaderboard endpoint
+app.get('/api/leaderboard', (req, res) => {
+    const { period = 'today' } = req.query;
+    
+    // Mock leaderboard data
+    const leaderboard = [
+        {
+            displayName: 'Top Performer',
+            totalPoints: 850,
+            activityCount: 15,
+            rank: 1
+        },
+        {
+            displayName: 'Rising Star', 
+            totalPoints: 720,
+            activityCount: 12,
+            rank: 2
+        },
+        {
+            displayName: 'Team Player',
+            totalPoints: 680,
+            activityCount: 11,
+            rank: 3
+        }
+    ];
+    
+    res.json(leaderboard);
 });
 
 // LINE webhook (for future LINE bot integration)
