@@ -35,6 +35,220 @@
     <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2.23.0/sdk.js"></script>
     
+    <!-- Magic UI Styles -->
+    <style>
+        /* Enhanced Base Styles with Modern Design */
+        :root {
+            --primary: #D4AF37;
+            --primary-dark: #B8941F;
+            --secondary: #F4E4BC;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --glass-bg: rgba(26, 26, 26, 0.8);
+            --glass-border: rgba(212, 175, 55, 0.3);
+            --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.37);
+            --shadow-hover: 0 15px 35px rgba(212, 175, 55, 0.5);
+            --gradient-primary: linear-gradient(135deg, #D4AF37 0%, #F4E4BC 100%);
+            --text: #FFFFFF;
+            --text-light: #999999;
+            --background: #000000;
+            --surface: #1A1A1A;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1A1A1A 50%, #2D2D2D 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--text);
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 0 8px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-soft);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: statCardFloat 6s ease-in-out infinite;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0s; }
+        .stat-card:nth-child(2) { animation-delay: 1.5s; }
+        .stat-card:nth-child(3) { animation-delay: 3s; }
+        .stat-card:nth-child(4) { animation-delay: 4.5s; }
+
+        @keyframes statCardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            display: block;
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-soft);
+            margin: 0 8px 20px 8px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section h2 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Activity Bubble Grid */
+        #activityList {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .activity-item {
+            background: var(--surface);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 70px;
+            backdrop-filter: blur(10px);
+        }
+
+        .activity-item:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+            border-color: var(--primary);
+        }
+
+        .activity-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+            filter: drop-shadow(0 0 8px var(--primary));
+        }
+
+        .activity-title {
+            font-weight: 600;
+            font-size: 8px;
+            color: var(--text);
+            margin-bottom: 4px;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .activity-counter {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 4px;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .activity-actions {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .action-btn.minus {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .action-btn.plus {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+    </style>
+    
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
     
@@ -1149,7 +1363,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.31</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.32</span>
                         </div>
                     </div>
                 </div>
@@ -1189,40 +1403,37 @@
             </div>
         </header>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <div class="tab active" onclick="app.showTab('activities')">Activities</div>
-            <div class="tab" onclick="app.showTab('dashboard')">Dashboard</div>
-            <div class="tab" onclick="app.showTab('goals')">Goals</div>
-            <div class="tab" onclick="app.showTab('settings')">Settings</div>
+        <!-- Summary Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">📊</span>
+                <div class="stat-label">Total Points</div>
+                <div class="stat-value" id="totalPointsDisplay">0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🎯</span>
+                <div class="stat-label">Today</div>
+                <div class="stat-value" id="todayPointsDisplay">0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📈</span>
+                <div class="stat-label">This Week</div>
+                <div class="stat-value" id="weekPointsDisplay">0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🏆</span>
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="levelDisplay">1</div>
+            </div>
         </div>
 
-        <!-- Content Area -->
-        <div class="content">
-            <!-- Activities Tab -->
-            <div id="activities-tab" class="tab-content">
-                <div id="activityList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <span>Loading activities...</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Goals Tab -->
-            <div id="goals-tab" class="tab-content" style="display: none;">
-                <div style="text-align: center; padding: 40px; color: var(--text-light);">
-                    <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
-                    <div style="font-size: 16px;">Goals feature coming soon!</div>
-                </div>
-            </div>
-
-            <!-- Team Tab -->
-            <div id="team-tab" class="tab-content" style="display: none;">
-                <div style="text-align: center; padding: 40px; color: var(--text-light);">
-                    <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
-                    <div style="font-size: 16px;">Team leaderboard coming soon!</div>
+        <!-- Activity Bubbles Grid -->
+        <div class="section">
+            <h2>📱 Activity Tracker</h2>
+            <div id="activityList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Loading activities...</span>
                 </div>
             </div>
         </div>
@@ -1230,16 +1441,12 @@
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a href="#" class="nav-item active" onclick="app.showTab('activities')">
-                <span class="nav-icon">📋</span>
-                <span class="nav-label">Activities</span>
+                <span class="nav-icon">📱</span>
+                <span class="nav-label">Track</span>
             </a>
-            <a href="#" class="nav-item" onclick="app.showTab('goals')">
-                <span class="nav-icon">🎯</span>
-                <span class="nav-label">Goals</span>
-            </a>
-            <a href="#" class="nav-item" onclick="app.showTab('team')">
-                <span class="nav-icon">👥</span>
-                <span class="nav-label">Team</span>
+            <a href="#" class="nav-item" onclick="app.showTab('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Dashboard</span>
             </a>
             <a href="#" class="nav-item" onclick="app.showInfo()">
                 <span class="nav-icon">ℹ️</span>
@@ -1583,7 +1790,7 @@
                     <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Version:</span>
-                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.31</span>
+                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.32</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Last Updated:</span>
@@ -1845,32 +2052,41 @@
             }
 
             updateAllStats() {
-                this.updateTotalPoints();
-                this.updateWeekTotal();
-                this.updateStreak();
+                this.updateStatCards();
             }
 
-            updateTotalPoints() {
+            updateStatCards() {
+                // Today's points
                 const todayActivities = this.getTodayActivities();
-                const totalPoints = todayActivities.reduce((sum, a) => sum + (a.points * a.count), 0);
-                document.getElementById('totalPoints').textContent = totalPoints;
+                const todayPoints = todayActivities.reduce((sum, a) => sum + (a.points * a.count), 0);
+                
+                // Total points (all time)
+                const totalPoints = this.activities.reduce((sum, a) => sum + (a.points * a.count), 0);
+                
+                // Week points
+                const weekPoints = this.getWeekPoints();
+                
+                // Current level
+                const currentLevel = Math.floor(totalPoints / 100) + 1;
 
-                // Update progress ring
-                const progress = Math.min(totalPoints / this.dailyGoal, 1);
-                const circumference = 2 * Math.PI * 90;
-                const offset = circumference - (progress * circumference);
-                document.getElementById('progressRing').style.strokeDashoffset = offset;
+                // Update display elements
+                document.getElementById('totalPointsDisplay').textContent = totalPoints.toLocaleString();
+                document.getElementById('todayPointsDisplay').textContent = todayPoints;
+                document.getElementById('weekPointsDisplay').textContent = weekPoints;
+                document.getElementById('levelDisplay').textContent = currentLevel;
 
-                // Update level badge
+                // Update level badge if exists
                 const levelBadge = document.getElementById('levelBadge');
-                if (totalPoints >= 500) {
-                    levelBadge.textContent = 'Gold Elite';
-                } else if (totalPoints >= 200) {
-                    levelBadge.textContent = 'Silver Pro';
-                } else if (totalPoints >= 50) {
-                    levelBadge.textContent = 'Bronze';
-                } else {
-                    levelBadge.textContent = 'Starter';
+                if (levelBadge) {
+                    if (totalPoints >= 500) {
+                        levelBadge.textContent = 'Gold Elite';
+                    } else if (totalPoints >= 200) {
+                        levelBadge.textContent = 'Silver Pro';
+                    } else if (totalPoints >= 50) {
+                        levelBadge.textContent = 'Bronze';
+                    } else {
+                        levelBadge.textContent = 'Starter';
+                    }
                 }
             }
 
