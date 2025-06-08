@@ -33,7 +33,7 @@
     <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
     
     <!-- LINE LIFF SDK -->
-    <script src="https://static.line-scdn.net/liff/edge/2.23.0/sdk.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
     <!-- Magic UI Styles -->
     <style>
@@ -1416,7 +1416,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.36</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.37</span>
                         </div>
                     </div>
                 </div>
@@ -1569,7 +1569,7 @@
                         <div class="settings-group-title">ℹ️ About</div>
                         <div class="setting-item">
                             <div class="setting-label">Version</div>
-                            <div class="setting-value" id="appVersion">v2.36</div>
+                            <div class="setting-value" id="appVersion">v2.37</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Last Sync</div>
@@ -1599,8 +1599,7 @@
         </div>
     </div>
 
-    <!-- LIFF SDK -->
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <!-- LIFF SDK already loaded above -->
     
     <script>
         // Global error handler
@@ -1622,7 +1621,7 @@
         // Configuration - Update this with your deployed backend URL
         const CONFIG = {
             BACKEND_URL: 'https://sales-tracker-backend-vho4.onrender.com', // Your actual Render URL
-            LIFF_ID: '2007539402',
+            LIFF_ID: '2007539402-Mnwlaklq',
             ENABLE_BACKEND_SYNC: true
         };
     </script>
@@ -1730,7 +1729,7 @@
                 try {
                     if (typeof liff !== 'undefined') {
                         console.log('LIFF SDK loaded, initializing...');
-                        // Initialize LIFF with your actual LIFF ID
+                        // Initialize LIFF with correct ID format
                         await liff.init({ liffId: CONFIG.LIFF_ID });
                         console.log('LIFF initialized successfully');
                         
@@ -2493,25 +2492,7 @@
                 }
             }
 
-            async initLIFF() {
-                try {
-                    if (typeof liff !== 'undefined') {
-                        await liff.init({ liffId: '2007539402-Mnwlaklq' });
-                        if (liff.isLoggedIn()) {
-                            const profile = await liff.getProfile();
-                            this.userProfile = profile;
-                            this.lineUserId = profile.userId;
-                            console.log('LIFF initialized, user:', profile.displayName);
-                            // Reload activities for this user
-                            this.loadActivities();
-                            this.renderActivities();
-                            this.updateAllStats();
-                        }
-                    }
-                } catch (error) {
-                    console.log('LIFF not available or failed to initialize:', error);
-                }
-            }
+            // Duplicate initLIFF function removed to prevent conflicts
 
             async shareToLINE(activity) {
                 try {
@@ -3077,13 +3058,12 @@
             emergencyFallback();
         }
         
-        // Always run emergency fallback as backup
-        setTimeout(emergencyFallback, 3000);
+        // Emergency fallback removed - was causing issues
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(registration => {
                         console.log('SW registered: ', registration);
                     })
