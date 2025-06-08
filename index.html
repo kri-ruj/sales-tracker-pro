@@ -665,6 +665,232 @@
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
+
+        /* Team Dashboard Styles */
+        .team-dashboard {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            margin: 16px 0;
+            color: white;
+        }
+
+        .team-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .team-stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .team-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .team-stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .team-leaderboard {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .leaderboard-rank.gold {
+            background: #FFD700;
+            color: #333;
+        }
+
+        .leaderboard-rank.silver {
+            background: #C0C0C0;
+            color: #333;
+        }
+
+        .leaderboard-rank.bronze {
+            background: #CD7F32;
+            color: white;
+        }
+
+        /* Goals & Streaks Styles */
+        .goals-section {
+            padding: 20px;
+            background: var(--surface);
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .goal-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 12px 0;
+            transition: all 0.3s ease;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .goal-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .goal-progress {
+            background: var(--border);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .goal-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .streak-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .streak-flame {
+            font-size: 20px;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.7; }
+        }
+
+        /* Quick Actions Styles */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .quick-action-btn {
+            padding: 16px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+
+        .quick-action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .quick-action-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .template-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .template-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .template-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .template-points {
+            background: var(--primary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -796,6 +1022,152 @@
                 <div class="quick-activities" id="quickActivities">
                     <!-- Activities will be inserted here -->
                 </div>
+
+                <!-- Quick Actions -->
+                <div class="section-title">⚡ Quick Actions</div>
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="app.quickAction('cold_prospect')">
+                        <span class="quick-action-icon">🥶</span>
+                        <span class="quick-action-label">Cold Call</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('client_contact')">
+                        <span class="quick-action-icon">📱</span>
+                        <span class="quick-action-label">Follow Up</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('new_appointment')">
+                        <span class="quick-action-icon">✅</span>
+                        <span class="quick-action-label">Appointment</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('sale_closed')">
+                        <span class="quick-action-icon">🎉</span>
+                        <span class="quick-action-label">Sale Closed!</span>
+                    </div>
+                </div>
+
+                <!-- Activity Templates -->
+                <div class="section-title">📋 Activity Templates</div>
+                <div class="templates-grid" id="activityTemplates">
+                    <!-- Templates will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Goals Tab -->
+            <div id="goals-tab" class="tab-content" style="display: none;">
+                <div class="goals-section">
+                    <div class="section-title">🎯 Daily Goals & Streaks</div>
+                    
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-title">Daily Points Target</div>
+                            <div id="dailyGoalValue">500 pts</div>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-bar" id="dailyProgressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="streak-indicator">
+                            <span class="streak-flame">🔥</span>
+                            <span id="dailyStreak">0 day streak</span>
+                        </div>
+                    </div>
+
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-title">Weekly Activities</div>
+                            <div id="weeklyGoalValue">20 activities</div>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-bar" id="weeklyProgressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="streak-indicator">
+                            <span class="streak-flame">⚡</span>
+                            <span id="weeklyProgress">0/20 this week</span>
+                        </div>
+                    </div>
+
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div class="goal-title">Sales Closed</div>
+                            <div id="salesGoalValue">5 sales</div>
+                        </div>
+                        <div class="goal-progress">
+                            <div class="goal-progress-bar" id="salesProgressBar" style="width: 0%"></div>
+                        </div>
+                        <div class="streak-indicator">
+                            <span class="streak-flame">💰</span>
+                            <span id="salesProgress">0/5 this month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Tab -->
+            <div id="team-tab" class="tab-content" style="display: none;">
+                <div class="team-dashboard">
+                    <div class="section-title" style="color: white; margin-bottom: 0;">👥 Team Performance</div>
+                    
+                    <div class="team-stats-grid">
+                        <div class="team-stat-card">
+                            <div class="team-stat-value" id="teamTotalPoints">2,450</div>
+                            <div class="team-stat-label">Total Points</div>
+                        </div>
+                        <div class="team-stat-card">
+                            <div class="team-stat-value" id="teamTotalActivities">48</div>
+                            <div class="team-stat-label">Activities Today</div>
+                        </div>
+                        <div class="team-stat-card">
+                            <div class="team-stat-value" id="teamSalesCount">12</div>
+                            <div class="team-stat-label">Sales This Week</div>
+                        </div>
+                        <div class="team-stat-card">
+                            <div class="team-stat-value" id="teamAverage">85%</div>
+                            <div class="team-stat-label">Goal Achievement</div>
+                        </div>
+                    </div>
+
+                    <div class="team-leaderboard">
+                        <div style="font-weight: 600; margin-bottom: 12px;">🏆 Leaderboard</div>
+                        <div class="leaderboard-item">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="leaderboard-rank gold">1</div>
+                                <div>
+                                    <div style="font-weight: 600;">You</div>
+                                    <div style="font-size: 12px; opacity: 0.8;">Today: 145 pts</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 600;">1,245 pts</div>
+                        </div>
+                        <div class="leaderboard-item">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="leaderboard-rank silver">2</div>
+                                <div>
+                                    <div style="font-weight: 600;">Sarah M.</div>
+                                    <div style="font-size: 12px; opacity: 0.8;">Today: 120 pts</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 600;">1,180 pts</div>
+                        </div>
+                        <div class="leaderboard-item">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="leaderboard-rank bronze">3</div>
+                                <div>
+                                    <div style="font-weight: 600;">Mike L.</div>
+                                    <div style="font-size: 12px; opacity: 0.8;">Today: 95 pts</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 600;">1,025 pts</div>
+                        </div>
+                        <div class="leaderboard-item">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="leaderboard-rank">4</div>
+                                <div>
+                                    <div style="font-weight: 600;">Emma K.</div>
+                                    <div style="font-size: 12px; opacity: 0.8;">Today: 80 pts</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 600;">890 pts</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -845,6 +1217,11 @@
                 
                 // Initialize LIFF if available
                 this.initLIFF();
+                
+                // Initialize new features
+                this.renderActivityTemplates();
+                this.updateGoalsTab();
+                this.updateTeamTab();
                 
                 // Remove loading after initialization
                 setTimeout(() => {
@@ -1303,6 +1680,196 @@
                 } catch (error) {
                     console.log('LINE share failed:', error);
                 }
+            }
+
+            // Quick Action Method
+            quickAction(activityId) {
+                const activityType = this.activityTypes.find(type => type.id === activityId);
+                if (activityType) {
+                    this.logActivity(activityType);
+                    this.showToast(`⚡ ${activityType.icon} ${activityType.title} logged!`);
+                }
+            }
+
+            // Tab switching method
+            showTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.style.display = 'none';
+                });
+                
+                // Remove active class from all tab buttons
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show selected tab
+                document.getElementById(tabName + '-tab').style.display = 'block';
+                
+                // Add active class to clicked tab
+                event.target.classList.add('active');
+                
+                this.currentTab = tabName;
+                
+                // Update content based on tab
+                if (tabName === 'goals') {
+                    this.updateGoalsTab();
+                } else if (tabName === 'team') {
+                    this.updateTeamTab();
+                } else if (tabName === 'activities') {
+                    this.renderActivityTemplates();
+                }
+            }
+
+            // Update Goals Tab
+            updateGoalsTab() {
+                const todayPoints = this.getTodayPoints();
+                const weeklyActivities = this.getWeeklyActivities().length;
+                const monthlySales = this.getMonthlySales();
+                
+                // Daily progress
+                const dailyProgress = Math.min((todayPoints / this.dailyGoal) * 100, 100);
+                document.getElementById('dailyProgressBar').style.width = dailyProgress + '%';
+                
+                // Streak calculation
+                const streak = this.calculateStreak();
+                document.getElementById('dailyStreak').textContent = `${streak} day streak`;
+                
+                // Weekly progress
+                const weeklyProgress = Math.min((weeklyActivities / 20) * 100, 100);
+                document.getElementById('weeklyProgressBar').style.width = weeklyProgress + '%';
+                document.getElementById('weeklyProgress').textContent = `${weeklyActivities}/20 this week`;
+                
+                // Sales progress
+                const salesProgress = Math.min((monthlySales / 5) * 100, 100);
+                document.getElementById('salesProgressBar').style.width = salesProgress + '%';
+                document.getElementById('salesProgress').textContent = `${monthlySales}/5 this month`;
+            }
+
+            // Calculate streak
+            calculateStreak() {
+                let streak = 0;
+                const today = new Date();
+                
+                for (let i = 0; i < 30; i++) {
+                    const checkDate = new Date(today);
+                    checkDate.setDate(today.getDate() - i);
+                    
+                    const dateStr = checkDate.toDateString();
+                    const dayActivities = this.activities.filter(activity => 
+                        new Date(activity.date).toDateString() === dateStr
+                    );
+                    
+                    const dayPoints = dayActivities.reduce((sum, activity) => sum + activity.points, 0);
+                    
+                    if (dayPoints >= this.dailyGoal) {
+                        streak++;
+                    } else if (i > 0) {
+                        break;
+                    }
+                }
+                
+                return streak;
+            }
+
+            // Get weekly activities
+            getWeeklyActivities() {
+                const today = new Date();
+                const oneWeekAgo = new Date(today);
+                oneWeekAgo.setDate(today.getDate() - 7);
+                
+                return this.activities.filter(activity => 
+                    new Date(activity.date) >= oneWeekAgo
+                );
+            }
+
+            // Get monthly sales
+            getMonthlySales() {
+                const today = new Date();
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                
+                return this.activities.filter(activity => 
+                    new Date(activity.date) >= firstDayOfMonth && 
+                    activity.type === 'sale_closed'
+                ).length;
+            }
+
+            // Update Team Tab
+            updateTeamTab() {
+                // Simulate team data (in real app, this would come from server)
+                const teamData = this.generateTeamData();
+                
+                document.getElementById('teamTotalPoints').textContent = teamData.totalPoints.toLocaleString();
+                document.getElementById('teamTotalActivities').textContent = teamData.totalActivities;
+                document.getElementById('teamSalesCount').textContent = teamData.salesCount;
+                document.getElementById('teamAverage').textContent = teamData.goalAchievement + '%';
+            }
+
+            // Generate mock team data
+            generateTeamData() {
+                const userPoints = this.getTodayPoints();
+                const userActivities = this.getTodayActivities().length;
+                
+                return {
+                    totalPoints: userPoints + Math.floor(Math.random() * 2000) + 1000,
+                    totalActivities: userActivities + Math.floor(Math.random() * 30) + 15,
+                    salesCount: this.getMonthlySales() + Math.floor(Math.random() * 8) + 4,
+                    goalAchievement: Math.min(Math.floor((userPoints / this.dailyGoal) * 100) + Math.floor(Math.random() * 20), 100)
+                };
+            }
+
+            // Render Activity Templates
+            renderActivityTemplates() {
+                const templates = [
+                    {
+                        title: 'Morning Prospecting',
+                        description: '3 cold calls + 2 follow-ups',
+                        points: 40,
+                        activities: ['cold_prospect', 'cold_prospect', 'cold_prospect', 'client_contact', 'client_contact']
+                    },
+                    {
+                        title: 'Appointment Block',
+                        description: 'Set appointments + fact finder',
+                        points: 65,
+                        activities: ['new_appointment', 'new_appointment', 'fact_finder']
+                    },
+                    {
+                        title: 'Follow-up Sprint',
+                        description: '5 client contacts + referral',
+                        points: 40,
+                        activities: ['client_contact', 'client_contact', 'client_contact', 'client_contact', 'client_contact', 'referral_prospect']
+                    },
+                    {
+                        title: 'Sales Closing',
+                        description: 'Close sale + COI meeting',
+                        points: 120,
+                        activities: ['sale_closed', 'coi_meeting']
+                    }
+                ];
+                
+                const templatesHtml = templates.map(template => `
+                    <div class="template-card" onclick="app.useTemplate(${JSON.stringify(template.activities).replace(/"/g, '&quot;')})">
+                        <div class="template-title">${template.title}</div>
+                        <div class="template-description">${template.description}</div>
+                        <div class="template-points">+${template.points} pts</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('activityTemplates').innerHTML = templatesHtml;
+            }
+
+            // Use activity template
+            useTemplate(activityIds) {
+                let totalPoints = 0;
+                activityIds.forEach(activityId => {
+                    const activityType = this.activityTypes.find(type => type.id === activityId);
+                    if (activityType) {
+                        this.logActivity(activityType);
+                        totalPoints += activityType.points;
+                    }
+                });
+                
+                this.showToast(`🚀 Template completed! +${totalPoints} points`);
             }
         }
 
