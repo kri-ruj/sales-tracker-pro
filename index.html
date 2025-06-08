@@ -899,6 +899,305 @@
             font-weight: 600;
             display: inline-block;
         }
+
+        /* Dashboard Styles */
+        .dashboard-section {
+            padding: 0;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .score-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .score-icon {
+            font-size: 24px;
+        }
+
+        .score-info {
+            flex: 1;
+        }
+
+        .score-title {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .score-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .score-trend {
+            font-size: 12px;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .score-breakdown {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .recent-summary {
+            margin: 20px 0;
+        }
+
+        .summary-chart {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 12px 0;
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+        }
+
+        .chart-placeholder div:first-child {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .achievement-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .achievement-icon {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .achievement-title {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .achievement-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        /* Settings Styles */
+        .settings-section {
+            padding: 0;
+        }
+
+        .settings-group {
+            margin: 20px 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .settings-group-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            flex: 1;
+        }
+
+        .setting-label span:first-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .setting-description {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .setting-value {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .setting-input, .setting-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .setting-input:focus, .setting-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .setting-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .setting-btn:hover {
+            background: var(--secondary);
+        }
+
+        .setting-btn.danger {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .setting-btn.danger:hover {
+            background: #c0392b;
+        }
+
+        /* Toggle Switch */
+        .setting-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .setting-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body>
@@ -963,8 +1262,9 @@
         <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" onclick="app.showTab('activities')">Activities</div>
+            <div class="tab" onclick="app.showTab('dashboard')">Dashboard</div>
             <div class="tab" onclick="app.showTab('goals')">Goals</div>
-            <div class="tab" onclick="app.showTab('team')">Team</div>
+            <div class="tab" onclick="app.showTab('settings')">Settings</div>
         </div>
 
         <!-- Content Area -->
@@ -1100,6 +1400,187 @@
                         <div class="streak-indicator">
                             <span class="streak-flame">💰</span>
                             <span id="salesProgress">0/5 this month</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content" style="display: none;">
+                <div class="dashboard-section">
+                    <div class="section-title">📊 Performance Dashboard</div>
+                    
+                    <!-- Accumulative Score Card -->
+                    <div class="score-card">
+                        <div class="score-header">
+                            <div class="score-icon">🏆</div>
+                            <div class="score-info">
+                                <div class="score-title">Total Lifetime Score</div>
+                                <div class="score-value" id="lifetimeScore">0</div>
+                            </div>
+                            <div class="score-trend" id="scoreTrend">📈 +12%</div>
+                        </div>
+                        <div class="score-breakdown">
+                            <div class="breakdown-item">
+                                <span>This Month</span>
+                                <span id="monthlyScore">0</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>This Week</span>
+                                <span id="weeklyScore">0</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>Today</span>
+                                <span id="dailyScore">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">📞</div>
+                            <div class="stat-value" id="totalCalls">0</div>
+                            <div class="stat-label">Total Calls</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-value" id="totalMeetings">0</div>
+                            <div class="stat-label">Meetings Set</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value" id="totalSales">0</div>
+                            <div class="stat-label">Sales Closed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-value" id="currentStreak">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Summary -->
+                    <div class="recent-summary">
+                        <div class="section-title">📈 Recent Performance</div>
+                        <div class="summary-chart" id="performanceChart">
+                            <div class="chart-placeholder">
+                                <div>📊</div>
+                                <div>7-day performance chart</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements -->
+                    <div class="achievements-section">
+                        <div class="section-title">🏅 Recent Achievements</div>
+                        <div class="achievements-grid" id="achievementsList">
+                            <!-- Achievements will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content" style="display: none;">
+                <div class="settings-section">
+                    <div class="section-title">⚙️ Settings</div>
+                    
+                    <!-- User Profile Settings -->
+                    <div class="settings-group">
+                        <div class="settings-group-title">👤 Profile</div>
+                        <div class="setting-item">
+                            <div class="setting-label">Display Name</div>
+                            <input type="text" class="setting-input" id="displayNameInput" placeholder="Enter your name">
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Team</div>
+                            <select class="setting-select" id="teamSelect">
+                                <option value="">Select Team</option>
+                                <option value="sales-alpha">Sales Alpha</option>
+                                <option value="sales-beta">Sales Beta</option>
+                                <option value="sales-gamma">Sales Gamma</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Goal Settings -->
+                    <div class="settings-group">
+                        <div class="settings-group-title">🎯 Goals</div>
+                        <div class="setting-item">
+                            <div class="setting-label">Daily Points Target</div>
+                            <input type="number" class="setting-input" id="dailyGoalInput" value="500" min="100" max="2000">
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Weekly Activities Target</div>
+                            <input type="number" class="setting-input" id="weeklyGoalInput" value="20" min="5" max="50">
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="settings-group">
+                        <div class="settings-group-title">🔔 Notifications</div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Achievement Notifications</span>
+                                <span class="setting-description">Get notified when you reach milestones</span>
+                            </div>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="achievementNotifications" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Daily Reminder</span>
+                                <span class="setting-description">Remind me to log activities</span>
+                            </div>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="dailyReminder" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>LINE Group Sharing</span>
+                                <span class="setting-description">Share achievements to LINE group</span>
+                            </div>
+                            <label class="setting-toggle">
+                                <input type="checkbox" id="lineSharing" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-group">
+                        <div class="settings-group-title">💾 Data</div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Export Data</span>
+                                <span class="setting-description">Download your activity data</span>
+                            </div>
+                            <button class="setting-btn" onclick="app.exportData()">Export CSV</button>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Reset Data</span>
+                                <span class="setting-description">Clear all activities (cannot be undone)</span>
+                            </div>
+                            <button class="setting-btn danger" onclick="app.resetData()">Reset All</button>
+                        </div>
+                    </div>
+
+                    <!-- App Info -->
+                    <div class="settings-group">
+                        <div class="settings-group-title">ℹ️ About</div>
+                        <div class="setting-item">
+                            <div class="setting-label">Version</div>
+                            <div class="setting-value">1.0.0</div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">Last Sync</div>
+                            <div class="setting-value" id="lastSyncTime">Never</div>
                         </div>
                     </div>
                 </div>
@@ -1615,6 +2096,203 @@
                 // Show selected tab
                 document.getElementById(`${tabName}-tab`).style.display = 'block';
                 this.currentTab = tabName;
+
+                // Update specific tabs if needed
+                if (tabName === 'dashboard') {
+                    this.updateDashboardTab();
+                } else if (tabName === 'settings') {
+                    this.updateSettingsTab();
+                }
+            }
+
+            updateDashboardTab() {
+                // Calculate accumulative score
+                const totalPoints = this.getTotalPoints();
+                const currentLevel = this.getCurrentLevel();
+                const nextLevel = currentLevel + 1;
+                const pointsForNext = nextLevel * 100;
+                const progressToNext = ((totalPoints % 100) / 100) * 100;
+
+                // Update dashboard values
+                document.getElementById('totalScore').textContent = totalPoints.toLocaleString();
+                document.getElementById('currentLevel').textContent = currentLevel;
+                document.getElementById('levelProgress').textContent = `${Math.round(progressToNext)}% to Level ${nextLevel}`;
+                document.getElementById('levelProgressBar').style.width = `${progressToNext}%`;
+
+                // Update stats
+                const todayActivities = this.getTodayActivities();
+                const todayPoints = todayActivities.reduce((sum, act) => sum + (act.points * act.count), 0);
+                const thisWeekPoints = this.getWeekPoints();
+                const totalActivities = this.activities.length;
+
+                document.getElementById('todayPoints').textContent = todayPoints;
+                document.getElementById('weekPoints').textContent = thisWeekPoints;
+                document.getElementById('totalActivities').textContent = totalActivities;
+                document.getElementById('bestDay').textContent = this.getBestDay();
+
+                // Update achievements
+                this.updateAchievements();
+            }
+
+            updateSettingsTab() {
+                // Load current settings
+                const settings = this.getSettings();
+                
+                // Update form values
+                document.getElementById('userName').value = settings.userName || '';
+                document.getElementById('userEmail').value = settings.userEmail || '';
+                document.getElementById('dailyGoal').value = settings.dailyGoal || 50;
+                document.getElementById('weeklyGoal').value = settings.weeklyGoal || 300;
+                document.getElementById('notifications').checked = settings.notifications !== false;
+                document.getElementById('lineNotifications').checked = settings.lineNotifications !== false;
+                document.getElementById('soundEffects').checked = settings.soundEffects !== false;
+            }
+
+            getSettings() {
+                const settings = localStorage.getItem('salesTracker_settings');
+                return settings ? JSON.parse(settings) : {};
+            }
+
+            saveSettings() {
+                const settings = {
+                    userName: document.getElementById('userName').value,
+                    userEmail: document.getElementById('userEmail').value,
+                    dailyGoal: parseInt(document.getElementById('dailyGoal').value) || 50,
+                    weeklyGoal: parseInt(document.getElementById('weeklyGoal').value) || 300,
+                    notifications: document.getElementById('notifications').checked,
+                    lineNotifications: document.getElementById('lineNotifications').checked,
+                    soundEffects: document.getElementById('soundEffects').checked
+                };
+                
+                localStorage.setItem('salesTracker_settings', JSON.stringify(settings));
+                this.showToast('Settings saved successfully!');
+            }
+
+            exportData() {
+                const data = {
+                    activities: this.activities,
+                    settings: this.getSettings(),
+                    exportDate: new Date().toISOString(),
+                    totalPoints: this.getTotalPoints(),
+                    currentLevel: this.getCurrentLevel()
+                };
+
+                const csvContent = this.convertToCSV(this.activities);
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sales-tracker-data-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                this.showToast('Data exported successfully!');
+            }
+
+            convertToCSV(activities) {
+                const headers = ['Date', 'Activity', 'Points', 'Count', 'Total Points'];
+                const rows = activities.map(activity => [
+                    activity.date,
+                    activity.title,
+                    activity.points,
+                    activity.count,
+                    activity.points * activity.count
+                ]);
+                
+                return [headers, ...rows]
+                    .map(row => row.map(field => `"${field}"`).join(','))
+                    .join('\n');
+            }
+
+            clearAllData() {
+                if (confirm('Are you sure you want to delete all your activity data? This action cannot be undone.')) {
+                    localStorage.removeItem('salesTracker_activities');
+                    localStorage.removeItem('salesTracker_settings');
+                    this.activities = [];
+                    this.renderActivities();
+                    this.updateAllStats();
+                    this.showToast('All data cleared successfully!');
+                }
+            }
+
+            getWeekPoints() {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                
+                return this.activities
+                    .filter(activity => new Date(activity.timestamp) >= oneWeekAgo)
+                    .reduce((sum, activity) => sum + (activity.points * activity.count), 0);
+            }
+
+            getBestDay() {
+                const dailyPoints = {};
+                
+                this.activities.forEach(activity => {
+                    const date = activity.date;
+                    if (!dailyPoints[date]) {
+                        dailyPoints[date] = 0;
+                    }
+                    dailyPoints[date] += activity.points * activity.count;
+                });
+                
+                const bestDay = Object.keys(dailyPoints).reduce((best, date) => 
+                    dailyPoints[date] > (dailyPoints[best] || 0) ? date : best, '');
+                
+                return bestDay ? `${dailyPoints[bestDay]} pts` : '0 pts';
+            }
+
+            updateAchievements() {
+                const achievements = [
+                    {
+                        title: 'First Steps',
+                        description: 'Log your first activity',
+                        achieved: this.activities.length > 0,
+                        icon: '🎯'
+                    },
+                    {
+                        title: 'Dedicated',
+                        description: 'Log activities for 7 days',
+                        achieved: this.getUniqueDays() >= 7,
+                        icon: '⭐'
+                    },
+                    {
+                        title: 'High Achiever',
+                        description: 'Reach 1000 total points',
+                        achieved: this.getTotalPoints() >= 1000,
+                        icon: '🏆'
+                    },
+                    {
+                        title: 'Master Seller',
+                        description: 'Close 10 sales',
+                        achieved: this.getSalesCount() >= 10,
+                        icon: '💎'
+                    }
+                ];
+
+                const container = document.getElementById('achievementsList');
+                container.innerHTML = achievements.map(achievement => `
+                    <div class="achievement ${achievement.achieved ? 'achieved' : ''}">
+                        <span class="achievement-icon">${achievement.icon}</span>
+                        <div class="achievement-info">
+                            <div class="achievement-title">${achievement.title}</div>
+                            <div class="achievement-desc">${achievement.description}</div>
+                        </div>
+                        ${achievement.achieved ? '<div class="achievement-badge">✓</div>' : ''}
+                    </div>
+                `).join('');
+            }
+
+            getUniqueDays() {
+                const uniqueDates = new Set(this.activities.map(activity => activity.date));
+                return uniqueDates.size;
+            }
+
+            getSalesCount() {
+                return this.activities
+                    .filter(activity => activity.type === 'sale_closed')
+                    .reduce((sum, activity) => sum + activity.count, 0);
             }
 
             showAddModal() {
