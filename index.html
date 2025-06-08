@@ -1174,6 +1174,9 @@
         </div>
     </div>
 
+    <!-- LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
     <script>
         class SalesTrackerApp {
             constructor() {
@@ -1232,14 +1235,17 @@
             }
 
             async initLIFF() {
+                console.log('Starting LIFF initialization...');
                 try {
                     if (typeof liff !== 'undefined') {
-                        // Initialize LIFF - REPLACE WITH YOUR LIFF ID
+                        console.log('LIFF SDK loaded, initializing...');
+                        // Initialize LIFF with your actual LIFF ID
                         await liff.init({ liffId: '2007539402' });
+                        console.log('LIFF initialized successfully');
                         
                         if (!liff.isLoggedIn()) {
-                            // Redirect to LINE Login
-                            liff.login();
+                            console.log('User not logged in');
+                            // Don't auto-redirect in mini app
                         } else {
                             // Get user profile from LINE
                             const profile = await liff.getProfile();
@@ -1264,10 +1270,12 @@
                                 console.log('Running in LINE app');
                             }
                         }
+                    } else {
+                        console.log('LIFF SDK not available, using local mode');
                     }
                 } catch (error) {
                     console.log('LIFF initialization failed:', error);
-                    // Fallback to local storage mode
+                    console.log('Continuing in local storage mode...');
                 }
             }
 
