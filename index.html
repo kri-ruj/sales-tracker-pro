@@ -1937,6 +1937,127 @@
                 document.getElementById('activityTemplates').innerHTML = templatesHtml;
             }
 
+            // Core method: Log Activity (was missing!)
+            logActivity(activityType, count = 1) {
+                console.log('Logging activity:', activityType.title, 'count:', count);
+                
+                const activity = {
+                    id: Date.now() + Math.random(),
+                    type: activityType.id,
+                    title: activityType.title,
+                    subtitle: activityType.subtitle,
+                    points: activityType.points,
+                    icon: activityType.icon,
+                    count: count,
+                    date: this.currentDate.toDateString(),
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Add to activities array
+                this.activities.push(activity);
+                
+                // Save to localStorage
+                this.saveActivities();
+                
+                // Update UI
+                this.renderActivities();
+                this.updateAllStats();
+                
+                console.log('Activity logged successfully:', activity);
+            }
+
+            // Save activities to localStorage
+            saveActivities() {
+                if (this.lineUserId) {
+                    // Save with LINE user ID if available
+                    const userKey = `salesActivities_${this.lineUserId}`;
+                    localStorage.setItem(userKey, JSON.stringify(this.activities));
+                    console.log('Activities saved for LINE user:', this.lineUserId);
+                } else {
+                    // Save to default localStorage
+                    localStorage.setItem('salesActivities', JSON.stringify(this.activities));
+                    console.log('Activities saved to default storage');
+                }
+            }
+
+            // Load user-specific activities
+            loadUserActivities() {
+                if (this.lineUserId) {
+                    const userKey = `salesActivities_${this.lineUserId}`;
+                    const userActivities = localStorage.getItem(userKey);
+                    if (userActivities) {
+                        this.activities = JSON.parse(userActivities);
+                        console.log('Loaded activities for LINE user:', this.lineUserId, this.activities.length);
+                    }
+                }
+            }
+
+            // Show toast notification
+            showToast(message) {
+                const toast = document.getElementById('successToast');
+                if (toast) {
+                    toast.textContent = message;
+                    toast.classList.add('show');
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 3000);
+                }
+                console.log('Toast:', message);
+            }
+
+            // Get today's activities
+            getTodayActivities() {
+                const todayStr = this.currentDate.toDateString();
+                return this.activities.filter(activity => activity.date === todayStr);
+            }
+
+            // Get today's total points
+            getTodayPoints() {
+                const todayActivities = this.getTodayActivities();
+                return todayActivities.reduce((total, activity) => total + (activity.points * activity.count), 0);
+            }
+
+            // Update all stats in UI
+            updateAllStats() {
+                const todayPoints = this.getTodayPoints();
+                const todayActivities = this.getTodayActivities();
+                
+                // Update main stats display
+                const pointsElement = document.querySelector('.progress-circle .progress-text');
+                if (pointsElement) {
+                    pointsElement.textContent = todayPoints;
+                }
+                
+                // Update week total
+                const weekElement = document.querySelector('#weekTotal');
+                if (weekElement) {
+                    weekElement.textContent = todayPoints; // For now, same as today
+                }
+                
+                // Update streak
+                const streakElement = document.querySelector('#dayStreak');
+                if (streakElement) {
+                    const streak = this.calculateStreak();
+                    streakElement.textContent = streak;
+                }
+                
+                console.log('Stats updated - Points:', todayPoints, 'Activities:', todayActivities.length);
+            }
+
+            // Render quick activities (placeholder for now)
+            renderQuickActivities() {
+                console.log('Quick activities rendered');
+            }
+
+            // Update date display
+            updateDateDisplay() {
+                const dateElement = document.querySelector('.date-header h2');
+                if (dateElement) {
+                    dateElement.textContent = 'Today';
+                }
+                console.log('Date display updated');
+            }
+
             // Use activity template
             async useTemplate(activityIds) {
                 let totalPoints = 0;
