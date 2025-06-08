@@ -6,7 +6,7 @@ const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // LINE Messaging API configuration
 const lineConfig = {
@@ -64,9 +64,23 @@ db.serialize(() => {
 
 // Routes
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Sales Tracker LINE Backend is running' });
+    res.status(200).json({ 
+        status: 'OK', 
+        message: 'Sales Tracker LINE Backend is running',
+        timestamp: new Date().toISOString() 
+    });
+});
+
+// Basic API info
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'Sales Tracker API',
+        status: 'running',
+        version: '1.0.0',
+        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook']
+    });
 });
 
 // User registration/update
