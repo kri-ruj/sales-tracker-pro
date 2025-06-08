@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "sales-tracker-2024"
+  },
+  "targets": {
+    "sales-tracker-2024": {
+      "hosting": {
+        "production": [
+          "sales-tracker-2024"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

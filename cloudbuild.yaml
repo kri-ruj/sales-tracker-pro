@@ -1,0 +1,56 @@
+# Google Cloud Build configuration
+steps:
+  # Install dependencies
+  - name: 'node:18'
+    entrypoint: 'npm'
+    args: ['install']
+    dir: 'backend'
+
+  # Run tests
+  - name: 'node:18'
+    entrypoint: 'npm'
+    args: ['test']
+    dir: 'backend'
+    env:
+      - 'NODE_ENV=test'
+
+  # Build application
+  - name: 'node:18'
+    entrypoint: 'npm'
+    args: ['run', 'build']
+    dir: 'backend'
+    env:
+      - 'NODE_ENV=production'
+
+  # Deploy to App Engine
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['app', 'deploy', 'backend/app.yaml', '--quiet']
+    env:
+      - 'CLOUDSDK_CORE_PROJECT=$PROJECT_ID'
+
+  # Deploy frontend to Firebase Hosting
+  - name: 'node:18'
+    entrypoint: 'npm'
+    args: ['install', '-g', 'firebase-tools']
+
+  - name: 'node:18'
+    entrypoint: 'firebase'
+    args: ['deploy', '--only', 'hosting', '--token', '$_FIREBASE_TOKEN']
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_MEDIUM'
+  substitution_option: 'ALLOW_LOOSE'
+
+# Substitutions (variables)
+substitutions:
+  _FIREBASE_TOKEN: 'placeholder'
+  _LINE_CHANNEL_ACCESS_TOKEN: 'placeholder'
+  _LINE_CHANNEL_SECRET: 'placeholder'
+
+# Timeout
+timeout: '1200s'
+
+# Service account
+serviceAccount: 'projects/$PROJECT_ID/serviceAccounts/cloudbuild-sa@$PROJECT_ID.iam.gserviceaccount.com'
