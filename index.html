@@ -1180,7 +1180,7 @@
     <script>
         // Configuration - Update this with your deployed backend URL
         const CONFIG = {
-            BACKEND_URL: 'https://sales-tracker-backend.onrender.com', // Replace with your Render URL
+            BACKEND_URL: 'https://sales-tracker-backend-vho4.onrender.com', // Your actual Render URL
             LIFF_ID: '2007539402',
             ENABLE_BACKEND_SYNC: true
         };
@@ -1222,8 +1222,9 @@
                 this.renderQuickActivities();
                 this.updateAllStats();
                 
-                // Always load demo data for testing
+                // Always load demo data for testing (force it)
                 this.loadDemoData();
+                console.log('Demo data loaded, activities count:', this.activities.length);
                 
                 // Initialize LIFF if available
                 this.initLIFF();
@@ -1236,22 +1237,20 @@
                 // Setup online/offline detection
                 this.setupNetworkListeners();
                 
-                // Sync with backend if online
-                if (this.isOnline) {
-                    this.syncWithBackend();
-                }
-                
                 // Force hide loading and show activities immediately
                 this.renderActivities();
                 this.updateAllStats();
                 
-                // Hide loading spinner
-                setTimeout(() => {
-                    const loadingElement = document.querySelector('.loading');
-                    if (loadingElement) {
-                        loadingElement.style.display = 'none';
-                    }
-                }, 100);
+                // Always hide loading spinner immediately
+                const loadingElement = document.querySelector('.loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+                // Sync with backend if online (don't wait for this)
+                if (this.isOnline) {
+                    this.syncWithBackend().catch(console.error);
+                }
             }
 
             async initLIFF() {
@@ -1427,6 +1426,7 @@
             }
 
             renderActivities() {
+                console.log('renderActivities called');
                 const list = document.getElementById('activityList');
                 if (!list) {
                     console.log('activityList element not found');
@@ -1435,6 +1435,7 @@
                 
                 const todayActivities = this.getTodayActivities();
                 console.log('Today activities:', todayActivities);
+                console.log('All activities:', this.activities);
                 
                 if (todayActivities.length === 0) {
                     list.innerHTML = `
