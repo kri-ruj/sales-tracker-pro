@@ -1240,6 +1240,14 @@
                 
                 console.log('Starting app initialization...');
                 
+                try {
+                    // Always load demo data for testing (force it)
+                    this.loadDemoData();
+                    console.log('Demo data loaded, activities count:', this.activities.length);
+                } catch (error) {
+                    console.error('Failed to load demo data:', error);
+                }
+                
                 // Force hide loading immediately
                 setTimeout(() => {
                     const loadingElement = document.querySelector('.loading');
@@ -1249,30 +1257,40 @@
                     }
                 }, 100);
                 
-                // Always load demo data for testing (force it)
-                this.loadDemoData();
-                console.log('Demo data loaded, activities count:', this.activities.length);
-                
                 // Force render activities
                 setTimeout(() => {
-                    this.renderActivities();
-                    this.updateAllStats();
-                    console.log('Activities rendered');
+                    try {
+                        this.renderActivities();
+                        this.updateAllStats();
+                        console.log('Activities rendered');
+                    } catch (error) {
+                        console.error('Failed to render activities:', error);
+                    }
                 }, 200);
                 
                 // Initialize new features
                 setTimeout(() => {
-                    this.renderActivityTemplates();
-                    this.updateGoalsTab();
-                    this.updateTeamTab();
+                    try {
+                        this.renderActivityTemplates();
+                        this.updateGoalsTab();
+                        this.updateTeamTab();
+                        console.log('New features initialized');
+                    } catch (error) {
+                        console.error('Failed to initialize new features:', error);
+                    }
                 }, 300);
                 
                 // Setup network and LIFF (background tasks)
                 setTimeout(() => {
-                    this.setupNetworkListeners();
-                    this.initLIFF();
-                    if (this.isOnline) {
-                        this.syncWithBackend().catch(console.error);
+                    try {
+                        this.setupNetworkListeners();
+                        this.initLIFF();
+                        if (this.isOnline) {
+                            this.syncWithBackend().catch(console.error);
+                        }
+                        console.log('Background tasks initialized');
+                    } catch (error) {
+                        console.error('Failed to initialize background tasks:', error);
                     }
                 }, 500);
             }
@@ -2078,27 +2096,38 @@
 
         // Initialize app with error handling
         let app;
+        
+        // Emergency fallback function
+        function emergencyFallback() {
+            setTimeout(() => {
+                const loadingElement = document.querySelector('.loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+                
+                const activityList = document.getElementById('activityList');
+                if (activityList) {
+                    activityList.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-primary);">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                            <div style="font-size: 16px; margin-bottom: 8px;">Simple Mode Active</div>
+                            <div style="font-size: 14px;">Click Quick Actions below to log activities</div>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+        
         try {
             app = new SalesTrackerApp();
             console.log('App initialized successfully');
         } catch (error) {
             console.error('App initialization failed:', error);
-            
-            // Fallback: Hide loading and show error message
-            setTimeout(() => {
-                const loadingElement = document.querySelector('.loading');
-                if (loadingElement) {
-                    loadingElement.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: var(--text-primary);">
-                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                            <div style="font-size: 16px; margin-bottom: 8px;">App initialization failed</div>
-                            <div style="font-size: 14px;">Please refresh the page</div>
-                            <button onclick="window.location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px;">Refresh</button>
-                        </div>
-                    `;
-                }
-            }, 100);
+            emergencyFallback();
         }
+        
+        // Always run emergency fallback as backup
+        setTimeout(emergencyFallback, 3000);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
