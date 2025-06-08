@@ -165,38 +165,40 @@
             margin-bottom: 20px;
         }
 
-        .activity-item {
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .activity-bubble {
             background: var(--surface);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 8px;
+            border: 2px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 12px 8px;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 70px;
+            min-height: 80px;
             backdrop-filter: blur(10px);
             cursor: pointer;
         }
 
-        .activity-item:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        .activity-bubble:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
             border-color: var(--primary);
         }
 
-        .activity-item.selected {
+        .activity-bubble.has-pending {
             border-color: var(--primary);
             background: rgba(212, 175, 55, 0.1);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
-        }
-
-        .activity-item.has-pending {
-            border-color: var(--warning);
-            background: rgba(237, 137, 54, 0.1);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
         .activity-icon {
@@ -215,13 +217,57 @@
         }
 
         .activity-counter {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
             font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .activity-minus {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 14px;
-            color: var(--primary);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .activity-minus:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .activity-subtitle {
+            font-size: 8px;
+            color: var(--text-light);
             margin-bottom: 4px;
-            background: rgba(212, 175, 55, 0.1);
-            padding: 2px 6px;
-            border-radius: 8px;
+            line-height: 1.1;
+        }
+
+        .activity-points {
+            font-size: 8px;
+            color: var(--primary);
+            font-weight: 600;
         }
 
         .activity-actions {
@@ -1370,7 +1416,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.35</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.36</span>
                         </div>
                     </div>
                 </div>
@@ -1523,7 +1569,7 @@
                         <div class="settings-group-title">ℹ️ About</div>
                         <div class="setting-item">
                             <div class="setting-label">Version</div>
-                            <div class="setting-value" id="appVersion">v2.35</div>
+                            <div class="setting-value" id="appVersion">v2.36</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Last Sync</div>
@@ -1584,8 +1630,9 @@
     <script>
         class SalesTrackerApp {
             constructor() {
-                this.activities = JSON.parse(localStorage.getItem('salesActivities') || '[]');
                 this.pendingActivities = new Map(); // Store pending activities to submit
+                this.userProfile = null;
+                this.lineUserId = null;
                 this.currentDate = new Date();
                 this.currentTab = 'activities';
                 this.dailyGoal = 500;
@@ -1593,6 +1640,9 @@
                 this.apiBaseUrl = CONFIG.BACKEND_URL;
                 this.enableBackendSync = CONFIG.ENABLE_BACKEND_SYNC;
                 this.isOnline = navigator.onLine;
+                
+                // Load activities from localStorage
+                this.loadActivities();
                 
                 this.activityTypes = [
                     { id: 'cold_prospect', title: 'New Prospect: Cold', subtitle: 'ผู้มุ่งหวังรายใหม่: หาไม่ร้อน', points: 10, icon: '🥶' },
@@ -1644,6 +1694,9 @@
                         console.error('Failed to render activities:', error);
                     }
                 }, 200);
+                
+                // Initialize LIFF if available
+                this.initLIFF();
                 
                 // Initialize new features
                 setTimeout(() => {
@@ -1861,38 +1914,28 @@
                     return;
                 }
                 
-                const todayActivities = this.getTodayActivities();
-                console.log('Today activities:', todayActivities);
-                console.log('All activities:', this.activities);
-                
-                if (todayActivities.length === 0) {
-                    list.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: var(--text-light);">
-                            <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-                            <div style="font-size: 16px;">No activities for today</div>
-                            <div style="font-size: 14px; margin-top: 8px;">Tap + to add activities</div>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Show activity type bubbles (not today's logged activities)
-                list.innerHTML = this.activityTypes.map(activityType => {
-                    const pendingCount = this.pendingActivities.get(activityType.id) || 0;
-                    const hasPending = pendingCount > 0;
-                    
-                    return `
-                        <div class="activity-item ${hasPending ? 'has-pending' : ''}" onclick="app.selectActivity('${activityType.id}')">
-                            <div class="activity-icon">${activityType.icon}</div>
-                            <div class="activity-title">${activityType.title}</div>
-                            <div class="activity-counter">${pendingCount}</div>
-                            <div class="activity-actions">
-                                <button class="action-btn minus" onclick="event.stopPropagation(); app.decrementPending('${activityType.id}')">－</button>
-                                <button class="action-btn plus" onclick="event.stopPropagation(); app.incrementPending('${activityType.id}')">＋</button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                // Always show activity type bubbles for selection
+                list.innerHTML = `
+                    <div class="activities-grid">
+                        ${this.activityTypes.map(activityType => {
+                            const pendingCount = this.pendingActivities.get(activityType.id) || 0;
+                            const hasPending = pendingCount > 0;
+                            
+                            return `
+                                <div class="activity-bubble ${hasPending ? 'has-pending' : ''}" onclick="app.selectActivity('${activityType.id}')" title="Click to add ${activityType.title}">
+                                    <div class="activity-icon">${activityType.icon}</div>
+                                    <div class="activity-title">${activityType.title}</div>
+                                    <div class="activity-subtitle">${activityType.subtitle}</div>
+                                    <div class="activity-points">+${activityType.points} pts</div>
+                                    ${pendingCount > 0 ? `
+                                        <div class="activity-counter">${pendingCount}</div>
+                                        <div class="activity-minus" onclick="event.stopPropagation(); app.decrementPending('${activityType.id}')" title="Remove one">−</div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
             }
 
 
@@ -2417,14 +2460,56 @@
                 }
             }
 
+            loadActivities() {
+                try {
+                    if (this.lineUserId) {
+                        // Load activities with LINE user ID
+                        const userKey = `salesActivities_${this.lineUserId}`;
+                        this.activities = JSON.parse(localStorage.getItem(userKey) || '[]');
+                    } else {
+                        // Fallback to general storage
+                        this.activities = JSON.parse(localStorage.getItem('salesActivities') || '[]');
+                    }
+                    console.log('Loaded activities:', this.activities.length);
+                } catch (error) {
+                    console.error('Error loading activities:', error);
+                    this.activities = [];
+                }
+            }
+
             saveActivities() {
-                if (this.lineUserId) {
-                    // Save activities with LINE user ID
-                    const userKey = `salesActivities_${this.lineUserId}`;
-                    localStorage.setItem(userKey, JSON.stringify(this.activities));
-                } else {
-                    // Fallback to general storage
-                    localStorage.setItem('salesActivities', JSON.stringify(this.activities));
+                try {
+                    if (this.lineUserId) {
+                        // Save activities with LINE user ID
+                        const userKey = `salesActivities_${this.lineUserId}`;
+                        localStorage.setItem(userKey, JSON.stringify(this.activities));
+                    } else {
+                        // Fallback to general storage
+                        localStorage.setItem('salesActivities', JSON.stringify(this.activities));
+                    }
+                    console.log('Saved activities:', this.activities.length);
+                } catch (error) {
+                    console.error('Error saving activities:', error);
+                }
+            }
+
+            async initLIFF() {
+                try {
+                    if (typeof liff !== 'undefined') {
+                        await liff.init({ liffId: '2007539402-Mnwlaklq' });
+                        if (liff.isLoggedIn()) {
+                            const profile = await liff.getProfile();
+                            this.userProfile = profile;
+                            this.lineUserId = profile.userId;
+                            console.log('LIFF initialized, user:', profile.displayName);
+                            // Reload activities for this user
+                            this.loadActivities();
+                            this.renderActivities();
+                            this.updateAllStats();
+                        }
+                    }
+                } catch (error) {
+                    console.log('LIFF not available or failed to initialize:', error);
                 }
             }
 
@@ -2976,12 +3061,10 @@
                 
                 const activityList = document.getElementById('activityList');
                 if (activityList) {
-                    activityList.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: var(--text-primary);">
-                            <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-                            <div style="font-size: 14px;">Loading complete. Ready to track activities!</div>
-                        </div>
-                    `;
+                    // Don't show fallback message if app is working
+                    if (window.app && window.app.activityTypes) {
+                        window.app.renderActivities();
+                    }
                 }
             }, 1000);
         }
