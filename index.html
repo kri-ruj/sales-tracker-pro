@@ -103,7 +103,7 @@
         /* Enhanced Header */
         .header {
             background: linear-gradient(135deg, var(--primary) 0%, #3498DB 100%);
-            padding: 20px;
+            padding: 16px;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -114,7 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .profile-section {
@@ -124,14 +124,14 @@
         }
 
         .profile-pic {
-            width: 45px;
-            height: 45px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: rgba(255,255,255,0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .profile-info {
@@ -234,9 +234,9 @@
         }
 
         .points-circle {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto 20px;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
             background: rgba(255,255,255,0.2);
             border-radius: 50%;
             display: flex;
@@ -262,24 +262,24 @@
 
         .progress-ring {
             position: absolute;
-            top: -5px;
-            left: -5px;
-            width: 190px;
-            height: 190px;
+            top: -3px;
+            left: -3px;
+            width: 126px;
+            height: 126px;
             transform: rotate(-90deg);
         }
 
         .progress-ring-circle {
             stroke: rgba(255,255,255,0.3);
-            stroke-width: 8;
+            stroke-width: 6;
             fill: transparent;
         }
 
         .progress-ring-progress {
             stroke: white;
-            stroke-width: 8;
+            stroke-width: 6;
             fill: transparent;
-            stroke-dasharray: 565.48;
+            stroke-dasharray: 377;
             stroke-dashoffset: 565.48;
             transition: stroke-dashoffset 1s ease;
         }
@@ -340,8 +340,8 @@
 
         /* Content */
         .content {
-            padding: 20px;
-            padding-bottom: 100px;
+            padding: 16px;
+            padding-bottom: 80px;
         }
 
         /* Activity Items */
@@ -816,16 +816,16 @@
         /* Quick Actions Styles */
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-            margin: 16px 0;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 12px 0;
         }
 
         .quick-action-btn {
-            padding: 16px 12px;
+            padding: 12px 8px;
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -839,14 +839,22 @@
         }
 
         .quick-action-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
+            font-size: 20px;
+            margin-bottom: 6px;
             display: block;
         }
 
         .quick-action-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 16px 0 12px 0;
+            color: var(--text-primary);
         }
 
         .templates-grid {
