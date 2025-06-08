@@ -787,72 +787,7 @@
         }
 
         /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            max-width: 430px;
-            margin: 0 auto;
-        }
 
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--text-light);
-            text-decoration: none;
-            position: relative;
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-        }
-
-        .nav-icon {
-            font-size: 22px;
-            margin-bottom: 4px;
-        }
-
-        .nav-label {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        /* FAB */
-        .fab {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
-        }
 
         /* Modal */
         .modal {
@@ -1463,13 +1398,12 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.33</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.34</span>
                         </div>
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="header-btn" onclick="app.toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
-                    <button class="header-btn" onclick="app.showSettings()" title="Settings">⚙️</button>
+                    <button class="header-btn" onclick="app.showSettingsModal()" title="Settings">⚙️</button>
                 </div>
             </div>
 
@@ -1515,16 +1449,6 @@
                 <div class="stat-label">Today</div>
                 <div class="stat-value" id="todayPointsDisplay">0</div>
             </div>
-            <div class="stat-card">
-                <span class="stat-icon">📈</span>
-                <div class="stat-label">This Week</div>
-                <div class="stat-value" id="weekPointsDisplay">0</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-icon">🏆</span>
-                <div class="stat-label">Level</div>
-                <div class="stat-value" id="levelDisplay">1</div>
-            </div>
         </div>
 
         <!-- Activity Bubbles Grid -->
@@ -1552,165 +1476,16 @@
             </button>
         </div>
 
-        <!-- Bottom Navigation -->
-        <nav class="bottom-nav">
-            <a href="#" class="nav-item active" onclick="app.showTab('activities')">
-                <span class="nav-icon">📱</span>
-                <span class="nav-label">Track</span>
-            </a>
-            <a href="#" class="nav-item" onclick="app.showTab('dashboard')">
-                <span class="nav-icon">📊</span>
-                <span class="nav-label">Dashboard</span>
-            </a>
-            <a href="#" class="nav-item" onclick="app.showInfo()">
-                <span class="nav-icon">ℹ️</span>
-                <span class="nav-label">Info</span>
-            </a>
-        </nav>
 
-        <!-- FAB -->
-        <button class="fab" onclick="app.showAddModal()" title="Add Activity">+</button>
 
-        <!-- Add Activity Modal -->
-        <div class="modal" id="addModal">
+        <!-- Settings Modal -->
+        <div class="modal" id="settingsModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">Add Activity</h2>
-                    <button class="close-btn" onclick="app.hideModal()">×</button>
+                    <h2 class="modal-title">⚙️ Settings</h2>
+                    <button class="close-btn" onclick="app.hideSettingsModal()">×</button>
                 </div>
-
-            </div>
-
-            <!-- Goals Tab -->
-            <div id="goals-tab" class="tab-content" style="display: none;">
-                <div class="goals-section">
-                    <div class="section-title">🎯 Daily Goals & Streaks</div>
-                    
-                    <div class="goal-card">
-                        <div class="goal-header">
-                            <div class="goal-title">Daily Points Target</div>
-                            <div id="dailyGoalValue">500 pts</div>
-                        </div>
-                        <div class="goal-progress">
-                            <div class="goal-progress-bar" id="dailyProgressBar" style="width: 0%"></div>
-                        </div>
-                        <div class="streak-indicator">
-                            <span class="streak-flame">🔥</span>
-                            <span id="dailyStreak">0 day streak</span>
-                        </div>
-                    </div>
-
-                    <div class="goal-card">
-                        <div class="goal-header">
-                            <div class="goal-title">Weekly Activities</div>
-                            <div id="weeklyGoalValue">20 activities</div>
-                        </div>
-                        <div class="goal-progress">
-                            <div class="goal-progress-bar" id="weeklyProgressBar" style="width: 0%"></div>
-                        </div>
-                        <div class="streak-indicator">
-                            <span class="streak-flame">⚡</span>
-                            <span id="weeklyProgress">0/20 this week</span>
-                        </div>
-                    </div>
-
-                    <div class="goal-card">
-                        <div class="goal-header">
-                            <div class="goal-title">Sales Closed</div>
-                            <div id="salesGoalValue">5 sales</div>
-                        </div>
-                        <div class="goal-progress">
-                            <div class="goal-progress-bar" id="salesProgressBar" style="width: 0%"></div>
-                        </div>
-                        <div class="streak-indicator">
-                            <span class="streak-flame">💰</span>
-                            <span id="salesProgress">0/5 this month</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dashboard Tab -->
-            <div id="dashboard-tab" class="tab-content" style="display: none;">
-                <div class="dashboard-section">
-                    <div class="section-title">📊 Performance Dashboard</div>
-                    
-                    <!-- Accumulative Score Card -->
-                    <div class="score-card">
-                        <div class="score-header">
-                            <div class="score-icon">🏆</div>
-                            <div class="score-info">
-                                <div class="score-title">Total Lifetime Score</div>
-                                <div class="score-value" id="lifetimeScore">0</div>
-                            </div>
-                            <div class="score-trend" id="scoreTrend">📈 +12%</div>
-                        </div>
-                        <div class="score-breakdown">
-                            <div class="breakdown-item">
-                                <span>This Month</span>
-                                <span id="monthlyScore">0</span>
-                            </div>
-                            <div class="breakdown-item">
-                                <span>This Week</span>
-                                <span id="weeklyScore">0</span>
-                            </div>
-                            <div class="breakdown-item">
-                                <span>Today</span>
-                                <span id="dailyScore">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stats Grid -->
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">📞</div>
-                            <div class="stat-value" id="totalCalls">0</div>
-                            <div class="stat-label">Total Calls</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">📅</div>
-                            <div class="stat-value" id="totalMeetings">0</div>
-                            <div class="stat-label">Meetings Set</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-value" id="totalSales">0</div>
-                            <div class="stat-label">Sales Closed</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">🔥</div>
-                            <div class="stat-value" id="currentStreak">0</div>
-                            <div class="stat-label">Day Streak</div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity Summary -->
-                    <div class="recent-summary">
-                        <div class="section-title">📈 Recent Performance</div>
-                        <div class="summary-chart" id="performanceChart">
-                            <div class="chart-placeholder">
-                                <div>📊</div>
-                                <div>7-day performance chart</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Achievements -->
-                    <div class="achievements-section">
-                        <div class="section-title">🏅 Recent Achievements</div>
-                        <div class="achievements-grid" id="achievementsList">
-                            <!-- Achievements will be inserted here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Settings Tab -->
-            <div id="settings-tab" class="tab-content" style="display: none;">
-                <div class="settings-section">
-                    <div class="section-title">⚙️ Settings</div>
-                    
+                <div class="modal-body">
                     <!-- User Profile Settings -->
                     <div class="settings-group">
                         <div class="settings-group-title">👤 Profile</div>
@@ -1757,16 +1532,6 @@
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">
-                                <span>Daily Reminder</span>
-                                <span class="setting-description">Remind me to log activities</span>
-                            </div>
-                            <label class="setting-toggle">
-                                <input type="checkbox" id="dailyReminder" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <div class="setting-item">
-                            <div class="setting-label">
                                 <span>LINE Group Sharing</span>
                                 <span class="setting-description">Share achievements to LINE group</span>
                             </div>
@@ -1801,138 +1566,33 @@
                         <div class="settings-group-title">ℹ️ About</div>
                         <div class="setting-item">
                             <div class="setting-label">Version</div>
-                            <div class="setting-value">1.0.0</div>
+                            <div class="setting-value" id="appVersion">v2.34</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Last Sync</div>
                             <div class="setting-value" id="lastSyncTime">Never</div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Team Tab -->
-            <div id="team-tab" class="tab-content" style="display: none;">
-                <div class="team-dashboard">
-                    <div class="section-title" style="color: white; margin-bottom: 0;">👥 Team Performance</div>
-                    
-                    <div class="team-stats-grid">
-                        <div class="team-stat-card">
-                            <div class="team-stat-value" id="teamTotalPoints">2,450</div>
-                            <div class="team-stat-label">Total Points</div>
-                        </div>
-                        <div class="team-stat-card">
-                            <div class="team-stat-value" id="teamTotalActivities">48</div>
-                            <div class="team-stat-label">Activities Today</div>
-                        </div>
-                        <div class="team-stat-card">
-                            <div class="team-stat-value" id="teamSalesCount">12</div>
-                            <div class="team-stat-label">Sales This Week</div>
-                        </div>
-                        <div class="team-stat-card">
-                            <div class="team-stat-value" id="teamAverage">85%</div>
-                            <div class="team-stat-label">Goal Achievement</div>
-                        </div>
-                    </div>
-
-                    <div class="team-leaderboard">
-                        <div style="font-weight: 600; margin-bottom: 12px;">🏆 Leaderboard</div>
-                        <div class="leaderboard-item">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="leaderboard-rank gold">1</div>
-                                <div>
-                                    <div style="font-weight: 600;">You</div>
-                                    <div style="font-size: 12px; opacity: 0.8;">Today: 145 pts</div>
-                                </div>
-                            </div>
-                            <div style="font-weight: 600;">1,245 pts</div>
-                        </div>
-                        <div class="leaderboard-item">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="leaderboard-rank silver">2</div>
-                                <div>
-                                    <div style="font-weight: 600;">Sarah M.</div>
-                                    <div style="font-size: 12px; opacity: 0.8;">Today: 120 pts</div>
-                                </div>
-                            </div>
-                            <div style="font-weight: 600;">1,180 pts</div>
-                        </div>
-                        <div class="leaderboard-item">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="leaderboard-rank bronze">3</div>
-                                <div>
-                                    <div style="font-weight: 600;">Mike L.</div>
-                                    <div style="font-size: 12px; opacity: 0.8;">Today: 95 pts</div>
-                                </div>
-                            </div>
-                            <div style="font-weight: 600;">1,025 pts</div>
-                        </div>
-                        <div class="leaderboard-item">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="leaderboard-rank">4</div>
-                                <div>
-                                    <div style="font-weight: 600;">Emma K.</div>
-                                    <div style="font-size: 12px; opacity: 0.8;">Today: 80 pts</div>
-                                </div>
-                            </div>
-                            <div style="font-weight: 600;">890 pts</div>
-                        </div>
+                    <!-- Save Settings -->
+                    <div class="modal-footer" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="setting-btn" onclick="app.hideSettingsModal()">Cancel</button>
+                        <button class="setting-btn" onclick="app.saveSettings(); app.hideSettingsModal();" style="background: var(--primary); color: white;">Save Settings</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Success Toast -->
-        <div class="toast" id="successToast">
-            ✅ Activity logged successfully!
-        </div>
-
-        <!-- About Modal -->
-        <div class="modal" id="aboutModal">
+        <!-- Add Activity Modal -->
+        <div class="modal" id="addModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title">📱 App Info</h2>
-                    <button class="modal-close" onclick="app.hideAbout()">×</button>
+                    <h2 class="modal-title">Add Activity</h2>
+                    <button class="close-btn" onclick="app.hideModal()">×</button>
                 </div>
-                <div style="padding: 20px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
-                        <h3 style="margin: 0; color: var(--primary);">FINNERGY Sales Tracker</h3>
-                        <p style="margin: 5px 0; color: var(--text-light);">ฟินเนอจี้ - Sales Activity Tracker</p>
-                    </div>
-                    
-                    <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Version:</span>
-                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.33</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Last Updated:</span>
-                            <span style="color: var(--text-light);" id="lastUpdated">Dec 8, 2024</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="font-weight: 600;">Build:</span>
-                            <span style="color: var(--text-light);" id="buildNumber">e2472b0-28</span>
-                        </div>
-                    </div>
 
-                    <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                        <h4 style="margin: 0 0 10px 0; color: var(--primary);">✨ Latest Updates</h4>
-                        <ul style="margin: 0; padding-left: 20px; color: var(--text-light); font-size: 14px;">
-                            <li>Dashboard with accumulative scoring</li>
-                            <li>Settings with user preferences</li>
-                            <li>Data export functionality</li>
-                            <li>Achievement system</li>
-                            <li>Backend API integration</li>
-                        </ul>
-                    </div>
-
-                    <div style="text-align: center; font-size: 12px; color: var(--text-light);">
-                        <p style="margin: 5px 0;">🤖 Generated with Claude Code</p>
-                        <p style="margin: 5px 0;">Backend: <span style="color: var(--success);" id="backendStatus">Connected</span></p>
-                    </div>
-                </div>
             </div>
+
         </div>
     </div>
 
@@ -1992,10 +1652,8 @@
             }
 
             init() {
-                // Apply dark mode if saved
-                if (this.darkMode) {
-                    document.body.classList.add('dark-mode');
-                }
+                // Always apply dark mode
+                document.body.classList.add('dark-mode');
                 
                 this.updateDateDisplay();
                 this.updateAllStats();
@@ -2502,33 +2160,46 @@
                 this.showToast(`+${activityType.points} points!`);
             }
 
-            showTab(tabName) {
-                // Update tabs
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                event.target.classList.add('active');
+            showSettingsModal() {
+                const modal = document.getElementById('settingsModal');
+                modal.classList.add('active');
+                this.loadSettings();
+            }
 
-                // Update nav
-                document.querySelectorAll('.nav-item').forEach(nav => {
-                    nav.classList.remove('active');
-                });
+            hideSettingsModal() {
+                const modal = document.getElementById('settingsModal');
+                modal.classList.remove('active');
+            }
 
-                // Hide all tab contents
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.style.display = 'none';
-                });
+            loadSettings() {
+                // Load saved settings from localStorage or defaults
+                const settings = this.getSettings();
+                
+                document.getElementById('displayNameInput').value = settings.displayName || '';
+                document.getElementById('teamSelect').value = settings.team || '';
+                document.getElementById('dailyGoalInput').value = settings.dailyGoal || 500;
+                document.getElementById('weeklyGoalInput').value = settings.weeklyGoal || 20;
+                document.getElementById('achievementNotifications').checked = settings.achievementNotifications !== false;
+                document.getElementById('lineSharing').checked = settings.lineSharing !== false;
+            }
 
-                // Show selected tab
-                document.getElementById(`${tabName}-tab`).style.display = 'block';
-                this.currentTab = tabName;
+            getSettings() {
+                const saved = localStorage.getItem('finnergySettings');
+                return saved ? JSON.parse(saved) : {};
+            }
 
-                // Update specific tabs if needed
-                if (tabName === 'dashboard') {
-                    this.updateDashboardTab();
-                } else if (tabName === 'settings') {
-                    this.updateSettingsTab();
-                }
+            saveSettings() {
+                const settings = {
+                    displayName: document.getElementById('displayNameInput').value,
+                    team: document.getElementById('teamSelect').value,
+                    dailyGoal: parseInt(document.getElementById('dailyGoalInput').value),
+                    weeklyGoal: parseInt(document.getElementById('weeklyGoalInput').value),
+                    achievementNotifications: document.getElementById('achievementNotifications').checked,
+                    lineSharing: document.getElementById('lineSharing').checked
+                };
+                
+                localStorage.setItem('finnergySettings', JSON.stringify(settings));
+                this.showToast('⚙️ Settings saved successfully!');
             }
 
             updateDashboardTab() {
@@ -2729,11 +2400,6 @@
                 document.getElementById('addModal').classList.remove('active');
             }
 
-            toggleDarkMode() {
-                this.darkMode = !this.darkMode;
-                document.body.classList.toggle('dark-mode');
-                localStorage.setItem('darkMode', this.darkMode);
-            }
 
             showToast(message, isNegative = false) {
                 const toast = document.getElementById('successToast');
@@ -2746,9 +2412,6 @@
                 }, 3000);
             }
 
-            showSettings() {
-                this.showTab('settings');
-            }
 
             showAbout() {
                 document.getElementById('aboutModal').classList.add('active');
