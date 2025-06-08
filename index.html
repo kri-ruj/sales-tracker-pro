@@ -370,16 +370,28 @@
             padding-bottom: 80px;
         }
 
+        /* Activity Grid */
+        #activityList {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+
         /* Activity Items */
         .activity-item {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 6px;
+            padding: 6px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 60px;
         }
 
         .activity-item:hover {
@@ -387,52 +399,37 @@
             box-shadow: var(--shadow-lg);
         }
 
-        .activity-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-
-        .activity-main {
-            flex: 1;
+        .activity-icon {
+            font-size: 16px;
+            margin-bottom: 3px;
         }
 
         .activity-title {
             font-weight: 600;
-            font-size: 12px;
+            font-size: 9px;
             color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            margin-bottom: 3px;
+            text-align: center;
+            line-height: 1.1;
         }
 
-        .activity-icon {
-            width: 18px;
-            height: 18px;
-            background: var(--background);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-        }
-
-        .activity-subtitle {
-            font-size: 10px;
-            color: var(--text-light);
-            margin-top: 2px;
+        .activity-counter {
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--primary);
+            margin-bottom: 3px;
         }
 
         .activity-actions {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
+            justify-content: center;
         }
 
         .action-btn {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             border: 1px solid var(--border);
             background: var(--surface);
@@ -441,7 +438,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .action-btn:hover {
@@ -469,10 +466,10 @@
         }
 
         .counter-display {
-            min-width: 20px;
+            min-width: 16px;
             text-align: center;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         /* Bottom Navigation */
@@ -839,92 +836,6 @@
             25%, 75% { opacity: 0.7; }
         }
 
-        /* Quick Actions Styles */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin: 12px 0;
-        }
-
-        .quick-action-btn {
-            padding: 12px 8px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--text-primary);
-        }
-
-        .quick-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary);
-        }
-
-        .quick-action-icon {
-            font-size: 20px;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        .quick-action-label {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        /* Section Titles */
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 16px 0 12px 0;
-            color: var(--text-primary);
-        }
-
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin: 16px 0;
-        }
-
-        .template-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .template-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-        }
-
-        .template-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .template-description {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        .template-points {
-            background: var(--primary);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
 
         /* Dashboard Styles */
         .dashboard-section {
@@ -1238,7 +1149,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.30</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.31</span>
                         </div>
                     </div>
                 </div>
@@ -1248,14 +1159,6 @@
                 </div>
             </div>
 
-            <!-- Date Navigation -->
-            <div class="date-nav">
-                <button class="date-btn" onclick="app.changeDate(-1)" title="Previous Day">‹</button>
-                <div class="current-date">
-                    <span id="currentDate">Today</span>
-                </div>
-                <button class="date-btn" onclick="app.changeDate(1)" title="Next Day">›</button>
-            </div>
 
             <!-- Points Display -->
             <div class="points-section">
@@ -1305,32 +1208,6 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="section-title">⚡ Quick Actions</div>
-                <div class="quick-actions">
-                    <div class="quick-action-btn" onclick="app.quickAction('cold_prospect')">
-                        <span class="quick-action-icon">🥶</span>
-                        <span class="quick-action-label">Cold Call</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('client_contact')">
-                        <span class="quick-action-icon">📱</span>
-                        <span class="quick-action-label">Follow Up</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('new_appointment')">
-                        <span class="quick-action-icon">✅</span>
-                        <span class="quick-action-label">Appointment</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('sale_closed')">
-                        <span class="quick-action-icon">🎉</span>
-                        <span class="quick-action-label">Sale Closed!</span>
-                    </div>
-                </div>
-
-                <!-- Activity Templates -->
-                <div class="section-title">📋 Activity Templates</div>
-                <div class="templates-grid" id="activityTemplates">
-                    <!-- Templates will be inserted here -->
-                </div>
             </div>
 
             <!-- Goals Tab -->
@@ -1706,7 +1583,7 @@
                     <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Version:</span>
-                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.30</span>
+                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.31</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Last Updated:</span>
@@ -1799,7 +1676,6 @@
                 }
                 
                 this.updateDateDisplay();
-                this.renderQuickActivities();
                 this.updateAllStats();
                 
                 console.log('Starting app initialization...');
@@ -2056,42 +1932,17 @@
                 
                 list.innerHTML = todayActivities.map(activity => `
                     <div class="activity-item animate-in">
-                        <div class="activity-header">
-                            <div class="activity-main">
-                                <div class="activity-title">
-                                    <div class="activity-icon">${activity.icon}</div>
-                                    ${activity.title}
-                                </div>
-                                <div class="activity-subtitle">${activity.subtitle}</div>
-                                <div style="margin-top: 8px; font-size: 12px; color: var(--text-light);">
-                                    💰 ${activity.points} pts each • Total: ${activity.points * activity.count} pts
-                                </div>
-                            </div>
-                            <div class="activity-actions">
-                                <button class="action-btn minus" onclick="app.decrementActivity('${activity.id}')">－</button>
-                                <span class="counter-display">${activity.count}</span>
-                                <button class="action-btn plus" onclick="app.incrementActivity('${activity.id}')">＋</button>
-                                <button class="action-btn share" onclick="app.shareToLINE(app.activities.find(a => a.id == '${activity.id}'))" title="Share to LINE">📤</button>
-                            </div>
+                        <div class="activity-icon">${activity.icon}</div>
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-counter">${activity.count}</div>
+                        <div class="activity-actions">
+                            <button class="action-btn minus" onclick="app.decrementActivity('${activity.id}')">－</button>
+                            <button class="action-btn plus" onclick="app.incrementActivity('${activity.id}')">＋</button>
                         </div>
                     </div>
                 `).join('');
             }
 
-            renderQuickActivities() {
-                const container = document.getElementById('quickActivities');
-                
-                container.innerHTML = this.activityTypes.map(type => `
-                    <div class="quick-activity" onclick="app.addActivity('${type.id}')">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                            <span style="font-size: 24px;">${type.icon}</span>
-                            <span style="font-weight: 600; color: var(--primary);">+${type.points} pts</span>
-                        </div>
-                        <div style="font-size: 14px; font-weight: 600;">${type.title}</div>
-                        <div style="font-size: 12px; color: var(--text-light); margin-top: 4px;">${type.subtitle}</div>
-                    </div>
-                `).join('');
-            }
 
             incrementActivity(id) {
                 const activity = this.activities.find(a => a.id == id);
@@ -2550,14 +2401,6 @@
                 }
             }
 
-            // Quick Action Method
-            async quickAction(activityId) {
-                const activityType = this.activityTypes.find(type => type.id === activityId);
-                if (activityType) {
-                    await this.logActivityWithSync(activityType);
-                    this.showToast(`⚡ ${activityType.icon} ${activityType.title} logged!`);
-                }
-            }
 
             // Tab switching method
             showTab(tabName) {
@@ -2833,10 +2676,6 @@
                 console.log('Stats updated - Points:', todayPoints, 'Activities:', todayActivities.length);
             }
 
-            // Render quick activities (placeholder for now)
-            renderQuickActivities() {
-                console.log('Quick activities rendered');
-            }
 
             // Update date display
             updateDateDisplay() {
