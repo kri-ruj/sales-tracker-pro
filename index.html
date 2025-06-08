@@ -1226,7 +1226,12 @@
                 // Remove loading after initialization
                 setTimeout(() => {
                     this.renderActivities();
-                }, 1000);
+                    // Hide loading spinner
+                    const loadingElement = document.querySelector('.loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+                }, 800);
             }
 
             async initLIFF() {
