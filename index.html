@@ -1207,10 +1207,8 @@
                 this.renderQuickActivities();
                 this.updateAllStats();
                 
-                // Load demo data if empty
-                if (this.getTodayActivities().length === 0) {
-                    this.loadDemoData();
-                }
+                // Always load demo data for testing
+                this.loadDemoData();
                 
                 // Initialize LIFF if available
                 this.initLIFF();
@@ -1220,23 +1218,17 @@
                 this.updateGoalsTab();
                 this.updateTeamTab();
                 
-                // Remove loading after initialization
+                // Force hide loading and show activities immediately
+                this.renderActivities();
+                this.updateAllStats();
+                
+                // Hide loading spinner
                 setTimeout(() => {
-                    this.renderActivities();
-                    this.updateAllStats();
-                    
-                    // Hide loading spinner and show content
                     const loadingElement = document.querySelector('.loading');
                     if (loadingElement) {
                         loadingElement.style.display = 'none';
                     }
-                    
-                    // Ensure activities container is visible
-                    const activitiesContainer = document.getElementById('quickActivities');
-                    if (activitiesContainer) {
-                        activitiesContainer.style.display = 'block';
-                    }
-                }, 500);
+                }, 100);
             }
 
             async initLIFF() {
@@ -1407,14 +1399,20 @@
             }
 
             renderActivities() {
-                const list = document.getElementById('activityList') || document.getElementById('quickActivities');
+                const list = document.getElementById('activityList');
+                if (!list) {
+                    console.log('activityList element not found');
+                    return;
+                }
+                
                 const todayActivities = this.getTodayActivities();
+                console.log('Today activities:', todayActivities);
                 
                 if (todayActivities.length === 0) {
                     list.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--text-light);">
                             <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-                            <div style="font-size: 16px;">No activities for this day</div>
+                            <div style="font-size: 16px;">No activities for today</div>
                             <div style="font-size: 14px; margin-top: 8px;">Tap + to add activities</div>
                         </div>
                     `;
