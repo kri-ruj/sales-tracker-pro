@@ -55,20 +55,20 @@
         }
 
         :root {
-            --primary: #4A90E2;
-            --secondary: #50C878;
+            --primary: #D4AF37;
+            --secondary: #F4E4BC;
             --danger: #FF6B6B;
             --warning: #FFD93D;
             --purple: #9B59B6;
             --orange: #F39C12;
-            --surface: #FFFFFF;
-            --background: #F5F7FA;
-            --dark: #2C3E50;
-            --text: #34495E;
-            --text-light: #7F8C8D;
-            --border: #E1E8ED;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+            --surface: #1A1A1A;
+            --background: #000000;
+            --dark: #000000;
+            --text: #FFFFFF;
+            --text-light: #999999;
+            --border: #333333;
+            --shadow: 0 2px 4px rgba(212,175,55,0.2);
+            --shadow-lg: 0 4px 12px rgba(212,175,55,0.3);
         }
 
         body {
@@ -251,55 +251,59 @@
         }
 
         .points-circle {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 16px;
-            background: rgba(255,255,255,0.2);
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 12px;
+            background: var(--surface);
             border-radius: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--primary);
+        }
+
+        .company-logo {
+            position: absolute;
+            top: -30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo-icon {
+            font-size: 20px;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .logo-text {
+            font-size: 8px;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 1px;
         }
 
         .points-number {
-            font-size: 42px;
+            font-size: 20px;
             font-weight: 700;
             line-height: 1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .points-label {
-            font-size: 16px;
-            opacity: 0.9;
+            color: var(--text);
             margin-top: 5px;
         }
 
-        .progress-ring {
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            width: 126px;
-            height: 126px;
-            transform: rotate(-90deg);
+        .points-label {
+            font-size: 9px;
+            color: var(--text-light);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .progress-ring-circle {
-            stroke: rgba(255,255,255,0.3);
-            stroke-width: 6;
-            fill: transparent;
-        }
-
-        .progress-ring-progress {
-            stroke: white;
-            stroke-width: 6;
-            fill: transparent;
-            stroke-dasharray: 377;
-            stroke-dashoffset: 565.48;
-            transition: stroke-dashoffset 1s ease;
-        }
 
         /* Stats Row */
         .stats-row {
@@ -316,15 +320,18 @@
         }
 
         .mini-stat-value {
-            font-size: 20px;
+            font-size: 14px;
             font-weight: 700;
             display: block;
+            color: var(--text);
         }
 
         .mini-stat-label {
-            font-size: 11px;
-            opacity: 0.9;
+            font-size: 8px;
+            color: var(--text-light);
             margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         /* Tabs */
@@ -1229,7 +1236,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.1.1</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.2.0</span>
                         </div>
                     </div>
                 </div>
@@ -1251,10 +1258,10 @@
             <!-- Points Display -->
             <div class="points-section">
                 <div class="points-circle">
-                    <svg class="progress-ring" width="190" height="190">
-                        <circle class="progress-ring-circle" cx="95" cy="95" r="90"/>
-                        <circle class="progress-ring-progress" id="progressRing" cx="95" cy="95" r="90"/>
-                    </svg>
+                    <div class="company-logo">
+                        <div class="logo-icon">Ⓕ</div>
+                        <div class="logo-text">FINNERGY</div>
+                    </div>
                     <div class="points-number" id="totalPoints">0</div>
                     <div class="points-label">Points Today</div>
                 </div>
@@ -1690,14 +1697,14 @@
                 <div style="padding: 20px;">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
-                        <h3 style="margin: 0; color: var(--primary);">Sales Activity Tracker</h3>
-                        <p style="margin: 5px 0; color: var(--text-light);">LINE Mini App</p>
+                        <h3 style="margin: 0; color: var(--primary);">FINNERGY Sales Tracker</h3>
+                        <p style="margin: 5px 0; color: var(--text-light);">ฟินเนอจี้ - Sales Activity Tracker</p>
                     </div>
                     
                     <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Version:</span>
-                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.1.1</span>
+                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.2.0</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Last Updated:</span>
@@ -1705,7 +1712,7 @@
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span style="font-weight: 600;">Build:</span>
-                            <span style="color: var(--text-light);" id="buildNumber">2024.12.08.003</span>
+                            <span style="color: var(--text-light);" id="buildNumber">2024.12.08.004</span>
                         </div>
                     </div>
 
