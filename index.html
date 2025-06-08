@@ -160,6 +160,23 @@
             font-size: 11px;
         }
 
+        .version-info {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 500;
+            margin-left: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .version-info:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
         .header-actions {
             display: flex;
             gap: 10px;
@@ -1212,6 +1229,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.1.0</span>
                         </div>
                     </div>
                 </div>
@@ -1660,6 +1678,54 @@
         <!-- Success Toast -->
         <div class="toast" id="successToast">
             ✅ Activity logged successfully!
+        </div>
+
+        <!-- About Modal -->
+        <div class="modal" id="aboutModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">📱 App Info</h2>
+                    <button class="modal-close" onclick="app.hideAbout()">×</button>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
+                        <h3 style="margin: 0; color: var(--primary);">Sales Activity Tracker</h3>
+                        <p style="margin: 5px 0; color: var(--text-light);">LINE Mini App</p>
+                    </div>
+                    
+                    <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Version:</span>
+                            <span style="color: var(--primary); font-weight: 600;" id="appVersion">v2.1.0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Last Updated:</span>
+                            <span style="color: var(--text-light);" id="lastUpdated">Dec 8, 2024</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-weight: 600;">Build:</span>
+                            <span style="color: var(--text-light);" id="buildNumber">2024.12.08.002</span>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 10px 0; color: var(--primary);">✨ Latest Updates</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: var(--text-light); font-size: 14px;">
+                            <li>Dashboard with accumulative scoring</li>
+                            <li>Settings with user preferences</li>
+                            <li>Data export functionality</li>
+                            <li>Achievement system</li>
+                            <li>Backend API integration</li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; font-size: 12px; color: var(--text-light);">
+                        <p style="margin: 5px 0;">🤖 Generated with Claude Code</p>
+                        <p style="margin: 5px 0;">Backend: <span style="color: var(--success);" id="backendStatus">Connected</span></p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2321,11 +2387,39 @@
             }
 
             showSettings() {
-                alert('⚙️ Settings feature coming soon!');
+                this.showTab('settings');
+            }
+
+            showAbout() {
+                document.getElementById('aboutModal').classList.add('active');
+                // Update backend connection status
+                this.checkBackendStatus();
+            }
+
+            hideAbout() {
+                document.getElementById('aboutModal').classList.remove('active');
+            }
+
+            async checkBackendStatus() {
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/health`);
+                    const statusElement = document.getElementById('backendStatus');
+                    if (response.ok) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.style.color = 'var(--success)';
+                    } else {
+                        statusElement.textContent = 'Error';
+                        statusElement.style.color = 'var(--danger)';
+                    }
+                } catch (error) {
+                    const statusElement = document.getElementById('backendStatus');
+                    statusElement.textContent = 'Offline';
+                    statusElement.style.color = 'var(--warning)';
+                }
             }
 
             showInfo() {
-                alert('📊 Sales Activity Tracker v1.0\n\nFeatures:\n• Activity tracking with points\n• Daily goals and streaks\n• Team competition\n• Progress analytics\n• Mobile PWA support\n• Offline functionality\n\nBuilt for sales excellence! 🚀');
+                this.showAbout();
             }
 
             loadUserActivities() {
