@@ -969,6 +969,33 @@
                         <span>Loading activities...</span>
                     </div>
                 </div>
+
+                <!-- Quick Actions -->
+                <div class="section-title">⚡ Quick Actions</div>
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="app.quickAction('cold_prospect')">
+                        <span class="quick-action-icon">🥶</span>
+                        <span class="quick-action-label">Cold Call</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('client_contact')">
+                        <span class="quick-action-icon">📱</span>
+                        <span class="quick-action-label">Follow Up</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('new_appointment')">
+                        <span class="quick-action-icon">✅</span>
+                        <span class="quick-action-label">Appointment</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="app.quickAction('sale_closed')">
+                        <span class="quick-action-icon">🎉</span>
+                        <span class="quick-action-label">Sale Closed!</span>
+                    </div>
+                </div>
+
+                <!-- Activity Templates -->
+                <div class="section-title">📋 Activity Templates</div>
+                <div class="templates-grid" id="activityTemplates">
+                    <!-- Templates will be inserted here -->
+                </div>
             </div>
 
             <!-- Goals Tab -->
@@ -1019,36 +1046,6 @@
                     <button class="close-btn" onclick="app.hideModal()">×</button>
                 </div>
 
-                <div class="quick-activities" id="quickActivities">
-                    <!-- Activities will be inserted here -->
-                </div>
-
-                <!-- Quick Actions -->
-                <div class="section-title">⚡ Quick Actions</div>
-                <div class="quick-actions">
-                    <div class="quick-action-btn" onclick="app.quickAction('cold_prospect')">
-                        <span class="quick-action-icon">🥶</span>
-                        <span class="quick-action-label">Cold Call</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('client_contact')">
-                        <span class="quick-action-icon">📱</span>
-                        <span class="quick-action-label">Follow Up</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('new_appointment')">
-                        <span class="quick-action-icon">✅</span>
-                        <span class="quick-action-label">Appointment</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="app.quickAction('sale_closed')">
-                        <span class="quick-action-icon">🎉</span>
-                        <span class="quick-action-label">Sale Closed!</span>
-                    </div>
-                </div>
-
-                <!-- Activity Templates -->
-                <div class="section-title">📋 Activity Templates</div>
-                <div class="templates-grid" id="activityTemplates">
-                    <!-- Templates will be inserted here -->
-                </div>
             </div>
 
             <!-- Goals Tab -->
@@ -1226,12 +1223,20 @@
                 // Remove loading after initialization
                 setTimeout(() => {
                     this.renderActivities();
-                    // Hide loading spinner
+                    this.updateAllStats();
+                    
+                    // Hide loading spinner and show content
                     const loadingElement = document.querySelector('.loading');
                     if (loadingElement) {
                         loadingElement.style.display = 'none';
                     }
-                }, 800);
+                    
+                    // Ensure activities container is visible
+                    const activitiesContainer = document.getElementById('quickActivities');
+                    if (activitiesContainer) {
+                        activitiesContainer.style.display = 'block';
+                    }
+                }, 500);
             }
 
             async initLIFF() {
@@ -1402,7 +1407,7 @@
             }
 
             renderActivities() {
-                const list = document.getElementById('activityList');
+                const list = document.getElementById('activityList') || document.getElementById('quickActivities');
                 const todayActivities = this.getTodayActivities();
                 
                 if (todayActivities.length === 0) {
