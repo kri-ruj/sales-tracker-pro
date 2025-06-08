@@ -432,6 +432,16 @@
             border-color: var(--secondary);
         }
 
+        .action-btn.share {
+            color: #06C755;
+            border-color: #06C755;
+            background: rgba(6, 199, 85, 0.1);
+        }
+
+        .action-btn.share:hover {
+            background: rgba(6, 199, 85, 0.2);
+        }
+
         .counter-display {
             min-width: 30px;
             text-align: center;
@@ -845,17 +855,40 @@
             async initLIFF() {
                 try {
                     if (typeof liff !== 'undefined') {
-                        // Add your LIFF ID here
-                        // await liff.init({ liffId: 'YOUR_LIFF_ID' });
+                        // Initialize LIFF - REPLACE WITH YOUR LIFF ID
+                        await liff.init({ liffId: 'YOUR_LIFF_ID_HERE' });
                         
-                        // if (liff.isLoggedIn()) {
-                        //     const profile = await liff.getProfile();
-                        //     document.getElementById('profileName').textContent = profile.displayName;
-                        //     document.getElementById('profilePic').textContent = profile.pictureUrl ? '👤' : '👤';
-                        // }
+                        if (!liff.isLoggedIn()) {
+                            // Redirect to LINE Login
+                            liff.login();
+                        } else {
+                            // Get user profile from LINE
+                            const profile = await liff.getProfile();
+                            
+                            // Update UI with LINE profile
+                            document.getElementById('profileName').textContent = profile.displayName;
+                            
+                            // Set profile picture if available
+                            if (profile.pictureUrl) {
+                                const profilePic = document.getElementById('profilePic');
+                                profilePic.innerHTML = `<img src="${profile.pictureUrl}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                            }
+                            
+                            // Store LINE user ID for data persistence
+                            this.lineUserId = profile.userId;
+                            
+                            // Load user-specific activities
+                            this.loadUserActivities();
+                            
+                            // Check if in LINE app
+                            if (liff.isInClient()) {
+                                console.log('Running in LINE app');
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.log('LIFF not available or error:', error);
+                    console.log('LIFF initialization failed:', error);
+                    // Fallback to local storage mode
                 }
             }
 
@@ -1018,6 +1051,7 @@
                                 <button class="action-btn minus" onclick="app.decrementActivity('${activity.id}')">－</button>
                                 <span class="counter-display">${activity.count}</span>
                                 <button class="action-btn plus" onclick="app.incrementActivity('${activity.id}')">＋</button>
+                                <button class="action-btn share" onclick="app.shareToLINE(app.activities.find(a => a.id == '${activity.id}'))" title="Share to LINE">📤</button>
                             </div>
                         </div>
                     </div>
@@ -1152,8 +1186,123 @@
                 alert('📊 Sales Activity Tracker v1.0\n\nFeatures:\n• Activity tracking with points\n• Daily goals and streaks\n• Team competition\n• Progress analytics\n• Mobile PWA support\n• Offline functionality\n\nBuilt for sales excellence! 🚀');
             }
 
+            loadUserActivities() {
+                if (this.lineUserId) {
+                    // Load activities specific to LINE user
+                    const userKey = `salesActivities_${this.lineUserId}`;
+                    const userActivities = localStorage.getItem(userKey);
+                    
+                    if (userActivities) {
+                        this.activities = JSON.parse(userActivities);
+                    } else {
+                        // First time user - load demo data
+                        this.loadDemoData();
+                    }
+                }
+            }
+
             saveActivities() {
-                localStorage.setItem('salesActivities', JSON.stringify(this.activities));
+                if (this.lineUserId) {
+                    // Save activities with LINE user ID
+                    const userKey = `salesActivities_${this.lineUserId}`;
+                    localStorage.setItem(userKey, JSON.stringify(this.activities));
+                } else {
+                    // Fallback to general storage
+                    localStorage.setItem('salesActivities', JSON.stringify(this.activities));
+                }
+            }
+
+            async shareToLINE(activity) {
+                try {
+                    if (typeof liff !== 'undefined' && liff.isInClient()) {
+                        // Create rich message for LINE
+                        const message = {
+                            type: 'flex',
+                            altText: `🎉 ${activity.title} completed! +${activity.points} points`,
+                            contents: {
+                                type: 'bubble',
+                                header: {
+                                    type: 'box',
+                                    layout: 'vertical',
+                                    contents: [
+                                        {
+                                            type: 'text',
+                                            text: '🏆 Sales Achievement!',
+                                            weight: 'bold',
+                                            color: '#4A90E2',
+                                            size: 'md'
+                                        }
+                                    ]
+                                },
+                                body: {
+                                    type: 'box',
+                                    layout: 'vertical',
+                                    contents: [
+                                        {
+                                            type: 'text',
+                                            text: activity.title,
+                                            weight: 'bold',
+                                            size: 'lg',
+                                            wrap: true
+                                        },
+                                        {
+                                            type: 'text',
+                                            text: activity.subtitle,
+                                            size: 'sm',
+                                            color: '#666666',
+                                            wrap: true
+                                        },
+                                        {
+                                            type: 'separator',
+                                            margin: 'md'
+                                        },
+                                        {
+                                            type: 'box',
+                                            layout: 'horizontal',
+                                            contents: [
+                                                {
+                                                    type: 'text',
+                                                    text: `+${activity.points} points`,
+                                                    color: '#50C878',
+                                                    weight: 'bold',
+                                                    flex: 1
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    text: `Count: ${activity.count}`,
+                                                    color: '#999999',
+                                                    align: 'end'
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                footer: {
+                                    type: 'box',
+                                    layout: 'vertical',
+                                    contents: [
+                                        {
+                                            type: 'button',
+                                            action: {
+                                                type: 'uri',
+                                                label: '📊 View Full Tracker',
+                                                uri: 'https://kri-ruj.github.io/sales-tracker-pro/'
+                                            },
+                                            style: 'primary',
+                                            color: '#4A90E2'
+                                        }
+                                    ]
+                                }
+                            }
+                        };
+
+                        // Send to current chat
+                        await liff.shareTargetPicker([message]);
+                        this.showToast('🎉 Shared to LINE group!');
+                    }
+                } catch (error) {
+                    console.log('LINE share failed:', error);
+                }
             }
         }
 
