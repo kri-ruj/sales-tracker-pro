@@ -1178,6 +1178,22 @@
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
     <script>
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement && loadingElement.style.display !== 'none') {
+                loadingElement.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-primary);">
+                        <div style="font-size: 48px; margin-bottom: 16px;">💥</div>
+                        <div style="font-size: 16px; margin-bottom: 8px;">JavaScript Error</div>
+                        <div style="font-size: 14px;">${e.message}</div>
+                        <button onclick="window.location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px;">Refresh</button>
+                    </div>
+                `;
+            }
+        });
+
         // Configuration - Update this with your deployed backend URL
         const CONFIG = {
             BACKEND_URL: 'https://sales-tracker-backend-vho4.onrender.com', // Your actual Render URL
@@ -1222,35 +1238,43 @@
                 this.renderQuickActivities();
                 this.updateAllStats();
                 
+                console.log('Starting app initialization...');
+                
+                // Force hide loading immediately
+                setTimeout(() => {
+                    const loadingElement = document.querySelector('.loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                        console.log('Loading spinner hidden');
+                    }
+                }, 100);
+                
                 // Always load demo data for testing (force it)
                 this.loadDemoData();
                 console.log('Demo data loaded, activities count:', this.activities.length);
                 
-                // Initialize LIFF if available
-                this.initLIFF();
+                // Force render activities
+                setTimeout(() => {
+                    this.renderActivities();
+                    this.updateAllStats();
+                    console.log('Activities rendered');
+                }, 200);
                 
                 // Initialize new features
-                this.renderActivityTemplates();
-                this.updateGoalsTab();
-                this.updateTeamTab();
+                setTimeout(() => {
+                    this.renderActivityTemplates();
+                    this.updateGoalsTab();
+                    this.updateTeamTab();
+                }, 300);
                 
-                // Setup online/offline detection
-                this.setupNetworkListeners();
-                
-                // Force hide loading and show activities immediately
-                this.renderActivities();
-                this.updateAllStats();
-                
-                // Always hide loading spinner immediately
-                const loadingElement = document.querySelector('.loading');
-                if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                }
-                
-                // Sync with backend if online (don't wait for this)
-                if (this.isOnline) {
-                    this.syncWithBackend().catch(console.error);
-                }
+                // Setup network and LIFF (background tasks)
+                setTimeout(() => {
+                    this.setupNetworkListeners();
+                    this.initLIFF();
+                    if (this.isOnline) {
+                        this.syncWithBackend().catch(console.error);
+                    }
+                }, 500);
             }
 
             async initLIFF() {
@@ -2052,8 +2076,29 @@
             }
         }
 
-        // Initialize app
-        const app = new SalesTrackerApp();
+        // Initialize app with error handling
+        let app;
+        try {
+            app = new SalesTrackerApp();
+            console.log('App initialized successfully');
+        } catch (error) {
+            console.error('App initialization failed:', error);
+            
+            // Fallback: Hide loading and show error message
+            setTimeout(() => {
+                const loadingElement = document.querySelector('.loading');
+                if (loadingElement) {
+                    loadingElement.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-primary);">
+                            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                            <div style="font-size: 16px; margin-bottom: 8px;">App initialization failed</div>
+                            <div style="font-size: 14px;">Please refresh the page</div>
+                            <button onclick="window.location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px;">Refresh</button>
+                        </div>
+                    `;
+                }
+            }, 100);
+        }
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
