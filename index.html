@@ -620,35 +620,7 @@
         }
 
 
-        /* Stats Row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin: 8px 0;
-        }
 
-        .mini-stat {
-            background: rgba(255,255,255,0.1);
-            padding: 8px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .mini-stat-value {
-            font-size: 14px;
-            font-weight: 700;
-            display: block;
-            color: var(--text);
-        }
-
-        .mini-stat-label {
-            font-size: 8px;
-            color: var(--text-light);
-            margin-top: 2px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
 
         /* Tabs */
         .tabs {
@@ -1398,7 +1370,7 @@
                         <div class="profile-level">
                             <span>Level</span>
                             <span class="level-badge" id="levelBadge">Starter</span>
-                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.34</span>
+                            <span class="version-info" onclick="app.showAbout()" title="App Info">v2.35</span>
                         </div>
                     </div>
                 </div>
@@ -1419,21 +1391,6 @@
                     <div class="points-label">Points Today</div>
                 </div>
 
-                <!-- Mini Stats -->
-                <div class="stats-row">
-                    <div class="mini-stat">
-                        <span class="mini-stat-value" id="weekTotal">0</span>
-                        <span class="mini-stat-label">Week Total</span>
-                    </div>
-                    <div class="mini-stat">
-                        <span class="mini-stat-value" id="streak">0</span>
-                        <span class="mini-stat-label">Day Streak</span>
-                    </div>
-                    <div class="mini-stat">
-                        <span class="mini-stat-value" id="rank">#1</span>
-                        <span class="mini-stat-label">Team Rank</span>
-                    </div>
-                </div>
             </div>
         </header>
 
@@ -1566,7 +1523,7 @@
                         <div class="settings-group-title">ℹ️ About</div>
                         <div class="setting-item">
                             <div class="setting-label">Version</div>
-                            <div class="setting-value" id="appVersion">v2.34</div>
+                            <div class="setting-value" id="appVersion">v2.35</div>
                         </div>
                         <div class="setting-item">
                             <div class="setting-label">Last Sync</div>
@@ -3022,8 +2979,7 @@
                     activityList.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--text-primary);">
                             <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-                            <div style="font-size: 16px; margin-bottom: 8px;">Simple Mode Active</div>
-                            <div style="font-size: 14px;">Click Quick Actions below to log activities</div>
+                            <div style="font-size: 14px;">Loading complete. Ready to track activities!</div>
                         </div>
                     `;
                 }
