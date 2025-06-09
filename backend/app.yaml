@@ -1,5 +1,5 @@
-runtime: nodejs18
-service: sales-tracker-api
+runtime: nodejs20
+service: default
 
 # Environment variables (will be overridden by CI/CD)
 env_variables:
