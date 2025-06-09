@@ -1,0 +1,33 @@
+
+> sales-ai-service@1.0.0 start:unified
+> node unified-server.js
+
+[32minfo[39m: Initializing Unified AI Server... {"timestamp":"2025-06-09T16:36:20.036Z"}
+info: Vertex AI client initialized {"location":"us-central1","projectId":"salesappfkt","service":"vertex-ai-provider","timestamp":"2025-06-09T16:36:20.042Z"}
+info: Tool registered {"category":"utility","name":"database","service":"tool-registry","timestamp":"2025-06-09T16:36:20.042Z","version":"1.0.0"}
+[33mwarn[39m: Database initialization failed, continuing without sample data {"error":"SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email","timestamp":"2025-06-09T16:36:20.051Z"}
+info: Tool registered {"category":"communication","name":"chat","service":"tool-registry","timestamp":"2025-06-09T16:36:20.051Z","version":"1.0.0"}
+info: Tool registered {"category":"sales","name":"searchLeads","service":"tool-registry","timestamp":"2025-06-09T16:36:20.051Z","version":"1.0.0"}
+info: Tool registered {"category":"sales","name":"generateEmail","service":"tool-registry","timestamp":"2025-06-09T16:36:20.052Z","version":"1.0.0"}
+info: Tool registered {"category":"sales","name":"analyzeLeadQuality","service":"tool-registry","timestamp":"2025-06-09T16:36:20.052Z","version":"1.0.0"}
+info: Tool registered {"category":"massage","name":"recommendMassage","service":"tool-registry","timestamp":"2025-06-09T16:36:20.052Z","version":"1.0.0"}
+info: Tool registered {"category":"analytics","name":"analyzePerformance","service":"tool-registry","timestamp":"2025-06-09T16:36:20.052Z","version":"1.0.0"}
+[32minfo[39m: Tools registered {"categories":["utility","communication","sales","massage","analytics"],"timestamp":"2025-06-09T16:36:20.053Z","tools":["database","chat","searchLeads","generateEmail","analyzeLeadQuality","recommendMassage","analyzePerformance"],"totalTools":7}
+[32minfo[39m: Core components initialized {"timestamp":"2025-06-09T16:36:20.053Z"}
+[32minfo[39m: Server initialization complete {"timestamp":"2025-06-09T16:36:20.056Z"}
+[32minfo[39m: Server started {"env":"development","host":"0.0.0.0","port":3000,"timestamp":"2025-06-09T16:36:20.059Z","url":"http://0.0.0.0:3000"}
+
+╔═══════════════════════════════════════════════════════════════╗
+║                   🚀 AI Agent Service v1.0.0                  ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Status:     ✅ Operational                                    ║
+║  Port:       3000                                             ║
+║  Model:      gemini-1.5-flash                              ║
+║  Tools:      7 registered                                   ║
+║  Docs:       http://localhost:3000/api-docs                   ║
+╚═══════════════════════════════════════════════════════════════╝
+        
+[32minfo[39m: Request processed {"duration":2,"ip":"127.0.0.1","method":"GET","path":"/health","requestId":"req_1749486988042_v1t69nea0","status":200,"timestamp":"2025-06-09T16:36:28.044Z","userAgent":"curl/8.7.1"}
+[32minfo[39m: Request processed {"duration":2,"ip":"127.0.0.1","method":"GET","path":"/","requestId":"req_1749487058430_bh85kqrg5","status":200,"timestamp":"2025-06-09T16:37:38.432Z","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"}
+[32minfo[39m: Request processed {"duration":1,"ip":"127.0.0.1","method":"GET","path":"/favicon.ico","requestId":"req_1749487058512_b61jmnkaq","status":404,"timestamp":"2025-06-09T16:37:38.513Z","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"}
+[32minfo[39m: Request processed {"duration":1,"ip":"127.0.0.1","method":"GET","path":"/health","requestId":"req_1749487061907_3fu9855dm","status":200,"timestamp":"2025-06-09T16:37:41.908Z","userAgent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"}

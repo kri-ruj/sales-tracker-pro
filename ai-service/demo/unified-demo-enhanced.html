@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Pro - Advanced Sales & Wellness Assistant</title>
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f7fa;
+            --bg-tertiary: #e8ecf0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --accent-primary: #1a73e8;
+            --accent-secondary: #34a853;
+            --accent-danger: #ea4335;
+            --border-color: #e0e0e0;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        /* Dark theme */
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-tertiary: #999999;
+            --accent-primary: #4a9eff;
+            --accent-secondary: #52c759;
+            --accent-danger: #ff6b6b;
+            --border-color: #444444;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header with theme toggle */
+        header {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        h1 {
+            color: var(--accent-primary);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Export button */
+        .export-btn {
+            background: var(--accent-secondary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Main grid layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 160px);
+        }
+
+        /* Enhanced tools panel */
+        .tools-panel {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow-y: auto;
+        }
+
+        .tools-search {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .tool-category {
+            margin-bottom: 25px;
+        }
+
+        .tool-category h3 {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-badge {
+            background: var(--accent-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        /* Chat panel enhancements */
+        .chat-panel {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .voice-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--accent-danger);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .voice-indicator.active {
+            display: flex;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Enhanced chat messages */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--accent-primary);
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.assistant .message-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* File attachment preview */
+        .file-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Enhanced input area */
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-primary);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 12px 50px 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+        }
+
+        #messageInput:focus {
+            border-color: var(--accent-primary);
+        }
+
+        /* Input buttons */
+        .input-actions {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .input-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Voice input button */
+        .voice-btn {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .voice-btn.recording {
+            animation: pulse 1s infinite;
+        }
+
+        /* File upload area */
+        .file-upload-area {
+            display: none;
+            padding: 20px;
+            margin: 10px 0;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            text-align: center;
+            background: var(--bg-tertiary);
+        }
+
+        .file-upload-area.drag-over {
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
+
+        /* Enhanced info panel */
+        .info-panel {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow-y: auto;
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Quick actions with icons */
+        .quick-action {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .quick-action:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(5px);
+        }
+
+        .quick-action-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Real-time charts */
+        .chart-container {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            height: 200px;
+            position: relative;
+        }
+
+        /* Export modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .export-option {
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .export-option:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
+
+        .export-option.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { 
+                opacity: 0; 
+                transform: translateX(100px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateX(0); 
+            }
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--accent-secondary);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--accent-danger);
+        }
+
+        /* Loading states */
+        .skeleton {
+            background: linear-gradient(90deg, 
+                var(--bg-tertiary) 25%, 
+                var(--bg-secondary) 50%, 
+                var(--bg-tertiary) 75%
+            );
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .tools-panel, .info-panel {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>
+                    <span>🤖</span>
+                    AI Agent Pro
+                </h1>
+                <span class="subtitle" style="color: var(--text-secondary);">
+                    Advanced Sales & Wellness Assistant
+                </span>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeText">Dark Mode</span>
+                </button>
+                <button class="export-btn" onclick="showExportModal()">
+                    <span>📥</span>
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Enhanced Tools Panel -->
+            <div class="tools-panel">
+                <h2 style="font-size: 18px; margin-bottom: 15px;">Tools & Features</h2>
+                <input type="text" class="tools-search" placeholder="Search tools..." onkeyup="filterTools(this.value)">
+                
+                <div class="tool-category">
+                    <h3>
+                        <span>📊</span>
+                        Sales Tools
+                        <span class="tool-badge">3</span>
+                    </h3>
+                    <div class="tool-item" onclick="useExample('leadSearch')">
+                        <div class="tool-name">Lead Search</div>
+                        <div class="tool-desc">Find and filter potential leads</div>
+                    </div>
+                    <div class="tool-item" onclick="useExample('emailGen')">
+                        <div class="tool-name">Email Generator</div>
+                        <div class="tool-desc">Create personalized emails</div>
+                    </div>
+                    <div class="tool-item" onclick="useExample('leadAnalysis')">
+                        <div class="tool-name">Lead Analyzer</div>
+                        <div class="tool-desc">Analyze lead quality</div>
+                    </div>
+                </div>
+
+                <div class="tool-category">
+                    <h3>
+                        <span>📅</span>
+                        Productivity Tools
+                        <span class="tool-badge">NEW</span>
+                    </h3>
+                    <div class="tool-item" onclick="useExample('calendar')">
+                        <div class="tool-name">Calendar Integration</div>
+                        <div class="tool-desc">Schedule meetings & check availability</div>
+                    </div>
+                    <div class="tool-item" onclick="useExample('tasks')">
+                        <div class="tool-name">Task Manager</div>
+                        <div class="tool-desc">Create and track tasks</div>
+                    </div>
+                    <div class="tool-item" onclick="useExample('document')">
+                        <div class="tool-name">Document Generator</div>
+                        <div class="tool-desc">Generate contracts & invoices</div>
+                    </div>
+                </div>
+
+                <div class="tool-category">
+                    <h3>
+                        <span>📈</span>
+                        Analytics Tools
+                        <span class="tool-badge">2</span>
+                    </h3>
+                    <div class="tool-item" onclick="useExample('performance')">
+                        <div class="tool-name">Performance Analytics</div>
+                        <div class="tool-desc">Analyze sales metrics</div>
+                    </div>
+                    <div class="tool-item" onclick="useExample('visualization')">
+                        <div class="tool-name">Data Visualization</div>
+                        <div class="tool-desc">Create charts and graphs</div>
+                    </div>
+                </div>
+
+                <div class="tool-category">
+                    <h3>
+                        <span>💆</span>
+                        Wellness Tools
+                        <span class="tool-badge">1</span>
+                    </h3>
+                    <div class="tool-item" onclick="useExample('massage')">
+                        <div class="tool-name">Massage Advisor</div>
+                        <div class="tool-desc">Personalized recommendations</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <div>
+                        <h2>AI Assistant</h2>
+                        <div id="connectionStatus" style="font-size: 12px; color: var(--accent-secondary); margin-top: 5px;">
+                            ✅ Connected
+                        </div>
+                    </div>
+                    <div class="voice-indicator" id="voiceIndicator">
+                        <span>🎙️</span>
+                        Listening...
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            👋 Hello! I'm your AI assistant with enhanced capabilities. I can now:
+                            <br><br>
+                            • 📅 Manage your calendar and schedule meetings<br>
+                            • ✅ Create and track tasks<br>
+                            • 📄 Generate professional documents<br>
+                            • 📊 Create data visualizations<br>
+                            • 🎤 Understand voice commands<br>
+                            • 📎 Process uploaded files<br>
+                            <br>
+                            How can I help you today?
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File upload area -->
+                <div class="file-upload-area" id="fileUploadArea">
+                    <p>Drop files here or click to upload</p>
+                    <input type="file" id="fileInput" multiple style="display: none;">
+                </div>
+
+                <div class="chat-input">
+                    <div class="input-wrapper">
+                        <div class="input-container">
+                            <textarea 
+                                id="messageInput" 
+                                placeholder="Type a message or use voice input..."
+                                onkeypress="handleKeyPress(event)"
+                                oninput="autoResize(this)"
+                            ></textarea>
+                            <div class="input-actions">
+                                <button class="input-btn" onclick="toggleFileUpload()" title="Attach file">
+                                    📎
+                                </button>
+                                <button class="input-btn voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="Voice input">
+                                    🎤
+                                </button>
+                            </div>
+                        </div>
+                        <button id="sendButton" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Info Panel -->
+            <div class="info-panel">
+                <div class="tab-navigation">
+                    <button class="tab-btn active" onclick="switchTab('quickActions')">Quick Actions</button>
+                    <button class="tab-btn" onclick="switchTab('analytics')">Analytics</button>
+                    <button class="tab-btn" onclick="switchTab('history')">History</button>
+                </div>
+
+                <div class="tab-content active" id="quickActionsTab">
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="useExample('calendar')">
+                            <div class="quick-action-icon">📅</div>
+                            <div>
+                                <div class="quick-action-title">Schedule Meeting</div>
+                                <div class="quick-action-desc">Check availability and book time</div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="useExample('visualization')">
+                            <div class="quick-action-icon">📊</div>
+                            <div>
+                                <div class="quick-action-title">Create Chart</div>
+                                <div class="quick-action-desc">Visualize your sales data</div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="useExample('document')">
+                            <div class="quick-action-icon">📄</div>
+                            <div>
+                                <div class="quick-action-title">Generate Invoice</div>
+                                <div class="quick-action-desc">Create professional documents</div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-action" onclick="useExample('tasks')">
+                            <div class="quick-action-icon">✅</div>
+                            <div>
+                                <div class="quick-action-title">Manage Tasks</div>
+                                <div class="quick-action-desc">Track your to-do list</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="analyticsTab">
+                    <div class="chart-container" id="performanceChart">
+                        <canvas id="chartCanvas"></canvas>
+                    </div>
+                    
+                    <div class="stats" id="sessionStats">
+                        <div class="stat-item">
+                            <span class="stat-label">Messages:</span>
+                            <span class="stat-value" id="messageCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Tools Used:</span>
+                            <span class="stat-value" id="toolsUsedCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Response:</span>
+                            <span class="stat-value" id="avgResponseTime">0ms</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="historyTab">
+                    <div id="conversationHistory">
+                        <!-- Conversation history will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Conversation</h3>
+                <button class="modal-close" onclick="closeExportModal()">×</button>
+            </div>
+            <div class="export-options">
+                <div class="export-option" data-format="pdf" onclick="selectExportFormat('pdf')">
+                    <div>📄</div>
+                    <div>PDF</div>
+                </div>
+                <div class="export-option" data-format="markdown" onclick="selectExportFormat('markdown')">
+                    <div>📝</div>
+                    <div>Markdown</div>
+                </div>
+                <div class="export-option" data-format="json" onclick="selectExportFormat('json')">
+                    <div>{ }</div>
+                    <div>JSON</div>
+                </div>
+                <div class="export-option" data-format="html" onclick="selectExportFormat('html')">
+                    <div>🌐</div>
+                    <div>HTML</div>
+                </div>
+            </div>
+            <button class="export-btn" style="width: 100%;" onclick="exportConversation()">
+                Export Conversation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // State
+        let messageCount = 0;
+        let totalResponseTime = 0;
+        let toolsUsedSet = new Set();
+        let isProcessing = false;
+        let currentTheme = 'light';
+        let selectedExportFormat = 'pdf';
+        let conversationHistory = [];
+        let recognition = null;
+        let isRecording = false;
+
+        // Enhanced example queries
+        const examples = {
+            leadSearch: "Find all technology companies in Bangkok with budget over 500,000 baht",
+            emailGen: "Write a professional introduction email for John Doe at ABC Technology Company",
+            leadAnalysis: "Analyze the quality and potential of our top 3 technology leads",
+            massage: "I'm a 35-year-old office worker with chronic lower back pain and high stress. What type of massage therapy would you recommend?",
+            performance: "Analyze my sales performance for this month and suggest areas for improvement",
+            calendar: "Check my availability tomorrow between 2-5 PM and schedule a meeting with the sales team",
+            tasks: "Create a high-priority task to prepare Q1 sales report due next Friday",
+            document: "Generate an invoice for ABC Company for consulting services totaling 75,000 baht",
+            visualization: "Create a bar chart showing monthly sales performance for the last 6 months",
+            multiTool: "Find high-value technology leads in Bangkok, analyze their potential, and draft personalized emails for the top 2 prospects"
+        };
+
+        // Initialize
+        window.onload = () => {
+            checkHealth();
+            initializeTheme();
+            initializeVoiceRecognition();
+            initializeFileUpload();
+            initializeChart();
+            document.getElementById('messageInput').focus();
+        };
+
+        // Theme management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            currentTheme = savedTheme;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggle();
+        }
+
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateThemeToggle();
+        }
+
+        function updateThemeToggle() {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (currentTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        // Voice input
+        function initializeVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    document.getElementById('voiceBtn').classList.add('recording');
+                    document.getElementById('voiceIndicator').classList.add('active');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0].transcript)
+                        .join('');
+                    
+                    document.getElementById('messageInput').value = transcript;
+                    autoResize(document.getElementById('messageInput'));
+                };
+
+                recognition.onend = () => {
+                    isRecording = false;
+                    document.getElementById('voiceBtn').classList.remove('recording');
+                    document.getElementById('voiceIndicator').classList.remove('active');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    showNotification('Voice input error: ' + event.error, 'error');
+                };
+            }
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                showNotification('Voice input not supported in this browser', 'error');
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // File upload
+        function initializeFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.getElementById('fileUploadArea');
+
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+        }
+
+        function toggleFileUpload() {
+            const uploadArea = document.getElementById('fileUploadArea');
+            uploadArea.style.display = uploadArea.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleFileSelect(event) {
+            handleFiles(event.target.files);
+        }
+
+        async function handleFiles(files) {
+            const uploadArea = document.getElementById('fileUploadArea');
+            uploadArea.style.display = 'none';
+
+            for (const file of files) {
+                // Create file preview in chat
+                const fileMessage = createFileMessage(file);
+                addMessage(fileMessage, 'user');
+
+                // Process file based on type
+                if (file.type.startsWith('image/')) {
+                    await processImage(file);
+                } else if (file.type === 'application/pdf' || file.type.startsWith('text/')) {
+                    await processDocument(file);
+                } else {
+                    showNotification('Unsupported file type', 'error');
+                }
+            }
+        }
+
+        function createFileMessage(file) {
+            const fileSize = (file.size / 1024).toFixed(2) + ' KB';
+            return `<div class="file-preview">
+                <div class="file-icon">📎</div>
+                <div>
+                    <div><strong>${file.name}</strong></div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${file.type} • ${fileSize}</div>
+                </div>
+            </div>`;
+        }
+
+        async function processImage(file) {
+            // Convert to base64 and send to AI
+            const base64 = await fileToBase64(file);
+            const message = `Analyze this image: [Image: ${file.name}]`;
+            
+            // Send with image context
+            await sendMessageWithContext(message, {
+                attachments: [{
+                    type: 'image',
+                    name: file.name,
+                    data: base64
+                }]
+            });
+        }
+
+        async function processDocument(file) {
+            const text = await file.text();
+            const message = `Analyze this document: ${file.name}`;
+            
+            await sendMessageWithContext(message, {
+                attachments: [{
+                    type: 'document',
+                    name: file.name,
+                    content: text.substring(0, 5000) // Limit to 5000 chars
+                }]
+            });
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+            });
+        }
+
+        // Enhanced message sending
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) return;
+            
+            await sendMessageWithContext(message, {});
+        }
+
+        async function sendMessageWithContext(message, context) {
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input and disable send
+            const input = document.getElementById('messageInput');
+            input.value = '';
+            autoResize(input);
+            setProcessing(true);
+            
+            // Show typing indicator
+            const typingId = showTypingIndicator();
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: {
+                            ...context,
+                            userId: 'demo-user',
+                            sessionId: getSessionId(),
+                            theme: currentTheme
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+                
+                if (data.success) {
+                    // Add assistant response
+                    addMessage(data.response, 'assistant', {
+                        tools: data.metadata?.toolsUsed,
+                        duration: Date.now() - startTime
+                    });
+                    
+                    // Update stats
+                    updateStats(data.metadata, Date.now() - startTime);
+                    
+                    // Update conversation history
+                    conversationHistory.push({
+                        timestamp: new Date().toISOString(),
+                        user: message,
+                        assistant: data.response,
+                        metadata: data.metadata
+                    });
+                } else {
+                    addMessage(`Sorry, I encountered an error: ${data.error}`, 'assistant');
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                console.error('Error:', error);
+                addMessage('Sorry, I couldn\'t connect to the AI service. Please make sure the server is running.', 'assistant');
+                updateConnectionStatus(false);
+            } finally {
+                setProcessing(false);
+            }
+        }
+
+        // Chart initialization
+        function initializeChart() {
+            const canvas = document.getElementById('chartCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Simple placeholder chart
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                    datasets: [{
+                        label: 'Response Time',
+                        data: [120, 95, 110, 85, 90],
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'),
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Export functionality
+        function showExportModal() {
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function selectExportFormat(format) {
+            selectedExportFormat = format;
+            
+            // Update UI
+            document.querySelectorAll('.export-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('selected');
+        }
+
+        async function exportConversation() {
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    messageCount: conversationHistory.length,
+                    format: selectedExportFormat
+                },
+                conversation: conversationHistory
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/ai/export`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(exportData)
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    downloadFile(blob, `conversation_${Date.now()}.${selectedExportFormat}`);
+                    closeExportModal();
+                    showNotification('Conversation exported successfully', 'success');
+                }
+            } catch (error) {
+                // Fallback: export as JSON
+                const jsonBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                downloadFile(jsonBlob, `conversation_${Date.now()}.json`);
+                closeExportModal();
+                showNotification('Exported as JSON (fallback)', 'success');
+            }
+        }
+
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+
+            // Load content if needed
+            if (tabName === 'history') {
+                loadConversationHistory();
+            }
+        }
+
+        function loadConversationHistory() {
+            const historyDiv = document.getElementById('conversationHistory');
+            historyDiv.innerHTML = '';
+
+            conversationHistory.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.style.cssText = `
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    background: var(--bg-secondary);
+                    border-radius: 8px;
+                    cursor: pointer;
+                `;
+                
+                const time = new Date(item.timestamp).toLocaleTimeString();
+                historyItem.innerHTML = `
+                    <div style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 5px;">${time}</div>
+                    <div style="font-weight: 500; margin-bottom: 5px;">You: ${item.user.substring(0, 50)}...</div>
+                    <div style="color: var(--text-secondary);">AI: ${item.assistant.substring(0, 50)}...</div>
+                `;
+                
+                historyItem.onclick = () => {
+                    // Load full conversation
+                    document.getElementById('messageInput').value = item.user;
+                    autoResize(document.getElementById('messageInput'));
+                };
+                
+                historyDiv.appendChild(historyItem);
+            });
+        }
+
+        // Tool filtering
+        function filterTools(query) {
+            const toolItems = document.querySelectorAll('.tool-item');
+            const lowerQuery = query.toLowerCase();
+
+            toolItems.forEach(item => {
+                const name = item.querySelector('.tool-name').textContent.toLowerCase();
+                const desc = item.querySelector('.tool-desc').textContent.toLowerCase();
+                
+                if (name.includes(lowerQuery) || desc.includes(lowerQuery)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Auto-resize textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        // Helper functions from original implementation
+        function addMessage(content, type, metadata = {}) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            let messageHTML = `<div class="message-content">${formatMessage(content)}</div>`;
+            
+            if (metadata.duration) {
+                messageHTML += `<div class="message-meta" style="font-size: 11px; color: var(--text-tertiary); margin-top: 5px;">${metadata.duration}ms</div>`;
+            }
+            
+            if (metadata.tools && metadata.tools.length > 0) {
+                messageHTML += '<div class="tools-used">';
+                metadata.tools.forEach(tool => {
+                    messageHTML += `<span class="tool-badge" style="font-size: 11px; background: var(--bg-tertiary); color: var(--accent-primary); padding: 4px 8px; border-radius: 12px;">${tool}</span>`;
+                    toolsUsedSet.add(tool);
+                });
+                messageHTML += '</div>';
+            }
+            
+            messageDiv.innerHTML = messageHTML;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            if (type === 'user') {
+                messageCount++;
+                document.getElementById('messageCount').textContent = messageCount;
+            }
+        }
+
+        function formatMessage(content) {
+            if (typeof content !== 'string') {
+                return content;
+            }
+            
+            content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            content = content.replace(/\n/g, '<br>');
+            content = content.replace(/```([\s\S]*?)```/g, '<pre style="background: var(--bg-tertiary); padding: 10px; border-radius: 5px; overflow-x: auto;">$1</pre>');
+            content = content.replace(/^- (.+)$/gm, '• $1');
+            
+            return content;
+        }
+
+        function showTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = id;
+            typingDiv.className = 'message assistant';
+            typingDiv.innerHTML = '<div class="message-content">Thinking<span class="loading" style="display: inline-block; width: 20px; height: 20px; margin-left: 10px;"></span></div>';
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        function updateStats(metadata, responseTime) {
+            if (metadata && responseTime) {
+                totalResponseTime += responseTime;
+                const avgTime = Math.round(totalResponseTime / (messageCount || 1));
+                document.getElementById('avgResponseTime').textContent = avgTime + 'ms';
+            }
+            
+            document.getElementById('toolsUsedCount').textContent = toolsUsedSet.size;
+        }
+
+        function setProcessing(processing) {
+            isProcessing = processing;
+            const button = document.getElementById('sendButton');
+            button.disabled = processing;
+            button.textContent = processing ? 'Processing...' : 'Send';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function useExample(type) {
+            const input = document.getElementById('messageInput');
+            input.value = examples[type];
+            autoResize(input);
+            input.focus();
+        }
+
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem('ai-demo-session');
+            if (!sessionId) {
+                sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('ai-demo-session', sessionId);
+            }
+            return sessionId;
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.innerHTML = '✅ Connected';
+                statusDiv.style.color = 'var(--accent-secondary)';
+            } else {
+                statusDiv.innerHTML = '❌ Disconnected';
+                statusDiv.style.color = 'var(--accent-danger)';
+            }
+        }
+
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                updateConnectionStatus(data.status === 'healthy');
+            } catch (error) {
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Add Chart.js minimal implementation for demo
+        class Chart {
+            constructor(ctx, config) {
+                this.ctx = ctx;
+                this.config = config;
+                this.draw();
+            }
+
+            draw() {
+                const canvas = this.ctx.canvas;
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                
+                // Simple line chart
+                this.ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                
+                const data = this.config.data.datasets[0].data;
+                const width = canvas.width;
+                const height = canvas.height;
+                const padding = 20;
+                
+                data.forEach((value, index) => {
+                    const x = (index / (data.length - 1)) * (width - 2 * padding) + padding;
+                    const y = height - (value / 120) * (height - 2 * padding) - padding;
+                    
+                    if (index === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                });
+                
+                this.ctx.stroke();
+            }
+        }
+    </script>
+</body>
+</html>

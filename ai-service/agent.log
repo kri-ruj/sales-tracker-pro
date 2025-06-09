@@ -1,0 +1,35 @@
+
+🚀 AI Sales Agent with Tools
+📍 Running on http://localhost:3002
+🛠️  Available tools: 10
+🤖 Using Gemini 1.5 Pro with tool execution
+
+📝 Example queries:
+   - "Find all technology leads in Bangkok"
+   - "Analyze the quality of lead ID 1"
+   - "Generate an email for my top lead"
+   - "What's my best route for tomorrow?"
+
+Ready to assist with intelligent tool usage! 🎯
+
+
+🤖 Agent received: "Find all technology companies in Bangkok with budget over 500k"
+✅ Tools used: searchLeads, analyzeLeadQuality, getMarketData
+
+🤖 Agent received: "What are the trends in the technology industry?"
+✅ Tools used: getMarketData
+
+🤖 Agent received: "Generate a proposal for lead ID 1"
+✅ Tools used: searchLeads, analyzeLeadQuality, searchCompetitors, generateProposal
+
+🤖 Agent received: "Plan the best route to visit my Bangkok customers"
+✅ Tools used: searchLeads, calculateOptimalRoute
+
+🤖 Agent received: "Find all technology leads in Bangkok with budget over 500k"
+✅ Tools used: searchLeads, analyzeLeadQuality
+
+🤖 Agent received: "What are my strengths and weaknesses?"
+✅ Tools used: analyzeSalesPerformance
+
+🤖 Agent received: "ใครคือเบลพงลดา"
+✅ Tools used: searchLeads, searchCompetitors
