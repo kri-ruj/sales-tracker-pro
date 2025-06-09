@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v2.66 - Gamified sales performance tracking for teams">
-    <title>FINNERGY Sales Tracker v2.66 - ฟินเนอจี้</title>
+    <meta name="description" content="Sales Activity Tracker v2.67 - Gamified sales performance tracking for teams">
+    <title>FINNERGY Sales Tracker v2.67 - ฟินเนอจี้</title>
     
     <!-- LINE LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -12,7 +12,15 @@
         // Check if LIFF loaded
         window.addEventListener('load', function() {
             console.log('Window loaded, LIFF status:', typeof liff !== 'undefined' ? 'loaded' : 'not loaded');
+            if (typeof liff !== 'undefined') {
+                console.log('LIFF version:', liff.getVersion ? liff.getVersion() : 'version method not available');
+            }
         });
+        
+        // Backup: Check LIFF after a delay
+        setTimeout(function() {
+            console.log('After 2s delay, LIFF status:', typeof liff !== 'undefined' ? 'loaded' : 'not loaded');
+        }, 2000);
     </script>
     
     <style>
@@ -636,6 +644,11 @@
                 Try Demo Mode
             </button>
             
+            <!-- Test Button -->
+            <button style="margin-top: 1rem; padding: 0.5rem 1rem; background: #666; color: white; border: none; border-radius: 0.5rem; cursor: pointer;" onclick="alert('Test button works!');">
+                Test Button Click
+            </button>
+            
             <!-- Debug Info -->
             <div style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
                 <div>LIFF Environment: <code style="color: var(--primary);" id="debugEnv">Developing</code></div>
@@ -772,6 +785,17 @@
     <script>
         console.log('Script started loading');
         
+        // Add error handler to catch any syntax errors
+        window.addEventListener('error', function(event) {
+            console.error('Global error caught:', event.error);
+            console.error('Error message:', event.message);
+            console.error('Error at:', event.filename, 'line:', event.lineno, 'col:', event.colno);
+            const errorEl = document.getElementById('debugError');
+            if (errorEl) {
+                errorEl.innerHTML += '<br>Error: ' + event.message + ' at line ' + event.lineno;
+            }
+        });
+        
         // Configuration
         const CONFIG = {
             BACKEND_URL: window.location.hostname === 'localhost' 
@@ -786,7 +810,7 @@
             // LIFF ID - Use the one that works from your configuration
             LIFF_ID: '2007539402-Mnwlaklq', // Developing environment LIFF ID
             ENABLE_BACKEND_SYNC: false,
-            VERSION: '2.66'
+            VERSION: '2.67'
         };
 
         // Main App Class
@@ -808,6 +832,11 @@
                     { id: 'present', icon: '🤗', title: 'นำเสนอ', points: 40 },
                     { id: 'start_plan', icon: '💚', title: 'เริ่มแผน', points: 50 }
                 ];
+                
+                // Bind methods
+                this.handleLineLogin = this.handleLineLogin.bind(this);
+                this.enterDemoMode = this.enterDemoMode.bind(this);
+                this.handleLogout = this.handleLogout.bind(this);
                 
                 this.init();
             }
@@ -1498,12 +1527,19 @@
         
         // Global function to handle LINE login button click
         function handleLineLoginClick() {
+            alert('LINE Login button clicked!'); // Immediate feedback
             console.log('handleLineLoginClick called, window.app:', window.app);
-            if (window.app && window.app.handleLineLogin) {
+            console.log('typeof window.app:', typeof window.app);
+            console.log('app methods:', window.app ? Object.getOwnPropertyNames(Object.getPrototypeOf(window.app)) : 'app is null');
+            
+            if (window.app && typeof window.app.handleLineLogin === 'function') {
+                console.log('Calling app.handleLineLogin()');
                 window.app.handleLineLogin();
             } else {
-                console.error('App not initialized yet');
-                alert('Please wait for the app to load and try again');
+                console.error('App not initialized yet or handleLineLogin not found');
+                console.error('window.app:', window.app);
+                console.error('window.app.handleLineLogin:', window.app ? window.app.handleLineLogin : 'app is null');
+                alert('App is still loading. Please wait a moment and try again.');
             }
         }
         
@@ -1523,13 +1559,35 @@
             // Check if LIFF SDK loaded
             if (typeof liff === 'undefined') {
                 console.error('LIFF SDK not loaded! Check network tab for failed requests.');
-                document.getElementById('debugError').textContent = 'LIFF SDK failed to load';
+                const errorEl = document.getElementById('debugError');
+                if (errorEl) errorEl.textContent = 'LIFF SDK failed to load';
             }
             
-            console.log('Creating SalesTrackerApp instance...');
-            app = new SalesTrackerApp();
-            window.app = app; // Make it globally accessible
-            console.log('App initialized, window.app is now available');
+            try {
+                console.log('Creating SalesTrackerApp instance...');
+                app = new SalesTrackerApp();
+                window.app = app; // Make it globally accessible
+                console.log('App initialized, window.app is now available');
+                console.log('App methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(app)));
+                
+                // Add event listener to LINE login button
+                const lineLoginBtn = document.getElementById('lineLoginBtn');
+                if (lineLoginBtn) {
+                    console.log('Adding click event listener to LINE login button');
+                    lineLoginBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('LINE login button clicked via addEventListener');
+                        handleLineLoginClick();
+                    });
+                } else {
+                    console.error('LINE login button not found!');
+                }
+            } catch (error) {
+                console.error('Failed to create app:', error);
+                console.error('Stack trace:', error.stack);
+                const errorEl = document.getElementById('debugError');
+                if (errorEl) errorEl.textContent = 'Failed to initialize app: ' + error.message;
+            }
         });
 
         // Service Worker Registration
