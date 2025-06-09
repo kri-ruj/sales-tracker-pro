@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sales-tracker-pro-v2.66';
+const CACHE_NAME = 'sales-tracker-pro-v2.67';
 const urlsToCache = [
   '/',
   '/index.html',
