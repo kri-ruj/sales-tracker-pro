@@ -24,7 +24,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: package.json
 
@@ -61,7 +61,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: backend/package.json
 
@@ -114,48 +114,7 @@ jobs:
         BACKEND_URL="https://${{ secrets.GCP_PROJECT_ID }}.uc.r.appspot.com"
         echo "Backend deployed to: $BACKEND_URL"
 
-  # Deploy Database to Cloud SQL (Optional)
-  setup-database:
-    name: Setup Cloud SQL Database
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-    - name: Create Cloud SQL instance (if not exists)
-      run: |
-        # Check if instance exists
-        if ! gcloud sql instances describe sales-tracker-db --quiet 2>/dev/null; then
-          echo "Creating Cloud SQL instance..."
-          gcloud sql instances create sales-tracker-db \
-            --database-version=POSTGRES_14 \
-            --tier=db-f1-micro \
-            --region=${{ env.REGION }} \
-            --root-password=${{ secrets.DB_ROOT_PASSWORD }} \
-            --storage-size=10GB \
-            --storage-type=SSD \
-            --backup-start-time=03:00
-        else
-          echo "Cloud SQL instance already exists"
-        fi
-
-    - name: Create database
-      run: |
-        # Create database if not exists
-        gcloud sql databases create sales_tracker_prod \
-          --instance=sales-tracker-db || echo "Database already exists"
+  # Database setup removed - using in-memory storage for simplicity
 
   # Run tests
   test:
@@ -169,7 +128,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: backend/package.json
 
