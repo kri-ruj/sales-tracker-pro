@@ -23,6 +23,7 @@ app.get('/health', (req, res) => {
     res.json({ 
         status: 'OK', 
         message: 'Sales Tracker Backend is running',
+        version: '2.74',
         timestamp: new Date().toISOString()
     });
 });
