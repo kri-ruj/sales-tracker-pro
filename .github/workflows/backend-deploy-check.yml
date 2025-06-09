@@ -1,0 +1,47 @@
+name: Backend Deploy Check
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'render.yaml'
+      - '.github/workflows/backend-deploy-check.yml'
+  workflow_dispatch:
+
+jobs:
+  check-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check backend files
+        run: |
+          echo "=== Backend Directory Contents ==="
+          ls -la backend/
+          echo ""
+          echo "=== Package.json ==="
+          cat backend/package.json
+          echo ""
+          echo "=== render.yaml ==="
+          cat render.yaml
+          
+      - name: Wait for Render deployment
+        run: |
+          echo "Waiting 3 minutes for Render to deploy..."
+          sleep 180
+          
+      - name: Test backend health
+        run: |
+          echo "Testing backend health endpoint..."
+          for i in {1..5}; do
+            if curl -f -m 10 https://sales-tracker-backend.onrender.com/health; then
+              echo "Backend is healthy!"
+              exit 0
+            else
+              echo "Attempt $i failed, waiting 30 seconds..."
+              sleep 30
+            fi
+          done
+          echo "Backend health check failed after 5 attempts"
+          exit 1
