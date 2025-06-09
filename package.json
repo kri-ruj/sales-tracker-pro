@@ -2,7 +2,7 @@
   "name": "sales-tracker-pro",
   "version": "1.0.0",
   "description": "Gamified sales activity tracking for teams",
-  "main": "index.html",
+  "main": "insurance-index.html",
   "scripts": {
     "start": "npx http-server -p 8000 -c-1",
     "build": "echo 'Static app, no build needed'",

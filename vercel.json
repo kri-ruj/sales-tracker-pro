@@ -3,14 +3,14 @@
   "name": "sales-tracker-pro",
   "builds": [
     {
-      "src": "index.html",
+      "src": "insurance-index.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/insurance-index.html"
     }
   ],
   "headers": [

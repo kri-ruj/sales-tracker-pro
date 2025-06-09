@@ -1,10 +1,21 @@
-const CACHE_NAME = 'sales-tracker-pro-v1.0.0';
+const CACHE_NAME = 'sales-tracker-pro-v2.66';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/index-refactored.html',
   '/manifest.json',
-  'https://static.line-scdn.net/liff/edge/2.23.0/sdk.js',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js'
+  '/css/main.css',
+  '/js/app.js',
+  '/js/config/appConfig.js',
+  '/js/modules/ActivityManager.js',
+  '/js/modules/APIService.js',
+  '/js/modules/LIFFManager.js',
+  '/js/modules/ErrorHandler.js',
+  '/js/modules/OfflineManager.js',
+  '/js/modules/StateManager.js',
+  '/js/modules/UIRenderer.js',
+  'https://static.line-scdn.net/liff/edge/2/sdk.js',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.js'
 ];
 
 // Install event - cache resources
