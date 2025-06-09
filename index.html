@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v2.66 - Gamified sales performance tracking for teams">
-    <title>FINNERGY Sales Tracker v2.66 - ฟินเนอจี้</title>
+    <meta name="description" content="Sales Activity Tracker v2.68 - Gamified sales performance tracking for teams">
+    <title>FINNERGY Sales Tracker v2.68 - ฟินเนอจี้</title>
     
     <!-- LINE LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -179,6 +179,62 @@
         .logout-btn:hover {
             background: rgba(239, 68, 68, 0.3);
             border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s;
+        }
+        
+        .status-dot.connected {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-dot.disconnected {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-dot.checking {
+            background: #facc15;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        .status-label {
+            color: var(--text-muted);
+        }
+        
+        .version-label {
+            color: var(--primary);
+            font-weight: 600;
         }
         
         /* Modern Dark Theme with Glass Morphism */
@@ -664,6 +720,29 @@
             <h1>FINNERGY SALES TRACKER</h1>
         </header>
         
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            <div style="display: flex; gap: 1rem;">
+                <div class="status-item">
+                    <span class="status-dot" id="backendStatusDot"></span>
+                    <span class="status-label">Backend</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="liffStatusDot"></span>
+                    <span class="status-label">LIFF</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="networkStatusDot"></span>
+                    <span class="status-label">Network</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="storageStatusDot"></span>
+                    <span class="status-label">Storage</span>
+                </div>
+            </div>
+            <div class="version-label">v<span id="versionNumber">2.68</span></div>
+        </div>
+        
         <!-- Stats Bar -->
         <div class="stats-bar">
             <div class="stat-item">
@@ -786,7 +865,7 @@
             // LIFF ID - Use the one that works from your configuration
             LIFF_ID: '2007539402-Mnwlaklq', // Developing environment LIFF ID
             ENABLE_BACKEND_SYNC: false,
-            VERSION: '2.66'
+            VERSION: '2.68'
         };
 
         // Main App Class
@@ -815,6 +894,9 @@
             async init() {
                 console.log('App init() called');
                 try {
+                    // Initialize status monitoring
+                    this.initializeStatusMonitoring();
+                    
                     // Check if user profile exists in localStorage
                     const savedProfile = localStorage.getItem('lineUserProfile');
                     if (savedProfile) {
@@ -837,10 +919,12 @@
 
             async initLIFF() {
                 this.showLoginScreen();
+                this.updateStatus('liff', 'checking');
                 
                 if (typeof liff === 'undefined') {
                     console.log('LIFF SDK not loaded, showing login options');
                     this.updateLoginButton('LIFF SDK not loaded', true);
+                    this.updateStatus('liff', 'disconnected');
                     return;
                 }
 
@@ -855,6 +939,7 @@
                     });
                     
                     this.liffInitialized = true;
+                    this.updateStatus('liff', 'connected');
                     console.log('LIFF initialized successfully');
                     console.log('LIFF environment:', {
                         isInClient: liff.isInClient(),
@@ -878,6 +963,8 @@
                         code: error.code,
                         liffId: CONFIG.LIFF_ID
                     });
+                    
+                    this.updateStatus('liff', 'disconnected');
                     
                     // Show debug error
                     const debugError = document.getElementById('debugError');
@@ -1086,18 +1173,81 @@
             }
 
             async checkBackendConnection() {
-                if (!CONFIG.ENABLE_BACKEND_SYNC) return;
+                this.updateStatus('backend', 'checking');
+                
+                if (!CONFIG.ENABLE_BACKEND_SYNC) {
+                    this.updateStatus('backend', 'disconnected');
+                    return;
+                }
 
                 try {
                     const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
                     if (response.ok) {
                         this.backendConnected = true;
+                        this.updateStatus('backend', 'connected');
                         if (this.lineUserId) {
                             this.updateDashboardTab();
                         }
+                    } else {
+                        this.updateStatus('backend', 'disconnected');
                     }
                 } catch (error) {
                     this.backendConnected = false;
+                    this.updateStatus('backend', 'disconnected');
+                }
+            }
+            
+            initializeStatusMonitoring() {
+                // Update version number
+                const versionEl = document.getElementById('versionNumber');
+                if (versionEl) versionEl.textContent = CONFIG.VERSION;
+                
+                // Check network status
+                this.checkNetworkStatus();
+                window.addEventListener('online', () => this.checkNetworkStatus());
+                window.addEventListener('offline', () => this.checkNetworkStatus());
+                
+                // Check storage status
+                this.checkStorageStatus();
+                
+                // Periodically check backend
+                setInterval(() => this.checkBackendConnection(), 30000); // Every 30 seconds
+            }
+            
+            checkNetworkStatus() {
+                const isOnline = navigator.onLine;
+                this.updateStatus('network', isOnline ? 'connected' : 'disconnected');
+            }
+            
+            checkStorageStatus() {
+                try {
+                    // Test localStorage
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    
+                    // Check storage usage if available
+                    if (navigator.storage && navigator.storage.estimate) {
+                        navigator.storage.estimate().then(estimate => {
+                            const percentUsed = (estimate.usage / estimate.quota) * 100;
+                            if (percentUsed > 90) {
+                                this.updateStatus('storage', 'disconnected'); // Warning
+                            } else {
+                                this.updateStatus('storage', 'connected'); // OK
+                            }
+                        });
+                    } else {
+                        this.updateStatus('storage', 'connected');
+                    }
+                } catch (error) {
+                    this.updateStatus('storage', 'disconnected');
+                }
+            }
+            
+            updateStatus(service, status) {
+                const dotId = service + 'StatusDot';
+                const dot = document.getElementById(dotId);
+                if (dot) {
+                    dot.className = 'status-dot ' + status;
                 }
             }
 
