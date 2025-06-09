@@ -1,6 +1,5 @@
 [build]
-  publish = "."
-  command = "echo 'Static site, no build needed'"
+  publish = "deploy"
 
 [[redirects]]
   from = "/*"
@@ -8,20 +7,8 @@
   status = 200
 
 [[headers]]
-  for = "/sw.js"
-  [headers.values]
-    Service-Worker-Allowed = "/"
-    Cache-Control = "public, max-age=0, must-revalidate"
-
-[[headers]]
-  for = "/manifest.json"
-  [headers.values]
-    Content-Type = "application/manifest+json"
-
-[[headers]]
   for = "/*"
   [headers.values]
-    X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"
