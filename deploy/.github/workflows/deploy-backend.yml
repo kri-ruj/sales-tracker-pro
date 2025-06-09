@@ -1,0 +1,55 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'backend/**' ]
+  workflow_dispatch:
+
+jobs:
+  deploy-railway:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Railway CLI
+      run: npm install -g @railway/cli
+      
+    - name: Deploy to Railway
+      run: |
+        cd backend
+        railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        railway up --detach
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Vercel CLI
+      run: npm install -g vercel
+      
+    - name: Deploy to Vercel
+      run: |
+        cd backend
+        vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+      env:
+        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

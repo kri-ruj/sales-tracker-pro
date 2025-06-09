@@ -1,0 +1,36 @@
+{
+  "name": "sales-tracker-pro",
+  "version": "1.0.0",
+  "description": "Gamified sales activity tracking for teams",
+  "main": "insurance-index.html",
+  "scripts": {
+    "start": "npx http-server -p 8000 -c-1",
+    "build": "echo 'Static app, no build needed'",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir .",
+    "test": "echo 'No tests specified' && exit 0"
+  },
+  "keywords": [
+    "sales",
+    "tracking",
+    "gamification",
+    "pwa",
+    "productivity"
+  ],
+  "author": "Sales Tracker Pro",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/sales-tracker-pro.git"
+  },
+  "homepage": "https://salestracker.pro",
+  "bugs": {
+    "url": "https://github.com/username/sales-tracker-pro/issues"
+  }
+}

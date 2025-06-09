@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sales-tracker-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: ./backend
+    buildCommand: npm install
+    startCommand: node server-simple.js
+    autoDeploy: true
+    branch: main
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_TYPE
+        value: sqlite
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: LINE_CHANNEL_SECRET
+        sync: false

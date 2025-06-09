@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sales Activity Tracker v2.68 - Gamified sales performance tracking for teams">
+    <title>FINNERGY Sales Tracker v2.68 - ฟินเนอจี้</title>
+    
+    <!-- LINE LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        // Check if LIFF loaded
+        window.addEventListener('load', function() {
+            console.log('Window loaded, LIFF status:', typeof liff !== 'undefined' ? 'loaded' : 'not loaded');
+        });
+    </script>
+    
+    <style>
+        /* Login Screen */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, var(--bg-dark), var(--bg-medium), var(--bg-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .login-container.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .login-card {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: loginSlideUp 0.6s ease-out;
+        }
+        
+        @keyframes loginSlideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .login-logo {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .line-login-btn {
+            background: #00B900;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 185, 0, 0.3);
+        }
+        
+        .line-login-btn:hover {
+            background: #00A000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 185, 0, 0.4);
+        }
+        
+        .line-login-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .line-logo {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .demo-mode-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .demo-mode-btn:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(31, 41, 55, 0.5);
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex: 1;
+        }
+        
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s;
+        }
+        
+        .status-dot.connected {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-dot.disconnected {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-dot.checking {
+            background: #facc15;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        .status-label {
+            color: var(--text-muted);
+        }
+        
+        .version-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        /* Modern Dark Theme with Glass Morphism */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #facc15; /* Yellow-400 */
+            --primary-dark: #eab308; /* Yellow-500 */
+            --primary-light: #fde047; /* Yellow-300 */
+            --bg-dark: #030712; /* Gray-950 */
+            --bg-medium: #111827; /* Gray-900 */
+            --bg-light: #1f2937; /* Gray-800 */
+            --glass-bg: rgba(31, 41, 55, 0.5);
+            --glass-border: rgba(250, 204, 21, 0.2);
+            --text: #ffffff;
+            --text-muted: #9ca3af;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 50%, #0a0e1a 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: pan-y;
+        }
+        
+        /* Container */
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: relative;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        
+        .header p {
+            display: none; /* Hide subtitle to save space */
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0.5rem;
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-icon {
+            font-size: 1.25rem;
+            display: inline-block;
+            margin-right: 0.25rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.625rem;
+            display: block;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: inline-block;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0.5rem;
+        }
+        
+        .section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .section h2 {
+            font-size: 0.875rem;
+            margin: 0 0 0.25rem 0;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        .section-subtitle {
+            display: none; /* Hide to save space */
+        }
+        
+        /* Activity List */
+        .activities-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        
+        .activity-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .activity-row:hover {
+            background: rgba(41, 51, 65, 0.9);
+            border-color: rgba(250, 204, 21, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .activity-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            text-align: center;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        .activity-info {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--text);
+            letter-spacing: 0.5px;
+        }
+        
+        .activity-points {
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-right: 0.5rem;
+            font-weight: 600;
+            background: rgba(250, 204, 21, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+        }
+        
+        .activity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .activity-count {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            background: rgba(250, 204, 21, 0.1);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+        
+        .btn-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(250, 204, 21, 0.2);
+        }
+        
+        .btn-circle:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            transform: scale(1.1);
+        }
+        
+        .btn-circle:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-circle:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .btn-circle:disabled:hover {
+            background: transparent;
+            color: var(--primary);
+            transform: scale(1);
+        }
+        
+        /* Submit Section */
+        .submit-section {
+            position: absolute;
+            bottom: 60px;
+            left: 0.5rem;
+            right: 0.5rem;
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            display: none;
+            animation: slideUp 0.3s ease-out;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3);
+        }
+        
+        .submit-section.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .submit-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
+        }
+        
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3);
+        }
+        
+        /* Navigation Dock */
+        .nav-dock {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 0;
+            padding: 0.5rem;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            flex: 1;
+            height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .nav-item:hover {
+            transform: scale(1.1) translateY(-5px);
+            background: rgba(55, 65, 81, 0.5);
+        }
+        
+        .nav-item.active {
+            background: rgba(250, 204, 21, 0.2);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+        
+        .nav-item.active .nav-icon,
+        .nav-item.active .nav-label {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.125rem;
+        }
+        
+        .nav-label {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(31, 41, 55, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Success Animation */
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--primary);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            text-align: center;
+            z-index: 3000;
+            animation: successPop 0.6s ease forwards;
+        }
+        
+        @keyframes successPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(10deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .activity-row {
+                padding: 0.5rem;
+            }
+            
+            .activity-icon {
+                font-size: 1.5rem;
+                width: 40px;
+            }
+            
+            .activity-title {
+                font-size: 0.875rem;
+            }
+            
+            .btn-circle {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Hide scrollbars */
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        *::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <div class="login-logo">🎯</div>
+            <h1 class="login-title">FINNERGY Sales Tracker</h1>
+            <p class="login-subtitle">Track your sales performance with style</p>
+            
+            <button class="line-login-btn" id="lineLoginBtn" onclick="handleLineLoginClick()">
+                <svg class="line-logo" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.39-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.349 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                </svg>
+                <span id="loginBtnText">Login with LINE</span>
+            </button>
+            
+            <button class="demo-mode-btn" onclick="if(window.app) window.app.enterDemoMode(); else alert('App loading, please wait...');">
+                Try Demo Mode
+            </button>
+            
+            <!-- Debug Info -->
+            <div style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                <div>LIFF Environment: <code style="color: var(--primary);" id="debugEnv">Developing</code></div>
+                <div>LIFF ID: <code style="color: var(--primary);" id="debugLiffId">2007539402-Mnwlaklq</code></div>
+                <div>Current URL: <code id="debugUrl" style="color: var(--primary);"></code></div>
+                <div id="debugError" style="color: #ef4444; margin-top: 0.5rem;"></div>
+                <div style="margin-top: 0.5rem; font-size: 0.7rem;">
+                    Using Developing Environment LIFF ID
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- User Info Bar -->
+        <div class="user-info" id="userInfo" style="display: none;">
+            <img class="user-avatar" id="userAvatar" src="" alt="User">
+            <div>
+                <div class="user-name" id="userName"></div>
+                <div style="font-size: 0.875rem; color: var(--text-muted);" id="userStatus">Connected</div>
+            </div>
+            <button class="logout-btn" onclick="window.app.handleLogout()">Logout</button>
+        </div>
+        
+        <header class="header">
+            <h1>FINNERGY SALES TRACKER</h1>
+        </header>
+        
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            <div style="display: flex; gap: 1rem;">
+                <div class="status-item">
+                    <span class="status-dot" id="backendStatusDot"></span>
+                    <span class="status-label">Backend</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="liffStatusDot"></span>
+                    <span class="status-label">LIFF</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="networkStatusDot"></span>
+                    <span class="status-label">Network</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="storageStatusDot"></span>
+                    <span class="status-label">Storage</span>
+                </div>
+            </div>
+            <div class="version-label">v<span id="versionNumber">2.68</span></div>
+        </div>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-icon">📊</span>
+                <span class="stat-value" id="todayPoints">0</span>
+                <span class="stat-label">Today</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">📈</span>
+                <span class="stat-value" id="weekPoints">0</span>
+                <span class="stat-label">Week</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🎯</span>
+                <span class="stat-value" id="goalProgress">0%</span>
+                <span class="stat-label">Goal</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🏆</span>
+                <span class="stat-value" id="totalPoints">0</span>
+                <span class="stat-label">Total</span>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <!-- Activities Tab -->
+            <div id="activitiesTab" class="tab-content active">
+                <div class="section">
+                    <h2>Sales Activities</h2>
+                    <div class="activities-container" id="activitiesContainer">
+                        <!-- Activities will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Dashboard</h2>
+                    <div id="dashboardContent">
+                        <p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Tab -->
+            <div id="leaderboardTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Leaderboard</h2>
+                    <div id="leaderboardContent">
+                        <p style="text-align: center; color: var(--text-muted);">Loading leaderboard...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Settings</h2>
+                    <div id="settingsContent">
+                        <!-- Settings form will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Submit Section -->
+        <div class="submit-section" id="submitSection">
+            <div class="submit-info">
+                <div>
+                    <span id="pendingCount">0</span> activities
+                    <span style="margin-left: 1rem; color: var(--primary); font-weight: 600;">
+                        +<span id="pendingPoints">0</span> points
+                    </span>
+                </div>
+                <button class="submit-btn" onclick="window.app.submitActivities()">
+                    🚀 Submit
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Dock -->
+        <nav class="nav-dock">
+            <div class="nav-item active" data-tab="activities">
+                <div class="nav-icon">🎯</div>
+                <div class="nav-label">Activities</div>
+            </div>
+            <div class="nav-item" data-tab="dashboard">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Dashboard</div>
+            </div>
+            <div class="nav-item" data-tab="leaderboard">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">Leaders</div>
+            </div>
+            <div class="nav-item" data-tab="settings">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">Settings</div>
+            </div>
+        </nav>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+        console.log('Script started loading');
+        
+        // Configuration
+        const CONFIG = {
+            BACKEND_URL: window.location.hostname === 'localhost' 
+                ? 'http://localhost:10000' 
+                : 'https://sales-tracker-backend.onrender.com',
+            // LINE LIFF IDs for different environments
+            LIFF_IDS: {
+                developing: '2007539402-Mnwlaklq',
+                review: '2007539403-M1dnODn6',
+                published: '2007539404-bxEyd2yZ'
+            },
+            // LIFF ID - Use the one that works from your configuration
+            LIFF_ID: '2007539402-Mnwlaklq', // Developing environment LIFF ID
+            ENABLE_BACKEND_SYNC: false,
+            VERSION: '2.68'
+        };
+
+        // Main App Class
+        class SalesTrackerApp {
+            constructor() {
+                this.activities = [];
+                this.pendingActivities = [];
+                this.settings = this.loadSettings();
+                this.userProfile = null;
+                this.lineUserId = null;
+                this.backendConnected = false;
+                this.currentTab = 'activities';
+                this.liffInitialized = false;
+                
+                this.activityTemplates = [
+                    { id: 'call', icon: '📞', title: 'โทร', points: 10 },
+                    { id: 'appointment', icon: '📅', title: 'นัด', points: 20 },
+                    { id: 'listen', icon: '👂', title: 'ฟัง', points: 30 },
+                    { id: 'present', icon: '🤗', title: 'นำเสนอ', points: 40 },
+                    { id: 'start_plan', icon: '💚', title: 'เริ่มแผน', points: 50 }
+                ];
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('App init() called');
+                try {
+                    // Initialize status monitoring
+                    this.initializeStatusMonitoring();
+                    
+                    // Check if user profile exists in localStorage
+                    const savedProfile = localStorage.getItem('lineUserProfile');
+                    if (savedProfile) {
+                        this.userProfile = JSON.parse(savedProfile);
+                        this.lineUserId = this.userProfile.userId;
+                    }
+                    
+                    await this.initLIFF();
+                    this.loadActivities();
+                    this.renderActivityDock();
+                    this.updateAllStats();
+                    this.setupEventListeners();
+                    this.checkBackendConnection();
+                    console.log('App init() completed successfully');
+                } catch (error) {
+                    console.error('Init error:', error);
+                    this.showToast('❌ Failed to initialize app');
+                }
+            }
+
+            async initLIFF() {
+                this.showLoginScreen();
+                this.updateStatus('liff', 'checking');
+                
+                if (typeof liff === 'undefined') {
+                    console.log('LIFF SDK not loaded, showing login options');
+                    this.updateLoginButton('LIFF SDK not loaded', true);
+                    this.updateStatus('liff', 'disconnected');
+                    return;
+                }
+
+                try {
+                    console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
+                    console.log('Current URL:', window.location.href);
+                    
+                    // Initialize LIFF with the correct ID
+                    await liff.init({ 
+                        liffId: CONFIG.LIFF_ID,
+                        withLoginOnExternalBrowser: true // Allow login on external browsers
+                    });
+                    
+                    this.liffInitialized = true;
+                    this.updateStatus('liff', 'connected');
+                    console.log('LIFF initialized successfully');
+                    console.log('LIFF environment:', {
+                        isInClient: liff.isInClient(),
+                        isLoggedIn: liff.isLoggedIn(),
+                        liffId: liff.id,
+                        language: liff.getLanguage(),
+                        version: liff.getVersion(),
+                        os: liff.getOS()
+                    });
+                    
+                    if (liff.isLoggedIn()) {
+                        await this.handleLoggedInUser();
+                    } else {
+                        console.log('User not logged in, showing login button');
+                        this.updateLoginButton('Login with LINE', false);
+                    }
+                } catch (error) {
+                    console.error('LIFF init failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        code: error.code,
+                        liffId: CONFIG.LIFF_ID
+                    });
+                    
+                    this.updateStatus('liff', 'disconnected');
+                    
+                    // Show debug error
+                    const debugError = document.getElementById('debugError');
+                    if (debugError) {
+                        debugError.innerHTML = `Error: ${error.code || 'Unknown'} - ${error.message || 'No message'}`;
+                    }
+                    
+                    // Show more specific error messages
+                    if (error.code === 'INVALID_ARGUMENT') {
+                        this.showToast('❌ Invalid LIFF ID');
+                        this.updateLoginButton('Invalid LIFF ID', true);
+                    } else if (error.code === 'FORBIDDEN') {
+                        this.showToast('❌ URL not registered in LINE Developers');
+                        this.updateLoginButton('URL not registered', true);
+                    } else if (error.message && error.message.includes('400')) {
+                        this.showToast('❌ LIFF ID mismatch or URL not registered');
+                        this.updateLoginButton('Configuration Error', true);
+                    } else if (error.code === 'INIT_FAILED') {
+                        this.showToast('❌ Invalid LIFF ID - Check LINE Developers Console');
+                        this.updateLoginButton('Invalid LIFF ID', true);
+                    } else {
+                        this.showToast(`❌ LINE error: ${error.message || 'Connection failed'}`);
+                        this.updateLoginButton('LINE connection failed', true);
+                    }
+                }
+            }
+            
+            updateLoginButton(text, isError) {
+                const btn = document.getElementById('lineLoginBtn');
+                const btnText = document.getElementById('loginBtnText');
+                if (btn && btnText) {
+                    btnText.textContent = text;
+                    if (isError) {
+                        btn.style.background = '#dc2626';
+                        btn.style.cursor = 'not-allowed';
+                        btn.disabled = true;
+                    }
+                }
+            }
+            
+            async handleLoggedInUser() {
+                try {
+                    const profile = await liff.getProfile();
+                    this.userProfile = profile;
+                    this.lineUserId = profile.userId;
+                    
+                    // Store user info in localStorage for persistence
+                    localStorage.setItem('lineUserProfile', JSON.stringify({
+                        userId: profile.userId,
+                        displayName: profile.displayName,
+                        pictureUrl: profile.pictureUrl,
+                        statusMessage: profile.statusMessage
+                    }));
+                    
+                    // Show user info
+                    this.displayUserInfo(profile);
+                    
+                    // Hide login screen
+                    this.hideLoginScreen();
+                    
+                    // Update all stats with user data
+                    this.updateAllStats();
+                    
+                    // Show welcome message
+                    this.showToast(`👋 Welcome back, ${profile.displayName}!`);
+                    
+                    console.log('User logged in:', profile.displayName);
+                } catch (error) {
+                    console.error('Failed to get profile:', error);
+                    this.showToast('❌ Failed to get user profile');
+                }
+            }
+            
+            async handleLineLogin() {
+                console.log('handleLineLogin called');
+                
+                // Check if app is properly initialized
+                if (!window.app) {
+                    console.error('App not initialized yet');
+                    alert('App is still loading, please try again in a moment');
+                    return;
+                }
+                
+                const btn = document.getElementById('lineLoginBtn');
+                const btnText = document.getElementById('loginBtnText');
+                
+                if (!btn || !btnText) {
+                    console.error('Button elements not found');
+                    return;
+                }
+                
+                console.log('LIFF available:', typeof liff !== 'undefined');
+                console.log('LIFF initialized:', this.liffInitialized);
+                
+                btn.disabled = true;
+                btnText.innerHTML = '<span class="loading-spinner"></span> Connecting...';
+                
+                if (typeof liff === 'undefined') {
+                    this.showToast('❌ LINE SDK not available');
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                    return;
+                }
+                
+                // Check if LIFF is initialized
+                if (!this.liffInitialized) {
+                    this.showToast('❌ LIFF not initialized yet');
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                    return;
+                }
+                
+                try {
+                    console.log('Checking login status...');
+                    console.log('Is logged in:', liff.isLoggedIn());
+                    
+                    if (!liff.isLoggedIn()) {
+                        console.log('Redirecting to LINE login...');
+                        liff.login();
+                    } else {
+                        console.log('Already logged in, getting profile...');
+                        await this.handleLoggedInUser();
+                    }
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        code: error.code,
+                        stack: error.stack
+                    });
+                    this.showToast(`❌ Login failed: ${error.message || 'Unknown error'}`);
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                }
+            }
+            
+            handleLogout() {
+                if (liff && liff.isLoggedIn()) {
+                    liff.logout();
+                    window.location.reload();
+                } else {
+                    // Clear demo user
+                    this.userProfile = null;
+                    this.lineUserId = null;
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            }
+            
+            enterDemoMode() {
+                this.setupDemoUser();
+                this.displayUserInfo(this.userProfile);
+                this.hideLoginScreen();
+                this.showToast('👋 Welcome to Demo Mode!');
+            }
+            
+            showLoginScreen() {
+                const container = document.getElementById('loginContainer');
+                if (container) {
+                    container.classList.remove('hide');
+                }
+            }
+            
+            hideLoginScreen() {
+                const container = document.getElementById('loginContainer');
+                if (container) {
+                    setTimeout(() => {
+                        container.classList.add('hide');
+                    }, 500);
+                }
+            }
+            
+            displayUserInfo(profile) {
+                const userInfo = document.getElementById('userInfo');
+                const userAvatar = document.getElementById('userAvatar');
+                const userName = document.getElementById('userName');
+                const userStatus = document.getElementById('userStatus');
+                
+                if (userInfo && profile) {
+                    userInfo.style.display = 'flex';
+                    userName.textContent = profile.displayName || 'Demo User';
+                    
+                    if (profile.pictureUrl) {
+                        userAvatar.src = profile.pictureUrl;
+                    } else {
+                        userAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2ZhY2MxNSIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzAzMDcxMiI+8J+YijwvdGV4dD48L3N2Zz4=';
+                    }
+                    
+                    if (profile.userId && profile.userId.startsWith('demo_')) {
+                        userStatus.textContent = 'Demo Mode';
+                        userStatus.style.color = '#facc15';
+                    } else {
+                        userStatus.textContent = 'LINE Connected';
+                        userStatus.style.color = '#10b981';
+                    }
+                }
+            }
+
+            setupDemoUser() {
+                this.userProfile = {
+                    userId: `demo_${Date.now()}`,
+                    displayName: 'Demo User',
+                    pictureUrl: null
+                };
+                this.lineUserId = this.userProfile.userId;
+            }
+
+            async checkBackendConnection() {
+                this.updateStatus('backend', 'checking');
+                
+                if (!CONFIG.ENABLE_BACKEND_SYNC) {
+                    this.updateStatus('backend', 'disconnected');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
+                    if (response.ok) {
+                        this.backendConnected = true;
+                        this.updateStatus('backend', 'connected');
+                        if (this.lineUserId) {
+                            this.updateDashboardTab();
+                        }
+                    } else {
+                        this.updateStatus('backend', 'disconnected');
+                    }
+                } catch (error) {
+                    this.backendConnected = false;
+                    this.updateStatus('backend', 'disconnected');
+                }
+            }
+            
+            initializeStatusMonitoring() {
+                // Update version number
+                const versionEl = document.getElementById('versionNumber');
+                if (versionEl) versionEl.textContent = CONFIG.VERSION;
+                
+                // Check network status
+                this.checkNetworkStatus();
+                window.addEventListener('online', () => this.checkNetworkStatus());
+                window.addEventListener('offline', () => this.checkNetworkStatus());
+                
+                // Check storage status
+                this.checkStorageStatus();
+                
+                // Periodically check backend
+                setInterval(() => this.checkBackendConnection(), 30000); // Every 30 seconds
+            }
+            
+            checkNetworkStatus() {
+                const isOnline = navigator.onLine;
+                this.updateStatus('network', isOnline ? 'connected' : 'disconnected');
+            }
+            
+            checkStorageStatus() {
+                try {
+                    // Test localStorage
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    
+                    // Check storage usage if available
+                    if (navigator.storage && navigator.storage.estimate) {
+                        navigator.storage.estimate().then(estimate => {
+                            const percentUsed = (estimate.usage / estimate.quota) * 100;
+                            if (percentUsed > 90) {
+                                this.updateStatus('storage', 'disconnected'); // Warning
+                            } else {
+                                this.updateStatus('storage', 'connected'); // OK
+                            }
+                        });
+                    } else {
+                        this.updateStatus('storage', 'connected');
+                    }
+                } catch (error) {
+                    this.updateStatus('storage', 'disconnected');
+                }
+            }
+            
+            updateStatus(service, status) {
+                const dotId = service + 'StatusDot';
+                const dot = document.getElementById(dotId);
+                if (dot) {
+                    dot.className = 'status-dot ' + status;
+                }
+            }
+
+            loadActivities() {
+                const saved = localStorage.getItem('activities');
+                this.activities = saved ? JSON.parse(saved) : [];
+                
+                const savedPending = localStorage.getItem('pendingActivities');
+                this.pendingActivities = savedPending ? JSON.parse(savedPending) : [];
+            }
+
+            saveActivities() {
+                localStorage.setItem('activities', JSON.stringify(this.activities));
+                localStorage.setItem('pendingActivities', JSON.stringify(this.pendingActivities));
+            }
+
+            loadSettings() {
+                const saved = localStorage.getItem('userSettings');
+                return saved ? JSON.parse(saved) : {
+                    userName: 'Sales Pro',
+                    dailyGoal: 100,
+                    weeklyGoal: 500,
+                    notifications: true,
+                    soundEffects: true
+                };
+            }
+
+            renderActivityDock() {
+                const container = document.getElementById('activitiesContainer');
+                if (!container) return;
+                
+                container.innerHTML = this.activityTemplates.map(template => {
+                    const pendingCount = this.pendingActivities.filter(a => 
+                        a.id.startsWith(template.id)
+                    ).length;
+                    
+                    return `
+                        <div class="activity-row">
+                            <div class="activity-icon">${template.icon}</div>
+                            <div class="activity-info">
+                                <div class="activity-title">${template.title}</div>
+                            </div>
+                            <div class="activity-points">+${template.points} pts</div>
+                            <div class="activity-controls">
+                                <button class="btn-circle" onclick="window.app.removeActivity('${template.id}')" ${pendingCount === 0 ? 'disabled' : ''}>−</button>
+                                <div class="activity-count">${pendingCount}</div>
+                                <button class="btn-circle" onclick="window.app.addActivity('${template.id}')">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addActivity(templateId) {
+                const template = this.activityTemplates.find(t => t.id === templateId);
+                if (!template) return;
+
+                const activity = {
+                    ...template,
+                    id: `${templateId}_${Date.now()}`,
+                    timestamp: new Date().toISOString(),
+                    date: new Date().toDateString()
+                };
+
+                this.pendingActivities.push(activity);
+                this.saveActivities();
+                this.renderActivityDock();
+                this.updatePendingDisplay();
+            }
+            
+            removeActivity(templateId) {
+                const index = this.pendingActivities.findIndex(a => a.id.startsWith(templateId));
+                if (index !== -1) {
+                    this.pendingActivities.splice(index, 1);
+                    this.saveActivities();
+                    this.renderActivityDock();
+                    this.updatePendingDisplay();
+                }
+            }
+
+            updatePendingDisplay() {
+                const section = document.getElementById('submitSection');
+                const countEl = document.getElementById('pendingCount');
+                const pointsEl = document.getElementById('pendingPoints');
+                
+                const count = this.pendingActivities.length;
+                const points = this.pendingActivities.reduce((sum, a) => sum + a.points, 0);
+
+                countEl.textContent = count;
+                pointsEl.textContent = points;
+                
+                section.classList.toggle('show', count > 0);
+            }
+
+            async submitActivities() {
+                if (this.pendingActivities.length === 0) return;
+
+                const totalPoints = this.pendingActivities.reduce((sum, a) => sum + a.points, 0);
+                
+                // Move to completed
+                this.activities.push(...this.pendingActivities);
+                
+                // Sync to backend if connected
+                if (this.backendConnected && this.lineUserId) {
+                    try {
+                        await this.syncActivitiesToBackend(this.pendingActivities);
+                    } catch (error) {
+                        console.error('Sync failed:', error);
+                    }
+                }
+                
+                // Clear pending
+                this.pendingActivities = [];
+                this.saveActivities();
+                
+                // Update UI
+                this.updateAllStats();
+                this.renderActivityDock();
+                this.updatePendingDisplay();
+                
+                // Show success
+                this.showToast(`✅ ${totalPoints} points earned!`);
+                this.showSuccessAnimation(totalPoints);
+            }
+
+            async syncActivitiesToBackend(activities) {
+                const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: this.lineUserId,
+                        userName: this.userProfile ? this.userProfile.displayName : 'Unknown',
+                        userPicture: this.userProfile ? this.userProfile.pictureUrl : null,
+                        activities: activities.map(a => ({
+                            type: a.id.split('_')[0],
+                            title: a.title,
+                            points: a.points,
+                            date: new Date().toISOString().split('T')[0]
+                        }))
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Sync failed');
+                }
+            }
+
+            updateAllStats() {
+                const today = new Date().toDateString();
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                
+                const todayActivities = this.activities.filter(a => a.date === today);
+                const weekActivities = this.activities.filter(a => 
+                    new Date(a.timestamp) >= weekStart
+                );
+
+                const todayPoints = todayActivities.reduce((sum, a) => sum + a.points, 0);
+                const weekPoints = weekActivities.reduce((sum, a) => sum + a.points, 0);
+                const totalPoints = this.activities.reduce((sum, a) => sum + a.points, 0);
+                const goalProgress = Math.min(100, Math.round((todayPoints / this.settings.dailyGoal) * 100));
+
+                document.getElementById('todayPoints').textContent = todayPoints;
+                document.getElementById('weekPoints').textContent = weekPoints;
+                document.getElementById('totalPoints').textContent = totalPoints;
+                document.getElementById('goalProgress').textContent = `${goalProgress}%`;
+            }
+
+            // Removed showActivityFeedback to keep the UI clean and fast
+
+            showSuccessAnimation(points) {
+                const animation = document.createElement('div');
+                animation.className = 'success-animation';
+                animation.innerHTML = `
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">
+                        +${points} Points!
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--text-muted);">Great job! Keep it up! 💪</div>
+                `;
+                
+                document.body.appendChild(animation);
+                setTimeout(() => animation.remove(), 2000);
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            switchTab(tabName) {
+                // Update navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.tab === tabName);
+                });
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                const activeTab = document.getElementById(`${tabName}Tab`);
+                if (activeTab) {
+                    activeTab.classList.add('active');
+                }
+
+                this.currentTab = tabName;
+
+                // Load tab-specific content
+                switch (tabName) {
+                    case 'dashboard':
+                        this.updateDashboardTab();
+                        break;
+                    case 'leaderboard':
+                        this.updateLeaderboardTab();
+                        break;
+                    case 'settings':
+                        this.renderSettings();
+                        break;
+                }
+            }
+
+            async updateDashboardTab() {
+                const content = document.getElementById('dashboardContent');
+                
+                // Use local data for dashboard
+                const today = new Date().toDateString();
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                
+                const todayActivities = this.activities.filter(a => a.date === today);
+                const weekActivities = this.activities.filter(a => 
+                    new Date(a.timestamp) >= weekStart
+                );
+                
+                const data = {
+                    totalPoints: this.activities.reduce((sum, a) => sum + a.points, 0),
+                    totalActivities: this.activities.length,
+                    todayPoints: todayActivities.reduce((sum, a) => sum + a.points, 0),
+                    weekPoints: weekActivities.reduce((sum, a) => sum + a.points, 0)
+                };
+                    
+                    content.innerHTML = `
+                        <div style="display: grid; gap: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                <span>Total Points:</span>
+                                <strong style="color: var(--primary);">${data.totalPoints || 0}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                <span>Activities:</span>
+                                <strong style="color: var(--primary);">${data.totalActivities || 0}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                <span>Today:</span>
+                                <strong style="color: var(--primary);">${data.todayPoints || 0} pts</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                <span>This Week:</span>
+                                <strong style="color: var(--primary);">${data.weekPoints || 0} pts</strong>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Dashboard error:', error);
+                }
+            }
+
+            async updateLeaderboardTab() {
+                const content = document.getElementById('leaderboardContent');
+                
+                // Mock data for demo
+                const userName = this.userProfile ? this.userProfile.displayName : 'You';
+                const userPicture = this.userProfile ? this.userProfile.pictureUrl : null;
+                const userPoints = this.activities.reduce((sum, a) => sum + a.points, 0);
+                
+                const mockData = [
+                    { 
+                        name: userName, 
+                        points: userPoints,
+                        pictureUrl: userPicture,
+                        isCurrentUser: true
+                    },
+                    { name: 'Sarah Chen', points: 1250, pictureUrl: null },
+                    { name: 'Mike Johnson', points: 1180, pictureUrl: null },
+                    { name: 'Emma Davis', points: 950, pictureUrl: null },
+                    { name: 'Alex Kim', points: 780, pictureUrl: null }
+                ].sort((a, b) => b.points - a.points);
+                
+                content.innerHTML = `
+                    <div style="display: grid; gap: 0.5rem;">
+                        ${mockData.slice(0, 5).map((user, index) => `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: ${user.isCurrentUser ? 'rgba(250, 204, 21, 0.1)' : 'rgba(55, 65, 81, 0.3)'}; border-radius: 0.5rem; font-size: 0.875rem; ${user.isCurrentUser ? 'border: 1px solid rgba(250, 204, 21, 0.3);' : ''}">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 1rem; font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                                    ${user.pictureUrl ? 
+                                        `<img src="${user.pictureUrl}" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--primary);" alt="${user.name}">` : 
+                                        `<div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: var(--bg-dark);">${user.name.charAt(0)}</div>`
+                                    }
+                                    <span style="${user.isCurrentUser ? 'font-weight: bold;' : ''}">${user.name}</span>
+                                </div>
+                                <span style="font-weight: bold; color: var(--primary);">${user.points}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            renderSettings() {
+                const content = document.getElementById('settingsContent');
+                
+                content.innerHTML = `
+                    <form id="settingsForm" style="display: grid; gap: 0.75rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Your Name</label>
+                            <input type="text" id="settingsName" value="${this.userProfile && this.userProfile.displayName ? this.userProfile.displayName : this.settings.userName}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Daily Goal</label>
+                            <input type="number" id="settingsDailyGoal" value="${this.settings.dailyGoal}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Weekly Goal</label>
+                            <input type="number" id="settingsWeeklyGoal" value="${this.settings.weeklyGoal}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <button type="submit" style="background: var(--primary); color: var(--bg-dark); border: none; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;">
+                            💾 Save Settings
+                        </button>
+                    </form>
+                    
+                    <div style="margin-top: 1rem; text-align: center; font-size: 0.75rem;">
+                        <p style="color: var(--text-muted);">Version ${CONFIG.VERSION}</p>
+                        ${this.userProfile ? `
+                            <p style="color: var(--text-muted);">User: ${this.userProfile.displayName}</p>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Setup form handler
+                const form = document.getElementById('settingsForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSettingsFromForm();
+                });
+            }
+
+            saveSettingsFromForm() {
+                this.settings = {
+                    userName: document.getElementById('settingsName').value,
+                    dailyGoal: parseInt(document.getElementById('settingsDailyGoal').value) || 100,
+                    weeklyGoal: parseInt(document.getElementById('settingsWeeklyGoal').value) || 500,
+                    notifications: true,
+                    soundEffects: true
+                };
+
+                localStorage.setItem('userSettings', JSON.stringify(this.settings));
+                this.showToast('✅ Settings saved!');
+                this.updateAllStats();
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        this.switchTab(item.dataset.tab);
+                    });
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key >= '1' && e.key <= '8') {
+                        const index = parseInt(e.key) - 1;
+                        if (index < this.activityTemplates.length) {
+                            this.addActivity(this.activityTemplates[index].id);
+                        }
+                    } else if (e.key === 'Enter' && this.pendingActivities.length > 0) {
+                        this.submitActivities();
+                    }
+                });
+            }
+        }
+
+        // Initialize app
+        let app;
+        
+        // Make app globally accessible for onclick handlers
+        window.app = null;
+        
+        // Global function to handle LINE login button click
+        function handleLineLoginClick() {
+            console.log('handleLineLoginClick called, window.app:', window.app);
+            if (window.app && window.app.handleLineLogin) {
+                window.app.handleLineLogin();
+            } else {
+                console.error('App not initialized yet');
+                alert('Please wait for the app to load and try again');
+            }
+        }
+        
+        // Make it globally accessible
+        window.handleLineLoginClick = handleLineLoginClick;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded event fired');
+            console.log('LIFF SDK available:', typeof liff !== 'undefined');
+            
+            // Show debug info immediately
+            const debugUrl = document.getElementById('debugUrl');
+            if (debugUrl) {
+                debugUrl.textContent = window.location.href;
+            }
+            
+            // Check if LIFF SDK loaded
+            if (typeof liff === 'undefined') {
+                console.error('LIFF SDK not loaded! Check network tab for failed requests.');
+                document.getElementById('debugError').textContent = 'LIFF SDK failed to load';
+            }
+            
+            console.log('Creating SalesTrackerApp instance...');
+            app = new SalesTrackerApp();
+            window.app = app; // Make it globally accessible
+            console.log('App initialized, window.app is now available');
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

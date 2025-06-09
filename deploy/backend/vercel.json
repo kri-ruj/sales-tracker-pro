@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "name": "sales-tracker-backend",
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "server.js": {
+      "maxDuration": 30
+    }
+  },
+  "github": {
+    "enabled": true,
+    "autoAlias": true
+  }
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FINNERGY Sales Tracker - Simple</title>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #facc15;
+            font-size: 24px;
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background: #00B900;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #ff6b6b;
+            margin: 10px 0;
+        }
+        .success {
+            color: #51cf66;
+            margin: 10px 0;
+        }
+        .profile {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .profile img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 FINNERGY Sales Tracker</h1>
+        
+        <div class="status">
+            <p>Status: <span id="status">Initializing...</span></p>
+            <p>LIFF: <span id="liffStatus">Checking...</span></p>
+        </div>
+        
+        <button id="loginBtn" onclick="loginWithLine()" disabled>
+            Login with LINE
+        </button>
+        
+        <button onclick="window.location.reload()">
+            Refresh Page
+        </button>
+        
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+        
+        <div id="profile" class="profile" style="display: none;">
+            <img id="profileImage" src="" alt="Profile">
+            <h3 id="profileName"></h3>
+            <p id="profileId"></p>
+            <button onclick="logoutLine()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Simple LIFF implementation
+        const LIFF_ID = '2007539402-Mnwlaklq';
+        
+        function updateStatus(msg) {
+            document.getElementById('status').textContent = msg;
+            console.log('Status:', msg);
+        }
+        
+        function showError(msg) {
+            document.getElementById('error').textContent = msg;
+            console.error('Error:', msg);
+        }
+        
+        function showSuccess(msg) {
+            document.getElementById('success').textContent = msg;
+            document.getElementById('error').textContent = '';
+        }
+        
+        // Initialize LIFF
+        window.onload = async function() {
+            updateStatus('Page loaded, checking LIFF...');
+            
+            // Check if LIFF is available
+            if (typeof liff === 'undefined') {
+                showError('LIFF SDK not loaded!');
+                document.getElementById('liffStatus').textContent = 'Not loaded';
+                return;
+            }
+            
+            document.getElementById('liffStatus').textContent = 'SDK loaded';
+            
+            try {
+                updateStatus('Initializing LIFF...');
+                
+                // Initialize LIFF
+                await liff.init({ 
+                    liffId: LIFF_ID,
+                    withLoginOnExternalBrowser: true
+                });
+                
+                document.getElementById('liffStatus').textContent = 'Initialized';
+                updateStatus('LIFF initialized successfully!');
+                
+                // Enable login button
+                document.getElementById('loginBtn').disabled = false;
+                
+                // Check if already logged in
+                if (liff.isLoggedIn()) {
+                    updateStatus('Already logged in!');
+                    showProfile();
+                } else {
+                    updateStatus('Ready to login');
+                }
+                
+            } catch (error) {
+                showError('LIFF init error: ' + error.message);
+                document.getElementById('liffStatus').textContent = 'Init failed';
+            }
+        };
+        
+        // Login function
+        async function loginWithLine() {
+            console.log('Login button clicked');
+            updateStatus('Starting login...');
+            
+            try {
+                if (!liff.isLoggedIn()) {
+                    updateStatus('Redirecting to LINE login...');
+                    liff.login();
+                } else {
+                    updateStatus('Already logged in');
+                    showProfile();
+                }
+            } catch (error) {
+                showError('Login error: ' + error.message);
+            }
+        }
+        
+        // Show profile
+        async function showProfile() {
+            try {
+                updateStatus('Getting profile...');
+                const profile = await liff.getProfile();
+                
+                // Display profile
+                document.getElementById('profileImage').src = profile.pictureUrl || '';
+                document.getElementById('profileName').textContent = profile.displayName;
+                document.getElementById('profileId').textContent = 'ID: ' + profile.userId;
+                document.getElementById('profile').style.display = 'block';
+                
+                // Hide login button
+                document.getElementById('loginBtn').style.display = 'none';
+                
+                showSuccess('Welcome, ' + profile.displayName + '!');
+                updateStatus('Logged in successfully');
+                
+            } catch (error) {
+                showError('Profile error: ' + error.message);
+            }
+        }
+        
+        // Logout function
+        function logoutLine() {
+            if (liff.isLoggedIn()) {
+                liff.logout();
+                window.location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
