@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .integrations {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .integration {
+            padding: 5px 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .integration.active {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Service Integration Test</h1>
+        
+        <div id="status" class="status">Checking connection...</div>
+        
+        <div class="test-section">
+            <h2>Server Status</h2>
+            <button onclick="checkHealth()">Check Health</button>
+            <button onclick="checkIntegrations()">Check Integrations</button>
+            <div id="serverResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>AI Tests</h2>
+            <button onclick="testSimpleAI()">Test Simple Query</button>
+            <button onclick="testEmailAI()">Test Email Integration</button>
+            <button onclick="testCalendarAI()">Test Calendar Integration</button>
+            <button onclick="testCRMAI()">Test CRM Integration</button>
+            <div id="aiResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Active Integrations</h2>
+            <div id="integrationsList" class="integrations"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3002/api';
+
+        // Check health on load
+        window.onload = async () => {
+            await checkHealth();
+            await checkIntegrations();
+        };
+
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                document.getElementById('status').className = 'status success';
+                document.getElementById('status').textContent = '✅ Server is healthy';
+                
+                showServerResponse('Health Check', data);
+            } catch (error) {
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').textContent = '❌ Server connection failed';
+                showServerResponse('Error', { error: error.message });
+            }
+        }
+
+        async function checkIntegrations() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/integrations`);
+                const data = await response.json();
+                
+                const list = document.getElementById('integrationsList');
+                list.innerHTML = '';
+                
+                data.integrations.forEach(integration => {
+                    const div = document.createElement('div');
+                    div.className = 'integration active';
+                    div.textContent = `${integration.name} - ${integration.status}`;
+                    list.appendChild(div);
+                });
+                
+                showServerResponse('Integrations', data);
+            } catch (error) {
+                showServerResponse('Error', { error: error.message });
+            }
+        }
+
+        async function testSimpleAI() {
+            const query = "What is the capital of Japan?";
+            await testAI(query);
+        }
+
+        async function testEmailAI() {
+            const query = "Help me send an email to the team about tomorrow's meeting";
+            await testAI(query);
+        }
+
+        async function testCalendarAI() {
+            const query = "Schedule a meeting for next Monday at 2pm";
+            await testAI(query);
+        }
+
+        async function testCRMAI() {
+            const query = "Show me all open leads";
+            await testAI(query);
+        }
+
+        async function testAI(message) {
+            try {
+                showAIResponse('Processing...', { status: 'loading' });
+                
+                const response = await fetch(`${API_BASE_URL}/ai/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: {}
+                    })
+                });
+                
+                const data = await response.json();
+                showAIResponse(`Query: "${message}"`, data);
+            } catch (error) {
+                showAIResponse('Error', { error: error.message });
+            }
+        }
+
+        function showServerResponse(title, data) {
+            const div = document.getElementById('serverResponse');
+            div.style.display = 'block';
+            div.innerHTML = `<strong>${title}:</strong>\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        function showAIResponse(title, data) {
+            const div = document.getElementById('aiResponse');
+            div.style.display = 'block';
+            
+            if (data.status === 'loading') {
+                div.innerHTML = `<strong>${title}</strong>`;
+                return;
+            }
+            
+            let content = `<strong>${title}</strong>\n\n`;
+            
+            if (data.response) {
+                content += `<strong>AI Response:</strong>\n${data.response}\n\n`;
+            }
+            
+            if (data.toolsUsed && data.toolsUsed.length > 0) {
+                content += `<strong>Tools Used:</strong> ${data.toolsUsed.join(', ')}\n\n`;
+            }
+            
+            if (data.toolResults && Object.keys(data.toolResults).length > 0) {
+                content += `<strong>Tool Results:</strong>\n${JSON.stringify(data.toolResults, null, 2)}`;
+            }
+            
+            div.innerHTML = content;
+        }
+    </script>
+</body>
+</html>

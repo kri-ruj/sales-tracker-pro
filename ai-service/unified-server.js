@@ -6,34 +6,16 @@ const rateLimit = require('express-rate-limit');
 const winston = require('winston');
 
 // Core modules
-const config = require('./core/config/unified-config');
-const VertexAIProvider = require('./core/providers/vertex-ai-provider');
-const ToolRegistry = require('./core/registry/tool-registry');
-const AgentOrchestrator = require('./core/orchestrator/agent-orchestrator');
-const ToolComposer = require('./core/orchestrator/tool-composer');
+const config = require('./config/config');
+const VertexAIService = require('./services/vertexai.service');
 
-// Sample tools
-const ChatTool = require('./tools/samples/chat.tool');
-
-// Shared tools
-const DatabaseTool = require('./tools/shared/database.tool');
-
-// Sales tools
-const LeadSearchTool = require('./tools/sales/lead-search.tool');
-const EmailGeneratorTool = require('./tools/sales/email-generator.tool');
-const LeadAnalyzerTool = require('./tools/sales/lead-analyzer.tool');
-
-// Massage tools
-const MassageRecommendationTool = require('./tools/massage/recommendation.tool');
-
-// Analytics tools
-const PerformanceAnalyticsTool = require('./tools/analytics/performance.tool');
-const DataVisualizationTool = require('./tools/analytics/data-visualization.tool');
-
-// Productivity tools
-const CalendarTool = require('./tools/productivity/calendar.tool');
-const TaskManagerTool = require('./tools/productivity/task-manager.tool');
-const DocumentGeneratorTool = require('./tools/productivity/document-generator.tool');
+// Integration tools
+const SalesforceIntegration = require('./integrations/crm/salesforce.integration');
+const GmailIntegration = require('./integrations/email/gmail.integration');
+const OutlookEmailIntegration = require('./integrations/email/outlook.integration');
+const SMTPIntegration = require('./integrations/email/smtp.integration');
+const GoogleCalendarIntegration = require('./integrations/calendar/google-calendar.integration');
+const OutlookCalendarIntegration = require('./integrations/calendar/outlook-calendar.integration');
 
 /**
  * Unified AI Agent Server
@@ -49,9 +31,7 @@ class UnifiedAIServer {
         
         // Core components
         this.aiProvider = null;
-        this.toolRegistry = null;
-        this.orchestrator = null;
-        this.toolComposer = null;
+        this.integrations = new Map();
         
         // Server instance
         this.server = null;

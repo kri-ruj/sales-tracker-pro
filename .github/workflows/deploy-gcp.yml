@@ -8,7 +8,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAE_SERVICE: sales-tracker-api
+  GAE_SERVICE: default
   REGION: asia-southeast1
 
 jobs:
@@ -75,7 +75,7 @@ jobs:
         cd backend
         cat > app.yaml << EOF
         runtime: nodejs18
-        service: sales-tracker-api
+        service: default
         
         env_variables:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
@@ -111,7 +111,7 @@ jobs:
     - name: Update Frontend API URL
       run: |
         # Update the frontend with the deployed backend URL
-        BACKEND_URL="https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.uc.r.appspot.com"
+        BACKEND_URL="https://${{ secrets.GCP_PROJECT_ID }}.uc.r.appspot.com"
         echo "Backend deployed to: $BACKEND_URL"
 
   # Deploy Database to Cloud SQL (Optional)
