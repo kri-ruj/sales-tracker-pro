@@ -12,41 +12,31 @@ env:
   REGION: asia-southeast1
 
 jobs:
-  # Deploy Frontend to Firebase Hosting
+  # Deploy Frontend to GCP App Engine
   deploy-frontend:
-    name: Deploy Frontend to Firebase
+    name: Deploy Frontend to GCP App Engine
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
       with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: package.json
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Install dependencies
-      run: npm install
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Build frontend
+    - name: Deploy Frontend to App Engine
       run: |
-        # Create optimized build
-        mkdir -p dist
-        cp index.html dist/
-        cp manifest.json dist/
-        cp sw.js dist/
-        echo "Frontend build complete"
-
-    - name: Deploy to Firebase Hosting
-      uses: FirebaseExtended/action-hosting-deploy@v0
-      with:
-        repoToken: ${{ secrets.GITHUB_TOKEN }}
-        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        channelId: live
-        projectId: ${{ secrets.GCP_PROJECT_ID }}
+        # Deploy frontend service
+        gcloud app deploy app.yaml --quiet --project=${{ secrets.GCP_PROJECT_ID }}
+        
+        echo "Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
 
   # Deploy Backend to Google App Engine
   deploy-backend:
@@ -108,11 +98,11 @@ jobs:
         cd backend
         gcloud app deploy app.yaml --quiet --promote
 
-    - name: Update Frontend API URL
+    - name: Display Deployment URLs
       run: |
-        # Update the frontend with the deployed backend URL
-        BACKEND_URL="https://${{ secrets.GCP_PROJECT_ID }}.uc.r.appspot.com"
-        echo "Backend deployed to: $BACKEND_URL"
+        # Display the deployment URLs
+        echo "✅ Backend deployed to: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "✅ Frontend will be deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
 
   # Database setup removed - using in-memory storage for simplicity
 
@@ -188,8 +178,8 @@ jobs:
       if: needs.deploy-frontend.result == 'success' && needs.deploy-backend.result == 'success'
       run: |
         echo "🎉 Deployment successful!"
-        echo "Frontend: https://${{ secrets.GCP_PROJECT_ID }}.web.app"
-        echo "Backend: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.uc.r.appspot.com"
+        echo "Frontend: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "Backend: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
         
     - name: Notify failure
       if: needs.deploy-frontend.result == 'failure' || needs.deploy-backend.result == 'failure'
