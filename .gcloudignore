@@ -1,68 +1,35 @@
-# This file specifies files that are *not* uploaded to Google Cloud
-# using gcloud. It follows the same syntax as .gitignore, with the addition of
-# "#!include" directives (which insert the entries of the given .gitignore-style
-# file at that point).
-
+# This file specifies files that are *not* uploaded to Google Cloud Platform
 .gcloudignore
 .git
 .gitignore
+.firebase/
+.github/
 
-# Node.js dependencies:
+# Node.js dependencies
 node_modules/
 
-# Python bytecode:
-__pycache__/
-*.pyc
+# Backend and AI service directories
+backend/
+ai-service/
 
-# Local development:
-.env
-*.local
-
-# IDE files:
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS generated files:
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Build outputs:
-dist/
-build/
-coverage/
-
-# Logs:
-*.log
-logs/
-
-# Documentation:
+# Scripts and documentation
+scripts/
 *.md
-docs/
+*.sh
 
-# Frontend files (deployed separately):
-index.html
-manifest.json
-sw.js
+# Development files
+package.json
+package-lock.json
 firebase.json
 .firebaserc
+test-*.js
+deploy-*.sh
 
-# CI/CD files:
-.github/
-cloudbuild.yaml
+# IDE
+.vscode/
+.idea/
 
-# Tests:
-test/
-tests/
-*.test.js
-*.spec.js
-
-# Other:
-README.md
-LICENSE
+# OS
+.DS_Store
+Thumbs.db
+EOF < /dev/null

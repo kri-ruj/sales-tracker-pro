@@ -2,24 +2,42 @@ runtime: nodejs20
 service: frontend
 
 handlers:
-- url: /
-  static_files: index.html
-  upload: index.html
+# Static assets with caching
+- url: /(.*\.(js|css|png|jpg|jpeg|gif|ico|svg|webp))$
+  static_files: \1
+  upload: .*\.(js|css|png|jpg|jpeg|gif|ico|svg|webp)$
   secure: always
+  http_headers:
+    Cache-Control: "public, max-age=31536000"
 
+# Service worker - no cache
 - url: /sw.js
   static_files: sw.js
   upload: sw.js
   secure: always
   http_headers:
-    Service-Worker-Allowed: /
+    Cache-Control: "no-cache"
+    Service-Worker-Allowed: "/"
 
+# Manifest
 - url: /manifest.json
   static_files: manifest.json
   upload: manifest.json
   secure: always
+  http_headers:
+    Content-Type: "application/manifest+json"
 
+# Test page
+- url: /test-hosting.html
+  static_files: test-hosting.html
+  upload: test-hosting.html
+  secure: always
+
+# Main app - always serve index.html for SPA routing
 - url: /.*
   static_files: index.html
   upload: index.html
   secure: always
+  http_headers:
+    Cache-Control: "no-cache, must-revalidate"
+
