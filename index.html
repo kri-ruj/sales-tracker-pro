@@ -12,6 +12,18 @@
     <!-- Liquid Glass Styles -->
     <link rel="stylesheet" href="liquid-glass-styles.css">
     
+    <!-- Force reload with version parameter -->
+    <script>
+        // Force cache bypass
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+    </script>
+    
     <!-- LINE LIFF SDK -->
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script>
@@ -846,7 +858,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.6.5</span></div>
+            <div class="version-label">v<span id="versionNumber">3.6.6</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1020,7 +1032,7 @@
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.5">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.6">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
@@ -1043,7 +1055,7 @@
             // LIFF ID - Using REVIEW environment for production use
             LIFF_ID: '2007539403-M1dnODn6', // Review environment LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6.5',
+            VERSION: '3.6.6',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -1298,10 +1310,8 @@
             }
             
             enterDemoMode() {
-                this.setupDemoUser();
-                this.displayUserInfo(this.userProfile);
-                this.hideLoginScreen();
-                this.showToast('Demo mode - Limited features');
+                this.showToast('❌ Demo mode is disabled. Please use LINE login.');
+                return;
             }
             
             showLoginScreen() {
@@ -1347,12 +1357,9 @@
             }
 
             setupDemoUser() {
-                this.userProfile = {
-                    userId: `demo_${Date.now()}`,
-                    displayName: 'Demo User',
-                    pictureUrl: null
-                };
-                this.lineUserId = this.userProfile.userId;
+                // No demo mode - require real LINE login
+                this.showToast('❌ Demo mode disabled. Please login with LINE.');
+                return;
             }
 
             async checkBackendConnection() {
@@ -1435,16 +1442,14 @@
             }
 
             loadActivities() {
-                const saved = localStorage.getItem('activities');
-                this.activities = saved ? JSON.parse(saved) : [];
-                
-                const savedPending = localStorage.getItem('pendingActivities');
-                this.pendingActivities = savedPending ? JSON.parse(savedPending) : [];
+                // No local storage - only keep in memory
+                this.activities = [];
+                this.pendingActivities = [];
             }
 
             saveActivities() {
-                localStorage.setItem('activities', JSON.stringify(this.activities));
-                localStorage.setItem('pendingActivities', JSON.stringify(this.pendingActivities));
+                // No local storage - data only persists during session
+                // All data must be synced to backend
             }
 
             loadSettings() {
@@ -1750,19 +1755,19 @@
                         <h2 style="margin-bottom: 1rem; color: var(--primary);">🎉 What's New in v${CONFIG.VERSION}</h2>
                         <div style="display: grid; gap: 1rem;">
                             <div class="changelog-section">
-                                <h3 style="color: #10b981; margin-bottom: 0.5rem;">✨ New Features</h3>
+                                <h3 style="color: #10b981; margin-bottom: 0.5rem;">🚨 Breaking Changes</h3>
                                 <ul style="list-style: none; padding: 0;">
-                                    <li style="margin: 0.5rem 0;">🔥 Real-time Activity Feed - See what your team is doing</li>
-                                    <li style="margin: 0.5rem 0;">📊 Live updates every 30 seconds</li>
-                                    <li style="margin: 0.5rem 0;">⏱️ Time-based activity tracking</li>
+                                    <li style="margin: 0.5rem 0;">❌ Removed ALL local/mock data</li>
+                                    <li style="margin: 0.5rem 0;">🔒 Backend connection required</li>
+                                    <li style="margin: 0.5rem 0;">🚫 Demo mode disabled</li>
                                 </ul>
                             </div>
                             <div class="changelog-section">
                                 <h3 style="color: #3b82f6; margin-bottom: 0.5rem;">🔧 Improvements</h3>
                                 <ul style="list-style: none; padding: 0;">
-                                    <li style="margin: 0.5rem 0;">⚡ Better caching strategy</li>
-                                    <li style="margin: 0.5rem 0;">🎨 Animated activity feed items</li>
-                                    <li style="margin: 0.5rem 0;">📱 Enhanced dashboard layout</li>
+                                    <li style="margin: 0.5rem 0;">🧹 Cleaner codebase</li>
+                                    <li style="margin: 0.5rem 0;">🔄 Force cache clearing</li>
+                                    <li style="margin: 0.5rem 0;">📡 Real data only</li>
                                 </ul>
                             </div>
                         </div>
@@ -1889,44 +1894,11 @@
                         }
                     }
                     
-                    // Fallback to local data
-                    const today = new Date().toDateString();
-                    const weekStart = new Date();
-                    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-                    
-                    const todayActivities = this.activities.filter(a => a.date === today);
-                    const weekActivities = this.activities.filter(a => 
-                        new Date(a.timestamp) >= weekStart
-                    );
-                    
-                    const data = {
-                        totalPoints: this.activities.reduce((sum, a) => sum + a.points, 0),
-                        totalActivities: this.activities.length,
-                        todayPoints: todayActivities.reduce((sum, a) => sum + a.points, 0),
-                        weekPoints: weekActivities.reduce((sum, a) => sum + a.points, 0)
-                    };
-                        
+                    // No local data - require backend
                     content.innerHTML = `
-                        <div style="display: grid; gap: 0.5rem;">
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
-                                <span>Total Points:</span>
-                                <strong style="color: var(--primary);">${data.totalPoints || 0}</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
-                                <span>Activities:</span>
-                                <strong style="color: var(--primary);">${data.totalActivities || 0}</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
-                                <span>Today:</span>
-                                <strong style="color: var(--primary);">${data.todayPoints || 0} pts</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
-                                <span>This Week:</span>
-                                <strong style="color: var(--primary);">${data.weekPoints || 0} pts</strong>
-                            </div>
-                            <div style="margin-top: 0.5rem; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
-                                (Local data - Backend not connected)
-                            </div>
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: var(--text-muted);">❌ Backend connection required</p>
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Dashboard data requires server connection</p>
                         </div>
                     `;
                 } catch (error) {
@@ -2004,42 +1976,11 @@
                         }
                     }
                     
-                    // Fallback to mock data
-                    const userName = this.userProfile ? this.userProfile.displayName : 'You';
-                    const userPicture = this.userProfile ? this.userProfile.pictureUrl : null;
-                    const userPoints = this.activities.reduce((sum, a) => sum + a.points, 0);
-                    
-                    const mockData = [
-                        { 
-                            name: userName, 
-                            points: userPoints,
-                            pictureUrl: userPicture,
-                            isCurrentUser: true
-                        },
-                        { name: 'Sarah Chen', points: 1250, pictureUrl: null },
-                        { name: 'Mike Johnson', points: 1180, pictureUrl: null },
-                        { name: 'Emma Davis', points: 950, pictureUrl: null },
-                        { name: 'Alex Kim', points: 780, pictureUrl: null }
-                    ].sort((a, b) => b.points - a.points);
-                    
+                    // No local data - require backend connection
                     content.innerHTML = `
-                        <div style="display: grid; gap: 0.5rem;">
-                            ${mockData.slice(0, 5).map((user, index) => `
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: ${user.isCurrentUser ? 'rgba(250, 204, 21, 0.1)' : 'rgba(55, 65, 81, 0.3)'}; border-radius: 0.5rem; font-size: 0.875rem; ${user.isCurrentUser ? 'border: 1px solid rgba(250, 204, 21, 0.3);' : ''}">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="font-size: 1rem; font-weight: bold; color: var(--primary);">#${index + 1}</span>
-                                        ${user.pictureUrl ? 
-                                            `<img src="${user.pictureUrl}" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--primary);" alt="${user.name}">` : 
-                                            `<div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: var(--bg-dark);">${user.name.charAt(0)}</div>`
-                                        }
-                                        <span style="${user.isCurrentUser ? 'font-weight: bold;' : ''}">${user.name}</span>
-                                    </div>
-                                    <span style="font-weight: bold; color: var(--primary);">${user.points}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div style="margin-top: 0.5rem; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
-                            (Local data - Backend not connected)
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: var(--text-muted);">❌ Backend connection required</p>
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Please check your internet connection</p>
                         </div>
                     `;
                 } catch (error) {
@@ -2157,12 +2098,11 @@
             }
 
             updateActivityFeedWithMockData() {
-                const mockActivities = [
-                    { user: 'Sarah Chen', action: 'completed', activity: 'นำเสนอ', points: 40, timestamp: new Date(Date.now() - 300000) },
-                    { user: 'Mike Johnson', action: 'completed', activity: 'นัด', points: 20, timestamp: new Date(Date.now() - 600000) },
-                    { user: 'Emma Davis', action: 'achieved', milestone: 'Level 10', points: 1000, timestamp: new Date(Date.now() - 900000) }
-                ];
-                this.updateActivityFeed(mockActivities);
+                // No mock data - show empty state
+                const feedContainer = document.getElementById('activityFeed');
+                if (feedContainer) {
+                    feedContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Waiting for team activities...</div>';
+                }
             }
 
             updateActivityFeed(activities) {
