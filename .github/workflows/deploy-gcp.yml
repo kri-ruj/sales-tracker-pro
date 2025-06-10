@@ -48,13 +48,13 @@ jobs:
         echo "New version: $NEW_VERSION"
         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
         
-        # Update all version references
-        ./scripts/bump-version.sh patch || echo "Script not found, updating manually"
+        # Update all version references using the update script
+        chmod +x update-version.sh
+        ./update-version.sh $NEW_VERSION || echo "Update script failed, updating manually"
         
-        # Ensure version is updated in critical files
-        sed -i "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" index.html
-        sed -i "s/>$CURRENT_VERSION</>$NEW_VERSION</" index.html
-        sed -i "s/What's New in v[^\"]*\"/What's New in v$NEW_VERSION\"/" index.html
+        # Also update these specific locations that the script might miss
+        sed -i "s/const CURRENT_VERSION = '[^']*'/const CURRENT_VERSION = '$NEW_VERSION'/" index.html
+        sed -i "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
 
     - name: Commit version changes
       run: |
