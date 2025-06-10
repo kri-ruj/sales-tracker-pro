@@ -62,3 +62,16 @@ cat ~/github-actions-key.json
 - `roles/storage.admin` - Access deployment buckets
 - `roles/cloudbuild.builds.editor` - Build images
 - `roles/iam.serviceAccountUser` - Act as service account
+
+## Additional Permission Required
+The GitHub Actions service account also needs permission to act as the App Engine default service account:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding \
+  salesappfkt@appspot.gserviceaccount.com \
+  --member="serviceAccount:github-actions@salesappfkt.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser" \
+  --project=salesappfkt
+```
+
+This has been applied and the deployment should now work.
