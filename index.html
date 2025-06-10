@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v3.6 - Gamified sales performance tracking for teams">
+    <meta name="description" content="Sales Activity Tracker v3.6.3 - Gamified sales performance tracking for teams">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
     
     <!-- Liquid Glass Styles -->
@@ -229,6 +232,17 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
         
         .status-label {
@@ -832,7 +846,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.6.2</span></div>
+            <div class="version-label">v<span id="versionNumber">3.6.5</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -917,6 +931,32 @@
                     <div id="dashboardContent">
                         <p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>
                     </div>
+                    
+                    <!-- Real-time Activity Feed -->
+                    <div style="margin-top: 1rem;">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🔥</span> Live Team Activity
+                            <span class="live-indicator" style="
+                                background: #10b981;
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 50%;
+                                animation: pulse 2s infinite;
+                                margin-left: auto;
+                            "></span>
+                        </h3>
+                        <div id="activityFeed" style="
+                            max-height: 300px;
+                            overflow-y: auto;
+                            background: rgba(31, 41, 55, 0.5);
+                            border-radius: 0.5rem;
+                            padding: 0.5rem;
+                        ">
+                            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                No recent activities
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -980,7 +1020,7 @@
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.3">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.5">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
@@ -1003,7 +1043,7 @@
             // LIFF ID - Using REVIEW environment for production use
             LIFF_ID: '2007539403-M1dnODn6', // Review environment LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6.3',
+            VERSION: '3.6.5',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -1021,6 +1061,8 @@
                 this.lastKnownVersion = CONFIG.VERSION;
                 this.updateCheckInterval = null;
                 this.liffInitialized = false;
+                this.activityFeedInterval = null;
+                this.lastFeedUpdate = Date.now();
                 
                 this.activityTemplates = [
                     { id: 'call', icon: '📞', title: 'โทร', points: 10 },
@@ -1053,6 +1095,7 @@
                     this.setupEventListeners();
                     this.checkBackendConnection();
                     this.startUpdateChecker();
+                    this.startActivityFeedUpdater();
                     console.log('App init() completed successfully');
                 } catch (error) {
                     console.error('Init error:', error);
@@ -1511,6 +1554,16 @@
                 // Show success
                 this.showToast(`✅ ${totalPoints} points earned!`);
                 this.showSuccessAnimation(totalPoints);
+                
+                // Add to activity feed
+                const activityCount = this.pendingActivities.length;
+                this.addToActivityFeed({
+                    user: this.userProfile?.displayName || 'You',
+                    action: 'submitted',
+                    activity: `${activityCount} activities`,
+                    points: totalPoints,
+                    timestamp: new Date()
+                });
             }
 
             async syncActivitiesToBackend(activities) {
@@ -1699,17 +1752,17 @@
                             <div class="changelog-section">
                                 <h3 style="color: #10b981; margin-bottom: 0.5rem;">✨ New Features</h3>
                                 <ul style="list-style: none; padding: 0;">
-                                    <li style="margin: 0.5rem 0;">🎯 What's New button to see latest updates</li>
-                                    <li style="margin: 0.5rem 0;">🔄 Automatic version updates on deployment</li>
-                                    <li style="margin: 0.5rem 0;">📱 Improved mobile experience</li>
+                                    <li style="margin: 0.5rem 0;">🔥 Real-time Activity Feed - See what your team is doing</li>
+                                    <li style="margin: 0.5rem 0;">📊 Live updates every 30 seconds</li>
+                                    <li style="margin: 0.5rem 0;">⏱️ Time-based activity tracking</li>
                                 </ul>
                             </div>
                             <div class="changelog-section">
                                 <h3 style="color: #3b82f6; margin-bottom: 0.5rem;">🔧 Improvements</h3>
                                 <ul style="list-style: none; padding: 0;">
-                                    <li style="margin: 0.5rem 0;">⚡ Faster loading times</li>
-                                    <li style="margin: 0.5rem 0;">🐛 Fixed caching issues</li>
-                                    <li style="margin: 0.5rem 0;">🎨 UI enhancements</li>
+                                    <li style="margin: 0.5rem 0;">⚡ Better caching strategy</li>
+                                    <li style="margin: 0.5rem 0;">🎨 Animated activity feed items</li>
+                                    <li style="margin: 0.5rem 0;">📱 Enhanced dashboard layout</li>
                                 </ul>
                             </div>
                         </div>
@@ -2072,6 +2125,100 @@
                         this.submitActivities();
                     }
                 });
+            }
+
+            // Activity Feed Methods
+            startActivityFeedUpdater() {
+                // Update feed every 30 seconds
+                this.activityFeedInterval = setInterval(() => {
+                    this.fetchLatestActivities();
+                }, 30000);
+                
+                // Initial fetch
+                this.fetchLatestActivities();
+            }
+
+            async fetchLatestActivities() {
+                if (!this.backendConnected || !CONFIG.ENABLE_BACKEND_SYNC) {
+                    // Use mock data in demo mode
+                    this.updateActivityFeedWithMockData();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/team/recent-activities`);
+                    if (response.ok) {
+                        const activities = await response.json();
+                        this.updateActivityFeed(activities);
+                    }
+                } catch (error) {
+                    console.log('Failed to fetch team activities');
+                }
+            }
+
+            updateActivityFeedWithMockData() {
+                const mockActivities = [
+                    { user: 'Sarah Chen', action: 'completed', activity: 'นำเสนอ', points: 40, timestamp: new Date(Date.now() - 300000) },
+                    { user: 'Mike Johnson', action: 'completed', activity: 'นัด', points: 20, timestamp: new Date(Date.now() - 600000) },
+                    { user: 'Emma Davis', action: 'achieved', milestone: 'Level 10', points: 1000, timestamp: new Date(Date.now() - 900000) }
+                ];
+                this.updateActivityFeed(mockActivities);
+            }
+
+            updateActivityFeed(activities) {
+                const feedContainer = document.getElementById('activityFeed');
+                if (!feedContainer) return;
+
+                if (!activities || activities.length === 0) {
+                    feedContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent activities</div>';
+                    return;
+                }
+
+                feedContainer.innerHTML = activities.map(activity => {
+                    const timeAgo = this.getTimeAgo(new Date(activity.timestamp));
+                    return `
+                        <div class="activity-feed-item" style="
+                            padding: 0.75rem;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            animation: slideIn 0.3s ease-out;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-weight: 600; color: var(--primary);">${activity.user}</span>
+                                <span style="color: var(--text-muted); font-size: 0.875rem;">${activity.action}</span>
+                                ${activity.activity ? `<span>${activity.activity}</span>` : ''}
+                                ${activity.milestone ? `<span style="color: #10b981;">🏆 ${activity.milestone}</span>` : ''}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                                <span style="color: var(--text-muted); font-size: 0.75rem;">${timeAgo}</span>
+                                <span style="color: var(--primary); font-size: 0.75rem; font-weight: 600;">+${activity.points} pts</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addToActivityFeed(activity) {
+                const feed = JSON.parse(localStorage.getItem('localActivityFeed') || '[]');
+                feed.unshift(activity);
+                
+                // Keep only last 20 activities
+                if (feed.length > 20) feed.pop();
+                
+                localStorage.setItem('localActivityFeed', JSON.stringify(feed));
+                
+                // Update display if on dashboard
+                if (this.currentTab === 'dashboard') {
+                    this.updateActivityFeed(feed);
+                }
+            }
+
+            getTimeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
             }
         }
 
