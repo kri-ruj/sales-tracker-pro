@@ -22,8 +22,15 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Initialize SQLite database - use in-memory for App Engine
-const db = new sqlite3.Database(':memory:');
+// Initialize SQLite database - use file for persistence
+const dbPath = process.env.NODE_ENV === 'production' ? '/tmp/sales-tracker.db' : './sales-tracker.db';
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err);
+    } else {
+        console.log('Connected to SQLite database at:', dbPath);
+    }
+});
 
 // Create tables
 db.serialize(() => {
@@ -71,8 +78,24 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Sales Tracker LINE Backend is running',
-        version: '3.7.0',
+        version: '3.7.2',
         timestamp: new Date().toISOString() 
+    });
+});
+
+// Debug endpoint to check registered groups
+app.get('/api/debug/groups', (req, res) => {
+    db.all('SELECT * FROM group_registrations', (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+        } else {
+            res.json({ 
+                groups: rows || [],
+                count: rows ? rows.length : 0,
+                dbPath: dbPath,
+                hasToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN
+            });
+        }
     });
 });
 
@@ -81,8 +104,8 @@ app.get('/', (req, res) => {
     res.json({ 
         message: 'Sales Tracker API',
         status: 'running',
-        version: '3.7.0',
-        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook']
+        version: '3.7.2',
+        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook', '/api/debug/groups']
     });
 });
 
@@ -199,10 +222,16 @@ app.post('/api/activities/sync', async (req, res) => {
 
         // Send notifications to registered groups
         if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
+            console.log('LINE_CHANNEL_ACCESS_TOKEN is configured, checking for registered groups...');
             const registeredGroups = await new Promise((resolve, reject) => {
                 db.all('SELECT group_id FROM group_registrations WHERE notifications_enabled = 1', (err, rows) => {
-                    if (err) reject(err);
-                    else resolve(rows || []);
+                    if (err) {
+                        console.error('Error fetching registered groups:', err);
+                        reject(err);
+                    } else {
+                        console.log('Raw query result:', rows);
+                        resolve(rows || []);
+                    }
                 });
             });
 

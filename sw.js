@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sales-tracker-pro-v3.6.8';
+const CACHE_NAME = 'sales-tracker-pro-v3.7.2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -20,18 +20,18 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', event => {
-  console.log('Service Worker: Installing v3.6.7...');
+  console.log('Service Worker: Installing v3.7.2...');
   // Force immediate activation
   self.skipWaiting();
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Service Worker: Caching files for v3.6.7');
+        console.log('Service Worker: Caching files for v3.7.2');
         return cache.addAll(urlsToCache);
       })
       .then(() => {
-        console.log('Service Worker: Installation complete v3.6.7');
+        console.log('Service Worker: Installation complete v3.7.2');
       })
       .catch(error => {
         console.error('Service Worker: Installation failed', error);

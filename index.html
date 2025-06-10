@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v3.6.3 - Gamified sales performance tracking for teams">
+    <meta name="description" content="Sales Activity Tracker v3.7.2 - Gamified sales performance tracking for teams">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.7.1';
+        const CURRENT_VERSION = '3.7.2';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -1040,7 +1040,7 @@
     </div>
 
     <script>
-        // Sales Tracker App v3.6 - Review Mode
+        // Sales Tracker App v3.7.2 - With Local Storage Persistence
         
         // Configuration
         const CONFIG = {
@@ -1056,7 +1056,7 @@
             // LIFF ID - Using your actual production LIFF ID
             LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.7.1',
+            VERSION: '3.7.2',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -1444,13 +1444,35 @@
                 this.activities = [];
                 this.pendingActivities = [];
                 
-                // Load from backend if connected and user is logged in
+                // First, try to load from localStorage
+                const savedActivities = localStorage.getItem('savedActivities');
+                const savedPending = localStorage.getItem('pendingActivities');
+                
+                if (savedActivities) {
+                    try {
+                        this.activities = JSON.parse(savedActivities);
+                        console.log(`Loaded ${this.activities.length} activities from localStorage`);
+                    } catch (error) {
+                        console.error('Failed to parse saved activities:', error);
+                    }
+                }
+                
+                if (savedPending) {
+                    try {
+                        this.pendingActivities = JSON.parse(savedPending);
+                        console.log(`Loaded ${this.pendingActivities.length} pending activities from localStorage`);
+                    } catch (error) {
+                        console.error('Failed to parse pending activities:', error);
+                    }
+                }
+                
+                // Then, try to sync with backend if connected and user is logged in
                 if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
                     try {
                         const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/${this.lineUserId}?limit=100`);
                         if (response.ok) {
                             const activities = await response.json();
-                            this.activities = activities.map(a => ({
+                            const backendActivities = activities.map(a => ({
                                 id: `${a.activity_type}_${a.id}`,
                                 type: a.activity_type,
                                 title: a.title,
@@ -1458,7 +1480,16 @@
                                 timestamp: a.created_at,
                                 date: a.date
                             }));
-                            console.log(`Loaded ${this.activities.length} activities from backend`);
+                            
+                            // Merge backend activities with local ones (avoid duplicates)
+                            const existingIds = new Set(this.activities.map(a => a.id));
+                            const newActivities = backendActivities.filter(a => !existingIds.has(a.id));
+                            this.activities = [...this.activities, ...newActivities];
+                            
+                            console.log(`Loaded ${backendActivities.length} activities from backend, merged to ${this.activities.length} total`);
+                            
+                            // Save the merged activities to localStorage
+                            this.saveActivities();
                         }
                     } catch (error) {
                         console.error('Failed to load activities from backend:', error);
@@ -1467,8 +1498,14 @@
             }
 
             saveActivities() {
-                // No local storage - data only persists during session
-                // All data must be synced to backend
+                // Save activities to localStorage for persistence across refreshes
+                try {
+                    localStorage.setItem('savedActivities', JSON.stringify(this.activities));
+                    localStorage.setItem('pendingActivities', JSON.stringify(this.pendingActivities));
+                    console.log('Activities saved to localStorage');
+                } catch (error) {
+                    console.error('Failed to save activities to localStorage:', error);
+                }
             }
 
             loadSettings() {
