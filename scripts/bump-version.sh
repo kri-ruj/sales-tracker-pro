@@ -47,8 +47,13 @@ fi
 # Update index.html meta tag
 sed -i.bak "s/<meta name=\"version\" content=\"[^\"]*\">/<meta name=\"version\" content=\"$NEW_VERSION\">/" index.html && rm index.html.bak
 
-# Update config.js VERSION constant
-sed -i.bak "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" config.js && rm config.js.bak
+# Update config.js VERSION constant (if exists)
+if [ -f "config.js" ]; then
+  sed -i.bak "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" config.js && rm config.js.bak
+fi
+
+# Update VERSION in index.html JavaScript
+sed -i.bak "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" index.html && rm index.html.bak
 
 # Update version display in HTML
 sed -i.bak "s/v[0-9]\+\.[0-9]\+\.[0-9]\+/v$NEW_VERSION/g" index.html && rm index.html.bak
