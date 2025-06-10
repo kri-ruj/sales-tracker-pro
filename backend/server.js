@@ -71,7 +71,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Sales Tracker LINE Backend is running',
-        version: '3.6.3',
+        version: '3.6.7',
         timestamp: new Date().toISOString() 
     });
 });
@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
     res.json({ 
         message: 'Sales Tracker API',
         status: 'running',
-        version: '3.6.3',
+        version: '3.6.7',
         endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook']
     });
 });

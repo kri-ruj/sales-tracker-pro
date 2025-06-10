@@ -10,17 +10,38 @@
     <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
     
     <!-- Liquid Glass Styles -->
-    <link rel="stylesheet" href="liquid-glass-styles.css">
+    <link rel="stylesheet" href="liquid-glass-styles.css?v=3.6.7">
     
     <!-- Force reload with version parameter -->
     <script>
-        // Force cache bypass
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-            });
+        // Aggressive cache bypass
+        const CURRENT_VERSION = '3.6.7';
+        const STORED_VERSION = localStorage.getItem('appVersion');
+        
+        if (STORED_VERSION !== CURRENT_VERSION) {
+            // Clear everything if version mismatch
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            
+            // Clear caches
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+            
+            // Update stored version
+            localStorage.setItem('appVersion', CURRENT_VERSION);
+            
+            // Force reload
+            if (STORED_VERSION) {
+                window.location.reload(true);
+            }
         }
     </script>
     
@@ -858,7 +879,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.6.6</span></div>
+            <div class="version-label">v<span id="versionNumber">3.6.7</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1032,7 +1053,7 @@
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.6">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.7">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
@@ -1055,7 +1076,7 @@
             // LIFF ID - Using REVIEW environment for production use
             LIFF_ID: '2007539403-M1dnODn6', // Review environment LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6.6',
+            VERSION: '3.6.7',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -2204,11 +2225,15 @@
             console.log('App initialized, window.app is now available');
         });
 
-        // Service Worker Registration
+        // Service Worker Registration with version
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registered'))
+                navigator.serviceWorker.register('/sw.js?v=' + CONFIG.VERSION)
+                    .then(reg => {
+                        console.log('Service Worker registered v' + CONFIG.VERSION);
+                        // Force update check
+                        reg.update();
+                    })
                     .catch(err => console.error('Service Worker registration failed:', err));
             });
         }

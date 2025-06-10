@@ -33,6 +33,14 @@ handlers:
   upload: test-hosting.html
   secure: always
 
+# Force update page
+- url: /force-update.html
+  static_files: force-update.html
+  upload: force-update.html
+  secure: always
+  http_headers:
+    Cache-Control: "no-cache, no-store, must-revalidate"
+
 # Main app - always serve index.html for SPA routing
 - url: /.*
   static_files: index.html
