@@ -118,29 +118,6 @@ jobs:
         cd backend
         npm install
 
-    - name: Create app.yaml for App Engine
-      run: |
-        cd backend
-        cat > app.yaml << EOF
-        runtime: nodejs20
-        service: default
-        
-        env_variables:
-          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
-          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
-          NODE_ENV: production
-          
-        automatic_scaling:
-          min_instances: 0
-          max_instances: 10
-          target_cpu_utilization: 0.6
-          
-        resources:
-          cpu: 1
-          memory_gb: 0.5
-          disk_size_gb: 10
-        EOF
-
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
       with:
@@ -154,12 +131,12 @@ jobs:
     - name: Deploy Backend to App Engine
       run: |
         cd backend
-        gcloud app deploy app.yaml --quiet --promote --version=${{ needs.version-bump.outputs.new_version }}
+        gcloud app deploy app.yaml --quiet --promote
 
     - name: Deploy Frontend to App Engine
       run: |
         # Deploy frontend from root directory
-        gcloud app deploy app.yaml --quiet --promote --version=${{ needs.version-bump.outputs.new_version }}
+        gcloud app deploy app.yaml --quiet --promote
 
     - name: Display Deployment URLs
       run: |
