@@ -1,0 +1,347 @@
+name: Deploy with Auto Version Bump
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAE_SERVICE: sales-tracker-api
+  REGION: asia-southeast1
+
+jobs:
+  version-bump:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Get current version
+      id: current
+      run: |
+        CURRENT_VERSION=$(grep -o '"version": "[^"]*"' package.json | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+        echo "Current version: $CURRENT_VERSION"
+        echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Calculate new version
+      id: bump
+      run: |
+        CURRENT="${{ steps.current.outputs.version }}"
+        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT"
+        MAJOR=${VERSION_PARTS[0]}
+        MINOR=${VERSION_PARTS[1]}
+        PATCH=${VERSION_PARTS[2]}
+        
+        VERSION_TYPE="${{ github.event.inputs.version_type || 'patch' }}"
+        
+        if [ "$VERSION_TYPE" = "major" ]; then
+          MAJOR=$((MAJOR + 1))
+          MINOR=0
+          PATCH=0
+        elif [ "$VERSION_TYPE" = "minor" ]; then
+          MINOR=$((MINOR + 1))
+          PATCH=0
+        else
+          PATCH=$((PATCH + 1))
+        fi
+        
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        echo "New version: $NEW_VERSION"
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Update version in all files
+      run: |
+        NEW_VERSION="${{ steps.bump.outputs.new_version }}"
+        
+        # Update root package.json
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" package.json
+        
+        # Update backend package.json
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" backend/package.json
+        
+        # Update ai-service package.json if exists
+        if [ -f "ai-service/package.json" ]; then
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" ai-service/package.json
+        fi
+        
+        # Update index.html meta tag
+        sed -i "s/<meta name=\"version\" content=\"[^\"]*\">/<meta name=\"version\" content=\"$NEW_VERSION\">/" index.html
+        
+        # Update config.js VERSION constant
+        sed -i "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" config.js
+        
+        # Update any version display in index.html
+        sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+/v$NEW_VERSION/g" index.html
+
+    - name: Create version file
+      run: |
+        echo "${{ steps.bump.outputs.new_version }}" > VERSION
+        echo "Updated at: $(date)" >> VERSION
+
+    - name: Commit version changes
+      run: |
+        git add .
+        git commit -m "🚀 Bump version to v${{ steps.bump.outputs.new_version }}"
+        git tag "v${{ steps.bump.outputs.new_version }}"
+
+    - name: Push changes
+      run: |
+        git push origin main
+        git push origin --tags
+
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: version-bump
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build frontend with version
+      run: |
+        VERSION="${{ needs.version-bump.outputs.new_version }}"
+        echo "Building frontend with version: $VERSION"
+        
+        # Create dist directory
+        mkdir -p dist
+        
+        # Copy files
+        cp index.html dist/
+        cp config.js dist/
+        cp manifest.json dist/
+        cp sw.js dist/
+        cp -r src dist/ || true
+        
+        # Update version in dist files
+        sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" dist/index.html
+        
+        echo "Frontend build complete with version $VERSION"
+
+    - name: Deploy to Firebase Hosting
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: ${{ secrets.GITHUB_TOKEN }}
+        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        channelId: live
+        projectId: ${{ secrets.GCP_PROJECT_ID }}
+
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: version-bump
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci --production
+
+    - name: Update app.yaml with version
+      run: |
+        cd backend
+        VERSION="${{ needs.version-bump.outputs.new_version }}"
+        
+        # Add version to env_variables in app.yaml
+        if grep -q "APP_VERSION:" app.yaml; then
+          sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+        else
+          sed -i "/env_variables:/a\  APP_VERSION: '$VERSION'" app.yaml
+        fi
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+    - name: Deploy to App Engine
+      run: |
+        cd backend
+        gcloud app deploy app.yaml --quiet --promote --version="${{ needs.version-bump.outputs.new_version }}"
+
+  deploy-ai-service:
+    name: Deploy AI Service (Optional)
+    runs-on: ubuntu-latest
+    needs: version-bump
+    if: ${{ hashFiles('ai-service/package.json') != '' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+
+    - name: Check if AI service should be deployed
+      id: check
+      run: |
+        if [ -f "ai-service/app.yaml" ]; then
+          echo "deploy=true" >> $GITHUB_OUTPUT
+        else
+          echo "deploy=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Deploy AI service
+      if: steps.check.outputs.deploy == 'true'
+      run: |
+        cd ai-service
+        echo "AI service deployment configured"
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [version-bump, deploy-frontend, deploy-backend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: main
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          COMMITS=$(git log --pretty=format:"- %s" -n 10)
+        else
+          COMMITS=$(git log --pretty=format:"- %s" "$LAST_TAG"..HEAD)
+        fi
+        
+        # Create changelog
+        cat > CHANGELOG.md << EOF
+        ## What's Changed in v${{ needs.version-bump.outputs.new_version }}
+        
+        ### Commits
+        $COMMITS
+        
+        ### Deployment Info
+        - Frontend: https://liff.line.me/2007552096-wrG1aV9p
+        - Backend: https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com
+        - Version: ${{ needs.version-bump.outputs.new_version }}
+        - Deployed at: $(date)
+        EOF
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ needs.version-bump.outputs.new_version }}
+        release_name: Release v${{ needs.version-bump.outputs.new_version }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
+
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [version-bump, deploy-frontend, deploy-backend, create-release]
+    if: always()
+    
+    steps:
+    - name: Create deployment summary
+      run: |
+        VERSION="${{ needs.version-bump.outputs.new_version }}"
+        
+        if [ "${{ needs.deploy-frontend.result }}" = "success" ] && [ "${{ needs.deploy-backend.result }}" = "success" ]; then
+          echo "# 🎉 Deployment Successful!"
+          echo ""
+          echo "## Version: v$VERSION"
+          echo ""
+          echo "### 🌐 URLs"
+          echo "- **Frontend**: https://liff.line.me/2007552096-wrG1aV9p"
+          echo "- **Backend**: https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com"
+          echo ""
+          echo "### ✅ Status"
+          echo "- Frontend: ✅ Deployed"
+          echo "- Backend: ✅ Deployed"
+          echo "- Release: ✅ Created"
+          echo ""
+          echo "### 📝 Release Notes"
+          echo "View the full release notes at: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+        else
+          echo "# ❌ Deployment Failed!"
+          echo ""
+          echo "## Version: v$VERSION"
+          echo ""
+          echo "### Status"
+          echo "- Frontend: ${{ needs.deploy-frontend.result }}"
+          echo "- Backend: ${{ needs.deploy-backend.result }}"
+          echo ""
+          echo "Please check the workflow logs for details."
+        fi > deployment-summary.md
+        
+        cat deployment-summary.md
+
+    - name: Post to PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const summary = fs.readFileSync('deployment-summary.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
