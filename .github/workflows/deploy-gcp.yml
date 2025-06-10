@@ -151,16 +151,22 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-    - name: Deploy to App Engine
+    - name: Deploy Backend to App Engine
       run: |
         cd backend
-        gcloud app deploy app.yaml --quiet --promote
+        gcloud app deploy app.yaml --quiet --promote --version=${{ needs.version-bump.outputs.new_version }}
+
+    - name: Deploy Frontend to App Engine
+      run: |
+        # Deploy frontend from root directory
+        gcloud app deploy app.yaml --quiet --promote --version=${{ needs.version-bump.outputs.new_version }}
 
     - name: Display Deployment URLs
       run: |
         # Display the deployment URLs
         echo "✅ Backend deployed to: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
-        echo "✅ Frontend will be deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "✅ Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "✅ Version: ${{ needs.version-bump.outputs.new_version }}"
 
   # Database setup removed - using in-memory storage for simplicity
 

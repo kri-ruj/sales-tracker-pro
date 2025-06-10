@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const { Client } = require('@line/bot-sdk');
 const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
-const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message');
+const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message-compact');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -71,7 +71,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Sales Tracker LINE Backend is running',
-        version: '3.6.7',
+        version: '3.7.0',
         timestamp: new Date().toISOString() 
     });
 });
@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
     res.json({ 
         message: 'Sales Tracker API',
         status: 'running',
-        version: '3.6.7',
+        version: '3.7.0',
         endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook']
     });
 });

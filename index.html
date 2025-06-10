@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.6.7';
+        const CURRENT_VERSION = '3.7.0';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -185,22 +185,22 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem;
+            gap: 0.25rem;
+            padding: 0.25rem;
             background: rgba(31, 41, 55, 0.5);
             flex-shrink: 0;
         }
         
         .user-avatar {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            border: 2px solid var(--primary);
+            border: 1px solid var(--primary);
         }
         
         .user-name {
             font-weight: 600;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             flex: 1;
         }
         
@@ -222,15 +222,7 @@
         
         /* Status Bar */
         .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.75rem;
-            flex-shrink: 0;
+            display: none; /* Hidden to save space */
         }
         
         .status-item {
@@ -344,22 +336,7 @@
         }
 
         .whats-new-btn {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            z-index: 1000;
+            display: none; /* Hidden to save space */
         }
 
         .whats-new-btn:hover {
@@ -421,29 +398,51 @@
         
         /* Header */
         .header {
-            text-align: center;
-            padding: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
             flex-shrink: 0;
+            background: rgba(31, 41, 55, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex: 1;
+        }
+        
+        .header-right {
+            justify-content: flex-end;
         }
         
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 0.875rem;
             font-weight: 700;
             background: linear-gradient(to right, var(--primary), var(--primary-dark));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
+            flex: 0;
         }
         
-        .header p {
-            display: none; /* Hide subtitle to save space */
+        .target-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
         }
         
         /* Stats Bar */
         .stats-bar {
             display: flex;
             justify-content: space-around;
-            padding: 0.75rem 0.5rem;
+            padding: 0.4rem 0.25rem;
             background: rgba(31, 41, 55, 0.8);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -457,19 +456,19 @@
         }
         
         .stat-icon {
-            font-size: 1.25rem;
+            font-size: 0.875rem;
             display: inline-block;
-            margin-right: 0.25rem;
+            margin-right: 0.125rem;
         }
         
         .stat-label {
             color: var(--text-muted);
-            font-size: 0.625rem;
+            font-size: 0.5rem;
             display: block;
         }
         
         .stat-value {
-            font-size: 1.25rem;
+            font-size: 0.875rem;
             font-weight: 700;
             color: var(--primary);
             display: inline-block;
@@ -492,8 +491,8 @@
         }
         
         .section h2 {
-            font-size: 0.875rem;
-            margin: 0 0 0.25rem 0;
+            font-size: 0.75rem;
+            margin: 0 0 0.125rem 0;
             text-align: center;
             color: var(--text-muted);
         }
@@ -507,22 +506,22 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-            padding: 1rem;
+            gap: 0.25rem;
+            padding: 0.25rem;
             overflow-y: auto;
         }
         
         .activity-row {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
+            gap: 0.25rem;
+            padding: 0.25rem;
             background: rgba(31, 41, 55, 0.8);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
+            border-radius: 0.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
         }
         
         .activity-row:hover {
@@ -533,8 +532,8 @@
         }
         
         .activity-icon {
-            font-size: 2.5rem;
-            width: 60px;
+            font-size: 1.5rem;
+            width: 35px;
             text-align: center;
             filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
@@ -545,19 +544,19 @@
         
         .activity-title {
             font-weight: 700;
-            font-size: 1.125rem;
+            font-size: 0.875rem;
             color: var(--text);
             letter-spacing: 0.5px;
         }
         
         .activity-points {
-            font-size: 0.75rem;
+            font-size: 0.625rem;
             color: var(--primary);
-            margin-right: 0.5rem;
+            margin-right: 0.25rem;
             font-weight: 600;
             background: rgba(250, 204, 21, 0.1);
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.375rem;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
             border: 1px solid rgba(250, 204, 21, 0.2);
         }
         
@@ -568,19 +567,19 @@
         }
         
         .activity-count {
-            min-width: 40px;
+            min-width: 25px;
             text-align: center;
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 0.875rem;
             color: var(--primary);
             background: rgba(250, 204, 21, 0.1);
-            padding: 0.25rem;
-            border-radius: 0.5rem;
+            padding: 0.125rem;
+            border-radius: 0.375rem;
         }
         
         .btn-circle {
-            width: 40px;
-            height: 40px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid var(--primary);
             background: rgba(250, 204, 21, 0.1);
@@ -589,7 +588,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: 600;
             transition: all 0.2s;
             box-shadow: 0 2px 8px rgba(250, 204, 21, 0.2);
@@ -619,14 +618,14 @@
         /* Submit Section */
         .submit-section {
             position: absolute;
-            bottom: 60px;
-            left: 0.5rem;
-            right: 0.5rem;
+            bottom: 45px;
+            left: 0.25rem;
+            right: 0.25rem;
             background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(250, 204, 21, 0.4);
-            border-radius: 1rem;
-            padding: 0.75rem;
+            border-radius: 0.75rem;
+            padding: 0.5rem;
             display: none;
             animation: slideUp 0.3s ease-out;
             z-index: 999;
@@ -674,7 +673,7 @@
             right: 0;
             display: flex;
             gap: 0;
-            padding: 0.5rem;
+            padding: 0.25rem;
             background: rgba(17, 24, 39, 0.95);
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -683,13 +682,13 @@
         
         .nav-item {
             flex: 1;
-            height: 50px;
+            height: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: transparent;
-            border-radius: 0.5rem;
+            border-radius: 0.375rem;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -710,12 +709,12 @@
         }
         
         .nav-icon {
-            font-size: 1.25rem;
-            margin-bottom: 0.125rem;
+            font-size: 1rem;
+            margin-bottom: 0;
         }
         
         .nav-label {
-            font-size: 0.625rem;
+            font-size: 0.5rem;
             color: var(--text-muted);
         }
         
@@ -779,27 +778,7 @@
             }
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
-            .activity-row {
-                padding: 0.5rem;
-            }
-            
-            .activity-icon {
-                font-size: 1.5rem;
-                width: 40px;
-            }
-            
-            .activity-title {
-                font-size: 0.875rem;
-            }
-            
-            .btn-circle {
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
-            }
-        }
+        /* Responsive - keep compact on all devices */
         
         /* Hide scrollbars */
         * {
@@ -845,18 +824,19 @@
     </div>
 
     <div class="app-container">
-        <!-- User Info Bar -->
-        <div class="user-info" id="userInfo" style="display: none;">
-            <img class="user-avatar" id="userAvatar" src="" alt="User">
-            <div>
-                <div class="user-name" id="userName"></div>
-                <div style="font-size: 0.875rem; color: var(--text-muted);" id="userStatus">Connected</div>
+        <!-- Combined Header with User Info -->
+        <header class="header" id="mainHeader">
+            <div class="header-left">
+                <img class="user-avatar" id="userAvatar" src="" alt="User" style="display: none;">
+                <span class="user-name" id="userName"></span>
             </div>
-            <button class="logout-btn" onclick="window.app.handleLogout()">Logout</button>
-        </div>
-        
-        <header class="header">
-            <h1>FINNERGY SALES TRACKER</h1>
+            <h1>FINNERGY</h1>
+            <div class="header-right">
+                <button class="target-btn" onclick="window.app.showTargetSettings()" title="Set Target">🎯</button>
+                <button class="logout-btn" onclick="window.app.handleLogout()" style="display: none;">
+                    <span style="font-size: 0.75rem;">↩</span>
+                </button>
+            </div>
         </header>
         
         <!-- Status Bar -->
@@ -879,7 +859,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.6.7</span></div>
+            <div class="version-label">v<span id="versionNumber">3.7.0</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1053,7 +1033,7 @@
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.7">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.9">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
@@ -1069,14 +1049,14 @@
                 : 'https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com',
             // LINE LIFF IDs for different environments
             LIFF_IDS: {
-                developing: '2007539402-Mnwlaklq',
+                developing: '2007552096-wrG1aV9p',  // Your actual LIFF ID
                 review: '2007539403-M1dnODn6',
                 published: '2007539404-bxEyd2yZ'
             },
-            // LIFF ID - Using REVIEW environment for production use
-            LIFF_ID: '2007539403-M1dnODn6', // Review environment LIFF ID
+            // LIFF ID - Using your actual production LIFF ID
+            LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6.7',
+            VERSION: '3.7.0',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -1122,11 +1102,11 @@
                     }
                     
                     await this.initLIFF();
-                    this.loadActivities();
+                    await this.checkBackendConnection();
+                    await this.loadActivities();
                     this.renderActivityDock();
                     this.updateAllStats();
                     this.setupEventListeners();
-                    this.checkBackendConnection();
                     this.startUpdateChecker();
                     this.startActivityFeedUpdater();
                     console.log('App init() completed successfully');
@@ -1236,13 +1216,16 @@
                     // Hide login screen
                     this.hideLoginScreen();
                     
-                    // Update all stats with user data
-                    this.updateAllStats();
-                    
                     // Send login notification to backend
                     if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
                         this.sendLoginNotification(profile);
+                        // Load user's activities from backend
+                        await this.loadActivities();
                     }
+                    
+                    // Update all stats with user data
+                    this.updateAllStats();
+                    this.renderActivityDock();
                     
                     // Show welcome message
                     this.showToast(`👋 Welcome back, ${profile.displayName}!`);
@@ -1352,28 +1335,22 @@
             }
             
             displayUserInfo(profile) {
-                const userInfo = document.getElementById('userInfo');
                 const userAvatar = document.getElementById('userAvatar');
                 const userName = document.getElementById('userName');
-                const userStatus = document.getElementById('userStatus');
+                const logoutBtn = document.querySelector('.logout-btn');
                 
-                if (userInfo && profile) {
-                    userInfo.style.display = 'flex';
+                if (profile) {
                     userName.textContent = profile.displayName || 'Demo User';
                     
                     if (profile.pictureUrl) {
                         userAvatar.src = profile.pictureUrl;
+                        userAvatar.style.display = 'block';
                     } else {
                         userAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2ZhY2MxNSIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzAzMDcxMiI+8J+YijwvdGV4dD48L3N2Zz4=';
+                        userAvatar.style.display = 'block';
                     }
                     
-                    if (profile.userId && profile.userId.startsWith('demo_')) {
-                        userStatus.textContent = 'Demo Mode';
-                        userStatus.style.color = '#facc15';
-                    } else {
-                        userStatus.textContent = 'LINE Connected';
-                        userStatus.style.color = '#10b981';
-                    }
+                    if (logoutBtn) logoutBtn.style.display = 'block';
                 }
             }
 
@@ -1462,10 +1439,31 @@
                 }
             }
 
-            loadActivities() {
-                // No local storage - only keep in memory
+            async loadActivities() {
+                // Initialize empty arrays
                 this.activities = [];
                 this.pendingActivities = [];
+                
+                // Load from backend if connected and user is logged in
+                if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
+                    try {
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/${this.lineUserId}?limit=100`);
+                        if (response.ok) {
+                            const activities = await response.json();
+                            this.activities = activities.map(a => ({
+                                id: `${a.activity_type}_${a.id}`,
+                                type: a.activity_type,
+                                title: a.title,
+                                points: a.points,
+                                timestamp: a.created_at,
+                                date: a.date
+                            }));
+                            console.log(`Loaded ${this.activities.length} activities from backend`);
+                        }
+                    } catch (error) {
+                        console.error('Failed to load activities from backend:', error);
+                    }
+                }
             }
 
             saveActivities() {
@@ -2180,6 +2178,94 @@
                 if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
                 if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
                 return `${Math.floor(seconds / 86400)}d ago`;
+            }
+
+            showTargetSettings() {
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 2000;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: var(--bg-secondary, #1f2937);
+                        border-radius: 1rem;
+                        padding: 1.5rem;
+                        max-width: 350px;
+                        width: 90%;
+                    ">
+                        <h2 style="margin-bottom: 1rem; color: var(--primary); font-size: 1.25rem;">🎯 Set Your Target</h2>
+                        <div style="display: grid; gap: 1rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-muted);">Daily Target (points)</label>
+                                <input type="number" id="dailyTarget" value="${this.settings.dailyGoal}" style="
+                                    width: 100%;
+                                    padding: 0.5rem;
+                                    background: rgba(55, 65, 81, 0.5);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    border-radius: 0.375rem;
+                                    color: white;
+                                    font-size: 0.875rem;
+                                ">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-muted);">Weekly Target (points)</label>
+                                <input type="number" id="weeklyTarget" value="${this.settings.weeklyGoal}" style="
+                                    width: 100%;
+                                    padding: 0.5rem;
+                                    background: rgba(55, 65, 81, 0.5);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    border-radius: 0.375rem;
+                                    color: white;
+                                    font-size: 0.875rem;
+                                ">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                            <button onclick="
+                                window.app.settings.dailyGoal = parseInt(document.getElementById('dailyTarget').value) || 100;
+                                window.app.settings.weeklyGoal = parseInt(document.getElementById('weeklyTarget').value) || 500;
+                                localStorage.setItem('userSettings', JSON.stringify(window.app.settings));
+                                window.app.updateAllStats();
+                                window.app.showToast('✅ Target updated!');
+                                this.parentElement.parentElement.parentElement.remove();
+                            " style="
+                                flex: 1;
+                                background: var(--primary);
+                                color: var(--bg-dark);
+                                border: none;
+                                padding: 0.5rem;
+                                border-radius: 0.375rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Save</button>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                                flex: 1;
+                                background: rgba(239, 68, 68, 0.2);
+                                color: #ef4444;
+                                border: 1px solid rgba(239, 68, 68, 0.3);
+                                padding: 0.5rem;
+                                border-radius: 0.375rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
             }
         }
 
