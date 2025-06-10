@@ -31,10 +31,14 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+    - name: Create requirements.txt for Python runtime
+      run: |
+        echo "Flask==2.3.2" > requirements.txt
+        
     - name: Deploy Frontend to App Engine
       run: |
         # Deploy frontend service
-        gcloud app deploy app.yaml --quiet --project=${{ secrets.GCP_PROJECT_ID }}
+        gcloud app deploy app.yaml --quiet --project=${{ secrets.GCP_PROJECT_ID }} --stop-previous-version
         
         echo "Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
 
