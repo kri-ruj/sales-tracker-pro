@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const { Client } = require('@line/bot-sdk');
 const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
+const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -21,8 +22,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Initialize SQLite database
-const db = new sqlite3.Database('sales_tracker.db');
+// Initialize SQLite database - use in-memory for App Engine
+const db = new sqlite3.Database(':memory:');
 
 // Create tables
 db.serialize(() => {
@@ -70,6 +71,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Sales Tracker LINE Backend is running',
+        version: '3.6.2',
         timestamp: new Date().toISOString() 
     });
 });
@@ -79,7 +81,7 @@ app.get('/', (req, res) => {
     res.json({ 
         message: 'Sales Tracker API',
         status: 'running',
-        version: '1.0.0',
+        version: '3.6.2',
         endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook']
     });
 });
@@ -103,6 +105,152 @@ app.post('/api/users', (req, res) => {
 
         res.json({ success: true, userId: this.lastID });
     });
+});
+
+// Sync activities from frontend (batch submission)
+app.post('/api/activities/sync', async (req, res) => {
+    const { userId, userName, userPicture, activities } = req.body;
+
+    if (!userId || !userName || !activities || !Array.isArray(activities)) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    console.log(`Syncing ${activities.length} activities for user ${userName}`);
+
+    try {
+        // First, ensure user exists
+        await new Promise((resolve, reject) => {
+            const userQuery = `INSERT OR REPLACE INTO users (line_user_id, display_name, picture_url, updated_at)
+                             VALUES (?, ?, ?, CURRENT_TIMESTAMP)`;
+            db.run(userQuery, [userId, userName, userPicture], (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+
+        // Insert all activities
+        const insertPromises = activities.map(activity => {
+            return new Promise((resolve, reject) => {
+                const query = `INSERT INTO activities (line_user_id, activity_type, title, subtitle, points, count, date)
+                             VALUES (?, ?, ?, ?, ?, ?, ?)`;
+                const params = [
+                    userId,
+                    activity.type || activity.id?.split('_')[0] || 'unknown',
+                    activity.title,
+                    activity.subtitle || '',
+                    activity.points,
+                    1,
+                    activity.date || new Date().toISOString().split('T')[0]
+                ];
+                
+                db.run(query, params, function(err) {
+                    if (err) {
+                        console.error('Error inserting activity:', err);
+                        reject(err);
+                    } else {
+                        resolve(this.lastID);
+                    }
+                });
+            });
+        });
+
+        await Promise.all(insertPromises);
+
+        // Calculate total points
+        const totalPoints = activities.reduce((sum, act) => sum + act.points, 0);
+
+        // Get team stats for today
+        const teamStats = await new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    COUNT(DISTINCT line_user_id) as activeUsers,
+                    SUM(points * count) as totalPoints,
+                    COUNT(*) as totalActivities
+                FROM activities 
+                WHERE date = date('now')
+            `;
+            db.get(query, (err, row) => {
+                if (err) reject(err);
+                else resolve(row || { activeUsers: 0, totalPoints: 0, totalActivities: 0 });
+            });
+        });
+
+        // Get today's leaderboard
+        const todayLeaderboard = await new Promise((resolve, reject) => {
+            const query = `
+                SELECT 
+                    u.line_user_id as userId,
+                    u.display_name as userName,
+                    u.picture_url as pictureUrl,
+                    SUM(a.points * a.count) as totalPoints,
+                    COUNT(a.id) as activityCount
+                FROM users u
+                JOIN activities a ON u.line_user_id = a.line_user_id
+                WHERE a.date = date('now')
+                GROUP BY u.line_user_id, u.display_name, u.picture_url
+                ORDER BY totalPoints DESC
+                LIMIT 10
+            `;
+            db.all(query, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+
+        // Send notifications to registered groups
+        if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
+            const registeredGroups = await new Promise((resolve, reject) => {
+                db.all('SELECT group_id FROM group_registrations WHERE notifications_enabled = 1', (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                });
+            });
+
+            console.log(`Found ${registeredGroups.length} registered groups for notifications`);
+
+            // Create user profile object
+            const userProfile = {
+                userId: userId,
+                displayName: userName,
+                pictureUrl: userPicture
+            };
+
+            // Send flex message to each registered group
+            for (const group of registeredGroups) {
+                try {
+                    const flexMessage = createActivitySubmissionFlex(
+                        userName,
+                        activities,
+                        totalPoints,
+                        teamStats,
+                        userProfile,
+                        todayLeaderboard
+                    );
+                    
+                    await sendFlexMessage(
+                        flexMessage,
+                        process.env.LINE_CHANNEL_ACCESS_TOKEN,
+                        group.group_id
+                    );
+                    console.log(`Sent activity notification to group ${group.group_id}`);
+                } catch (error) {
+                    console.error(`Failed to send notification to group ${group.group_id}:`, error);
+                }
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: `${activities.length} activities synced successfully`,
+            totalPoints,
+            teamStats,
+            userRank: todayLeaderboard.findIndex(u => u.userId === userId) + 1
+        });
+
+    } catch (error) {
+        console.error('Sync error:', error);
+        res.status(500).json({ error: 'Failed to sync activities' });
+    }
 });
 
 // Save activity
@@ -271,6 +419,43 @@ app.post('/api/user/:lineUserId/settings', (req, res) => {
             message: 'Settings saved successfully'
         });
     });
+});
+
+// User login notification
+app.post('/api/user/login', async (req, res) => {
+    const { userId, userProfile } = req.body;
+    
+    if (!userId || !userProfile) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    try {
+        // Update user profile in database
+        const query = `INSERT OR REPLACE INTO users (line_user_id, display_name, picture_url, updated_at)
+                       VALUES (?, ?, ?, CURRENT_TIMESTAMP)`;
+        
+        await new Promise((resolve, reject) => {
+            db.run(query, [userId, userProfile.displayName, userProfile.pictureUrl], function(err) {
+                if (err) reject(err);
+                else resolve(this.lastID);
+            });
+        });
+        
+        console.log(`User logged in: ${userProfile.displayName} (${userId})`);
+        
+        // Could send login notification to groups if needed
+        // For now, just log the login event
+        
+        res.json({ 
+            success: true, 
+            message: 'Login recorded successfully',
+            userId: userId
+        });
+        
+    } catch (error) {
+        console.error('Login notification error:', error);
+        res.status(500).json({ error: 'Failed to record login' });
+    }
 });
 
 // Dashboard statistics endpoint
@@ -503,7 +688,7 @@ async function sendGroupNotification(groupId, activity) {
                             action: {
                                 type: 'uri',
                                 label: '📊 Open Sales Tracker',
-                                uri: 'https://kri-ruj.github.io/sales-tracker-pro/'
+                                uri: 'https://liff.line.me/2007552096'
                             },
                             style: 'primary',
                             color: '#06C755'

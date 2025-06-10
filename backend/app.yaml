@@ -1,10 +1,11 @@
 runtime: nodejs20
-service: default
+service: sales-tracker-api
 
-# Environment variables (will be overridden by CI/CD)
+# Environment variables
 env_variables:
-  LINE_CHANNEL_ACCESS_TOKEN: "placeholder"
-  LINE_CHANNEL_SECRET: "placeholder"
+  LINE_CHANNEL_ACCESS_TOKEN: "p16MHJa6Wbc8IqZ0EzBGcMC/oAs9zo9MAQ0fSqZ8GCi7tgvQIDeuqNXhI93FetCMeBluaMRgyCsI0z6aA7dh9IvCFKUYoLBgTwaERUkjCYphrdJNQINsDbeFIOHCcamYjZJe7K0UXldyN61WD/uRPwdB04t89/1O/w1cDnyilFU="
+  LINE_CHANNEL_SECRET: "729d399073b6755757f9b215ee43f037"
+  LINE_GROUP_ID: "C3625de59977b799d812357ac738c5c9b"
   NODE_ENV: production
 
 # Automatic scaling configuration

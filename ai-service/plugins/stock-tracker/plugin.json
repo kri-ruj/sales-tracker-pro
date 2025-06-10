@@ -1,0 +1,34 @@
+{
+    "id": "stock-tracker",
+    "name": "Stock Market Tracker",
+    "version": "1.0.0",
+    "description": "Real-time stock market data, portfolio tracking, and financial analysis",
+    "author": "Enhanced ReAct Team",
+    "main": "index.js",
+    "permissions": [
+        "tools",
+        "http",
+        "cache",
+        "database",
+        "events",
+        "routes"
+    ],
+    "dependencies": {},
+    "configuration": {
+        "updateInterval": {
+            "type": "number",
+            "default": 60,
+            "description": "Update interval in seconds"
+        },
+        "maxWatchlist": {
+            "type": "number",
+            "default": 50,
+            "description": "Maximum stocks in watchlist"
+        },
+        "dataProvider": {
+            "type": "string",
+            "default": "yahoo",
+            "description": "Stock data provider"
+        }
+    }
+}

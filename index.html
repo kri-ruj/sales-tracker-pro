@@ -239,6 +239,62 @@
             color: var(--primary);
             font-weight: 600;
         }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .changelog-section {
+            background: rgba(79, 70, 229, 0.05);
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .changelog-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .changelog-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            min-width: 80px;
+        }
+
+        .update-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
         
         /* Modern Dark Theme with Glass Morphism */
         * {
@@ -770,6 +826,23 @@
             </div>
         </div>
 
+        <!-- Update Banner -->
+        <div id="updateBanner" style="
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        ">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span>🎉</span>
+                <span id="updateMessage">New update available!</span>
+                <span id="updateTime" style="font-size: 12px; opacity: 0.9;"></span>
+            </div>
+        </div>
+
         <main class="main-content">
             <!-- Activities Tab -->
             <div id="activitiesTab" class="tab-content active">
@@ -785,6 +858,29 @@
             <div id="dashboardTab" class="tab-content">
                 <div class="section" style="padding: 1rem; overflow-y: auto;">
                     <h2>Dashboard</h2>
+                    
+                    <!-- Changelog Section -->
+                    <div class="changelog-section">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>📝</span> Recent Updates
+                            <span class="update-indicator" id="newUpdateIndicator" style="position: relative; top: 0; right: 0;"></span>
+                        </h3>
+                        <div id="changelogContent">
+                            <div class="changelog-item">
+                                <span class="changelog-date">Now</span>
+                                <span>🚀 v3.6.1 - CI/CD Pipeline with auto version bumping</span>
+                            </div>
+                            <div class="changelog-item">
+                                <span class="changelog-date">Earlier</span>
+                                <span>✅ GitHub Actions workflow configured</span>
+                            </div>
+                            <div class="changelog-item">
+                                <span class="changelog-date">Today</span>
+                                <span>🔧 Backend deployed to App Engine</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div id="dashboardContent">
                         <p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>
                     </div>
@@ -868,7 +964,9 @@
             // LIFF ID - Using REVIEW environment for production use
             LIFF_ID: '2007539403-M1dnODn6', // Review environment LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6'
+            VERSION: '3.6.1',
+            LAST_UPDATE: new Date().toISOString(),
+            UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
 
         // Main App Class
@@ -881,6 +979,8 @@
                 this.lineUserId = null;
                 this.backendConnected = false;
                 this.currentTab = 'activities';
+                this.lastKnownVersion = CONFIG.VERSION;
+                this.updateCheckInterval = null;
                 this.liffInitialized = false;
                 
                 this.activityTemplates = [
@@ -913,6 +1013,7 @@
                     this.updateAllStats();
                     this.setupEventListeners();
                     this.checkBackendConnection();
+                    this.startUpdateChecker();
                     console.log('App init() completed successfully');
                 } catch (error) {
                     console.error('Init error:', error);
@@ -1464,6 +1565,67 @@
                 setTimeout(() => {
                     toast.classList.remove('show');
                 }, 3000);
+            }
+
+            // Update Checker Methods
+            startUpdateChecker() {
+                // Check for updates every minute
+                this.updateCheckInterval = setInterval(() => {
+                    this.checkForUpdates();
+                }, CONFIG.UPDATE_CHECK_INTERVAL);
+                
+                // Initial check after 5 seconds
+                setTimeout(() => this.checkForUpdates(), 5000);
+            }
+
+            async checkForUpdates() {
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
+                    const data = await response.json();
+                    
+                    if (data.version && data.version !== this.lastKnownVersion) {
+                        this.showUpdateNotification(data.version);
+                        this.lastKnownVersion = data.version;
+                    }
+                } catch (error) {
+                    console.log('Update check failed:', error);
+                }
+            }
+
+            showUpdateNotification(newVersion) {
+                const banner = document.getElementById('updateBanner');
+                const message = document.getElementById('updateMessage');
+                const timeEl = document.getElementById('updateTime');
+                const indicator = document.getElementById('newUpdateIndicator');
+                
+                message.textContent = `Version ${newVersion} is now available! Refresh to update.`;
+                timeEl.textContent = new Date().toLocaleTimeString();
+                
+                banner.style.display = 'block';
+                if (indicator) indicator.style.display = 'block';
+                
+                // Add to changelog
+                this.addToChangelog(newVersion);
+                
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                }, 10000);
+            }
+
+            addToChangelog(version) {
+                const changelogContent = document.getElementById('changelogContent');
+                if (!changelogContent) return;
+                
+                const newItem = document.createElement('div');
+                newItem.className = 'changelog-item';
+                newItem.style.animation = 'slideDown 0.3s ease-out';
+                newItem.innerHTML = `
+                    <span class="changelog-date">Just now</span>
+                    <span>🆕 Version ${version} deployed!</span>
+                `;
+                
+                changelogContent.insertBefore(newItem, changelogContent.firstChild);
             }
 
             switchTab(tabName) {

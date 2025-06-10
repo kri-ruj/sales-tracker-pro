@@ -67,22 +67,30 @@ class GmailIntegration extends BaseTool {
      * Initialize Gmail client
      */
     async initialize() {
-        if (this.mockMode) {
-            this.logger.info('Gmail integration running in mock mode');
+        // Check if we should use mock mode
+        if (process.env.USE_MOCK_INTEGRATIONS === 'true') {
+            this.mockMode = true;
+            this.logger.info('Gmail integration running in mock mode (forced)');
             return;
         }
 
         try {
-            const credentialsPath = process.env.GOOGLE_GMAIL_CREDENTIALS || './credentials/gmail-credentials.json';
-            const tokenPath = process.env.GOOGLE_GMAIL_TOKEN || './credentials/gmail-token.json';
-
-            // Authenticate
-            this.auth = await this.authenticateGoogle(credentialsPath, tokenPath);
+            // Use the shared Google Auth Service
+            const GoogleAuthService = require('../../services/google-auth.service');
+            const authService = new GoogleAuthService();
+            
+            this.auth = await authService.getAuthClient();
             this.gmail = google.gmail({ version: 'v1', auth: this.auth });
             
-            this.logger.info('Gmail client initialized');
+            // Test the connection
+            await this.gmail.users.getProfile({ userId: 'me' });
+            
+            this.logger.info('Gmail client initialized with real authentication');
+            this.mockMode = false;
         } catch (error) {
-            this.logger.error('Failed to initialize Gmail', { error: error.message });
+            this.logger.warn('Failed to initialize Gmail with real auth, falling back to mock mode', { 
+                error: error.message 
+            });
             this.mockMode = true;
         }
     }

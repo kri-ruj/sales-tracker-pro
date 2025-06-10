@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Admin Dashboard - AI Agent System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-rate {
+            font-size: 14px;
+            color: #95a5a6;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background-color: #ecf0f1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab:hover {
+            background-color: #bdc3c7;
+        }
+        
+        .tab.active:hover {
+            background-color: #2980b9;
+        }
+        
+        .content-section {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-sent {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-bounced {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-pending {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .provider-status {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .provider-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #ecf0f1;
+            text-align: center;
+        }
+        
+        .provider-card.active {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        
+        .provider-card.online {
+            border-color: #27ae60;
+        }
+        
+        .provider-card.offline {
+            border-color: #e74c3c;
+        }
+        
+        .template-preview {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+        }
+        
+        .preview-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .preview-content {
+            min-height: 200px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 5px 10px;
+            min-width: 40px;
+        }
+        
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .bulk-recipients {
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .provider-status {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Email Admin Dashboard</h1>
+            <p>Manage email notifications for the AI Agent System</p>
+        </header>
+        
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid" id="dashboardStats">
+            <div class="stat-card">
+                <h3>Total Sent</h3>
+                <div class="stat-value" id="totalSent">0</div>
+                <div class="stat-rate">Last 30 days</div>
+            </div>
+            <div class="stat-card">
+                <h3>Open Rate</h3>
+                <div class="stat-value" id="openRate">0%</div>
+                <div class="stat-rate" id="openCount">0 opened</div>
+            </div>
+            <div class="stat-card">
+                <h3>Click Rate</h3>
+                <div class="stat-value" id="clickRate">0%</div>
+                <div class="stat-rate" id="clickCount">0 clicked</div>
+            </div>
+            <div class="stat-card">
+                <h3>Bounce Rate</h3>
+                <div class="stat-value" id="bounceRate">0%</div>
+                <div class="stat-rate" id="bounceCount">0 bounced</div>
+            </div>
+        </div>
+        
+        <!-- Provider Status -->
+        <div class="provider-status" id="providerStatus">
+            <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showSection('logs')">Email Logs</button>
+            <button class="tab" onclick="showSection('templates')">Templates</button>
+            <button class="tab" onclick="showSection('test')">Send Test</button>
+            <button class="tab" onclick="showSection('bulk')">Bulk Email</button>
+            <button class="tab" onclick="showSection('preferences')">User Preferences</button>
+            <button class="tab" onclick="showSection('bounces')">Bounces</button>
+        </div>
+        
+        <!-- Email Logs Section -->
+        <div class="content-section active" id="logs-section">
+            <h2>Email Logs</h2>
+            
+            <div class="filters">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="filterEmail" placeholder="Filter by email">
+                </div>
+                <div class="form-group">
+                    <label>Template</label>
+                    <select id="filterTemplate">
+                        <option value="">All Templates</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="sent">Sent</option>
+                        <option value="failed">Failed</option>
+                        <option value="bounced">Bounced</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button onclick="loadLogs()">Apply Filters</button>
+                </div>
+            </div>
+            
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>To</th>
+                        <th>Subject</th>
+                        <th>Template</th>
+                        <th>Status</th>
+                        <th>Provider</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+            
+            <div class="pagination" id="logsPagination">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Templates Section -->
+        <div class="content-section" id="templates-section">
+            <h2>Email Templates</h2>
+            
+            <div id="templatesList">
+                <!-- Populated by JavaScript -->
+            </div>
+            
+            <div class="template-preview" id="templatePreview" style="display: none;">
+                <h3>Template Preview</h3>
+                <div class="preview-tabs">
+                    <button class="tab active" onclick="showPreviewTab('html')">HTML</button>
+                    <button class="tab" onclick="showPreviewTab('text')">Text</button>
+                </div>
+                <div class="preview-content" id="previewContent">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Send Test Section -->
+        <div class="content-section" id="test-section">
+            <h2>Send Test Email</h2>
+            
+            <form id="testEmailForm">
+                <div class="form-group">
+                    <label>To Email *</label>
+                    <input type="email" id="testTo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Template (optional)</label>
+                    <select id="testTemplate">
+                        <option value="">Simple Test Email</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Provider (optional)</label>
+                    <select id="testProvider">
+                        <option value="">Use Default</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Send Test Email</button>
+            </form>
+            
+            <div id="testResult" style="margin-top: 20px;">
+                <!-- Test results shown here -->
+            </div>
+        </div>
+        
+        <!-- Bulk Email Section -->
+        <div class="content-section" id="bulk-section">
+            <h2>Send Bulk Email</h2>
+            
+            <form id="bulkEmailForm">
+                <div class="form-group">
+                    <label>Recipients (one email per line, optionally with name: email,name) *</label>
+                    <textarea class="bulk-recipients" id="bulkRecipients" required placeholder="user1@example.com,John Doe
+user2@example.com,Jane Smith
+user3@example.com"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Template *</label>
+                    <select id="bulkTemplate" required>
+                        <option value="">Select Template</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Batch Size</label>
+                    <input type="number" id="bulkBatchSize" value="50" min="1" max="100">
+                </div>
+                
+                <button type="submit">Send Bulk Email</button>
+            </form>
+            
+            <div id="bulkResult" style="margin-top: 20px;">
+                <!-- Bulk results shown here -->
+            </div>
+        </div>
+        
+        <!-- User Preferences Section -->
+        <div class="content-section" id="preferences-section">
+            <h2>User Email Preferences</h2>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="prefsEmail" placeholder="Enter email to view/edit preferences">
+                <button onclick="loadPreferences()" style="margin-top: 10px;">Load Preferences</button>
+            </div>
+            
+            <div id="preferencesForm" style="display: none;">
+                <h3>Email Preferences for <span id="prefsEmailDisplay"></span></h3>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsNotificationsEnabled">
+                    <label for="prefsNotificationsEnabled">All Notifications Enabled</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsWelcomeEmails">
+                    <label for="prefsWelcomeEmails">Welcome Emails</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsSessionSummaries">
+                    <label for="prefsSessionSummaries">Session Summaries</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsErrorNotifications">
+                    <label for="prefsErrorNotifications">Error Notifications</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsQueryCompletions">
+                    <label for="prefsQueryCompletions">Query Completions</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsWeeklyReports">
+                    <label for="prefsWeeklyReports">Weekly Reports</label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="prefsMarketingEmails">
+                    <label for="prefsMarketingEmails">Marketing Emails</label>
+                </div>
+                
+                <div class="form-group">
+                    <label>Preferred Time</label>
+                    <input type="time" id="prefsPreferredTime">
+                </div>
+                
+                <div class="form-group">
+                    <label>Timezone</label>
+                    <input type="text" id="prefsTimezone" placeholder="UTC">
+                </div>
+                
+                <button onclick="savePreferences()">Save Preferences</button>
+            </div>
+        </div>
+        
+        <!-- Bounces Section -->
+        <div class="content-section" id="bounces-section">
+            <h2>Email Bounces</h2>
+            
+            <h3>Top Bouncing Emails</h3>
+            <table id="topBouncesTable">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Bounce Count</th>
+                        <th>Last Bounce</th>
+                    </tr>
+                </thead>
+                <tbody id="topBouncesBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+            
+            <h3 style="margin-top: 30px;">Recent Bounces</h3>
+            <table id="recentBouncesTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Email</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="recentBouncesBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Alert Container -->
+        <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+            <!-- Alerts shown here -->
+        </div>
+    </div>
+    
+    <script>
+        // API base URL - update this based on your setup
+        const API_BASE = '/api/email-admin';
+        
+        // Current state
+        let currentSection = 'logs';
+        let currentPage = 1;
+        let templates = {};
+        let providers = [];
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+            loadLogs();
+        });
+        
+        // Show section
+        function showSection(section) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update sections
+            document.querySelectorAll('.content-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById(`${section}-section`).classList.add('active');
+            
+            currentSection = section;
+            
+            // Load section data
+            switch(section) {
+                case 'logs':
+                    loadLogs();
+                    break;
+                case 'templates':
+                    loadTemplates();
+                    break;
+                case 'test':
+                    loadTestForm();
+                    break;
+                case 'bulk':
+                    loadBulkForm();
+                    break;
+                case 'bounces':
+                    loadBounces();
+                    break;
+            }
+        }
+        
+        // Load dashboard
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load dashboard');
+                
+                const data = await response.json();
+                
+                // Update stats
+                document.getElementById('totalSent').textContent = data.analytics.totalSent;
+                document.getElementById('openRate').textContent = data.analytics.openRate;
+                document.getElementById('openCount').textContent = `${data.analytics.opened} opened`;
+                document.getElementById('clickRate').textContent = data.analytics.clickRate;
+                document.getElementById('clickCount').textContent = `${data.analytics.clicked} clicked`;
+                document.getElementById('bounceRate').textContent = data.analytics.bounceRate;
+                document.getElementById('bounceCount').textContent = `${data.analytics.bounced} bounced`;
+                
+                // Update provider status
+                const providerHtml = Object.entries(data.providers).map(([name, status]) => `
+                    <div class="provider-card ${status.active ? 'active' : ''} ${status.status}">
+                        <h4>${name.toUpperCase()}</h4>
+                        <p>${status.status}</p>
+                        ${status.active ? '<p>Active</p>' : ''}
+                        ${status.active ? '' : `<button onclick="setProvider('${name}')">Set Active</button>`}
+                    </div>
+                `).join('');
+                
+                document.getElementById('providerStatus').innerHTML = providerHtml;
+                
+                // Store templates
+                templates = data.templates;
+                providers = Object.keys(data.providers);
+                
+            } catch (error) {
+                showAlert('error', 'Failed to load dashboard: ' + error.message);
+            }
+        }
+        
+        // Load email logs
+        async function loadLogs(page = 1) {
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    email: document.getElementById('filterEmail').value,
+                    template: document.getElementById('filterTemplate').value,
+                    status: document.getElementById('filterStatus').value
+                });
+                
+                const response = await fetch(`${API_BASE}/logs?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load logs');
+                
+                const data = await response.json();
+                
+                // Update table
+                const tbody = document.getElementById('logsTableBody');
+                tbody.innerHTML = data.logs.map(log => `
+                    <tr>
+                        <td>${new Date(log.sent_at || log.created_at).toLocaleString()}</td>
+                        <td>${log.to_email}</td>
+                        <td>${log.subject}</td>
+                        <td>${log.template || '-'}</td>
+                        <td><span class="status-badge status-${log.status}">${log.status}</span></td>
+                        <td>${log.provider}</td>
+                        <td>
+                            ${log.status === 'failed' ? `<button onclick="resendEmail('${log.message_id}')">Resend</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // Update pagination
+                updatePagination('logsPagination', data.pagination, loadLogs);
+                
+            } catch (error) {
+                showAlert('error', 'Failed to load logs: ' + error.message);
+            }
+        }
+        
+        // Load templates
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/templates`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load templates');
+                
+                const data = await response.json();
+                
+                // Update templates list
+                const templatesList = document.getElementById('templatesList');
+                templatesList.innerHTML = Object.entries(data).map(([name, template]) => `
+                    <div style="margin-bottom: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
+                        <h3>${name}</h3>
+                        <p>Subject: ${template.subject}</p>
+                        <p>Variables: ${template.variables.join(', ')}</p>
+                        <button onclick="previewTemplate('${name}')">Preview</button>
+                    </div>
+                `).join('');
+                
+                // Update dropdowns
+                updateTemplateDropdowns(Object.keys(data));
+                
+            } catch (error) {
+                showAlert('error', 'Failed to load templates: ' + error.message);
+            }
+        }
+        
+        // Preview template
+        async function previewTemplate(templateName) {
+            try {
+                const response = await fetch(`${API_BASE}/templates/preview`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        template: templateName,
+                        variables: {} // Use defaults
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to preview template');
+                
+                const data = await response.json();
+                
+                // Show preview
+                document.getElementById('templatePreview').style.display = 'block';
+                window.currentPreview = data.preview;
+                showPreviewTab('html');
+                
+            } catch (error) {
+                showAlert('error', 'Failed to preview template: ' + error.message);
+            }
+        }
+        
+        // Show preview tab
+        function showPreviewTab(type) {
+            if (!window.currentPreview) return;
+            
+            const content = document.getElementById('previewContent');
+            
+            if (type === 'html') {
+                // Create iframe to display HTML
+                content.innerHTML = `<iframe srcdoc="${escapeHtml(window.currentPreview.html)}" style="width: 100%; height: 400px; border: none;"></iframe>`;
+            } else {
+                content.innerHTML = `<pre>${escapeHtml(window.currentPreview.text)}</pre>`;
+            }
+            
+            // Update tabs
+            document.querySelectorAll('.preview-tabs .tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Load test form
+        function loadTestForm() {
+            // Update dropdowns
+            const templateSelect = document.getElementById('testTemplate');
+            templateSelect.innerHTML = '<option value="">Simple Test Email</option>' + 
+                templates.map(t => `<option value="${t}">${t}</option>`).join('');
+            
+            const providerSelect = document.getElementById('testProvider');
+            providerSelect.innerHTML = '<option value="">Use Default</option>' + 
+                providers.map(p => `<option value="${p}">${p}</option>`).join('');
+        }
+        
+        // Send test email
+        document.getElementById('testEmailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            button.innerHTML = 'Sending... <span class="loading"></span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        to: document.getElementById('testTo').value,
+                        template: document.getElementById('testTemplate').value,
+                        provider: document.getElementById('testProvider').value
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send test email');
+                
+                const data = await response.json();
+                
+                document.getElementById('testResult').innerHTML = `
+                    <div class="alert alert-success">
+                        Test email sent successfully!<br>
+                        Job ID: ${data.result.jobId}<br>
+                        Status: ${data.result.status}
+                    </div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('testResult').innerHTML = `
+                    <div class="alert alert-error">
+                        Failed to send test email: ${error.message}
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Send Test Email';
+            }
+        });
+        
+        // Load bulk form
+        function loadBulkForm() {
+            const templateSelect = document.getElementById('bulkTemplate');
+            templateSelect.innerHTML = '<option value="">Select Template</option>' + 
+                templates.map(t => `<option value="${t}">${t}</option>`).join('');
+        }
+        
+        // Send bulk email
+        document.getElementById('bulkEmailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            button.innerHTML = 'Sending... <span class="loading"></span>';
+            
+            try {
+                // Parse recipients
+                const recipientsText = document.getElementById('bulkRecipients').value;
+                const recipients = recipientsText.split('\n')
+                    .filter(line => line.trim())
+                    .map(line => {
+                        const parts = line.split(',');
+                        return {
+                            email: parts[0].trim(),
+                            name: parts[1] ? parts[1].trim() : undefined
+                        };
+                    });
+                
+                const response = await fetch(`${API_BASE}/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        recipients,
+                        template: document.getElementById('bulkTemplate').value,
+                        batchSize: parseInt(document.getElementById('bulkBatchSize').value)
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send bulk email');
+                
+                const data = await response.json();
+                
+                document.getElementById('bulkResult').innerHTML = `
+                    <div class="alert alert-success">
+                        Bulk email job queued!<br>
+                        Job ID: ${data.result.jobId}<br>
+                        Recipients: ${data.result.count}
+                    </div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('bulkResult').innerHTML = `
+                    <div class="alert alert-error">
+                        Failed to send bulk email: ${error.message}
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Send Bulk Email';
+            }
+        });
+        
+        // Load user preferences
+        async function loadPreferences() {
+            const email = document.getElementById('prefsEmail').value;
+            if (!email) {
+                showAlert('error', 'Please enter an email address');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/preferences/${encodeURIComponent(email)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (response.status === 404) {
+                    showAlert('error', 'User preferences not found');
+                    return;
+                }
+                
+                if (!response.ok) throw new Error('Failed to load preferences');
+                
+                const prefs = await response.json();
+                
+                // Show form
+                document.getElementById('preferencesForm').style.display = 'block';
+                document.getElementById('prefsEmailDisplay').textContent = email;
+                
+                // Update form values
+                document.getElementById('prefsNotificationsEnabled').checked = prefs.notifications_enabled;
+                document.getElementById('prefsWelcomeEmails').checked = prefs.welcome_emails;
+                document.getElementById('prefsSessionSummaries').checked = prefs.session_summaries;
+                document.getElementById('prefsErrorNotifications').checked = prefs.error_notifications;
+                document.getElementById('prefsQueryCompletions').checked = prefs.query_completions;
+                document.getElementById('prefsWeeklyReports').checked = prefs.weekly_reports;
+                document.getElementById('prefsMarketingEmails').checked = prefs.marketing_emails;
+                document.getElementById('prefsPreferredTime').value = prefs.preferred_time || '09:00';
+                document.getElementById('prefsTimezone').value = prefs.timezone || 'UTC';
+                
+            } catch (error) {
+                showAlert('error', 'Failed to load preferences: ' + error.message);
+            }
+        }
+        
+        // Save user preferences
+        async function savePreferences() {
+            const email = document.getElementById('prefsEmail').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/preferences/${encodeURIComponent(email)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        notifications_enabled: document.getElementById('prefsNotificationsEnabled').checked,
+                        welcome_emails: document.getElementById('prefsWelcomeEmails').checked,
+                        session_summaries: document.getElementById('prefsSessionSummaries').checked,
+                        error_notifications: document.getElementById('prefsErrorNotifications').checked,
+                        query_completions: document.getElementById('prefsQueryCompletions').checked,
+                        weekly_reports: document.getElementById('prefsWeeklyReports').checked,
+                        marketing_emails: document.getElementById('prefsMarketingEmails').checked,
+                        preferred_time: document.getElementById('prefsPreferredTime').value,
+                        timezone: document.getElementById('prefsTimezone').value
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save preferences');
+                
+                showAlert('success', 'Preferences saved successfully');
+                
+            } catch (error) {
+                showAlert('error', 'Failed to save preferences: ' + error.message);
+            }
+        }
+        
+        // Load bounces
+        async function loadBounces() {
+            try {
+                const response = await fetch(`${API_BASE}/bounces`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load bounces');
+                
+                const data = await response.json();
+                
+                // Update top bounces
+                document.getElementById('topBouncesBody').innerHTML = data.topBounces.map(bounce => `
+                    <tr>
+                        <td>${bounce.email}</td>
+                        <td>${bounce.count}</td>
+                        <td>${new Date(bounce.last_bounce).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+                
+                // Update recent bounces
+                document.getElementById('recentBouncesBody').innerHTML = data.recentBounces.map(bounce => `
+                    <tr>
+                        <td>${new Date(bounce.bounced_at).toLocaleString()}</td>
+                        <td>${bounce.email}</td>
+                        <td>${bounce.bounce_type}</td>
+                        <td>${bounce.bounce_message || '-'}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                showAlert('error', 'Failed to load bounces: ' + error.message);
+            }
+        }
+        
+        // Resend email
+        async function resendEmail(messageId) {
+            if (!confirm('Are you sure you want to resend this email?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/resend/${messageId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to resend email');
+                
+                showAlert('success', 'Email resent successfully');
+                loadLogs(currentPage);
+                
+            } catch (error) {
+                showAlert('error', 'Failed to resend email: ' + error.message);
+            }
+        }
+        
+        // Set active provider
+        async function setProvider(provider) {
+            try {
+                const response = await fetch(`${API_BASE}/provider`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({ provider })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.details || error.error);
+                }
+                
+                showAlert('success', `Active provider changed to ${provider}`);
+                loadDashboard();
+                
+            } catch (error) {
+                showAlert('error', 'Failed to change provider: ' + error.message);
+            }
+        }
+        
+        // Update pagination
+        function updatePagination(containerId, pagination, loadFunction) {
+            const container = document.getElementById(containerId);
+            
+            let html = '';
+            
+            if (pagination.page > 1) {
+                html += `<button onclick="${loadFunction.name}(${pagination.page - 1})">Previous</button>`;
+            }
+            
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    html += `<button disabled>${i}</button>`;
+                } else if (i === 1 || i === pagination.pages || Math.abs(i - pagination.page) <= 2) {
+                    html += `<button onclick="${loadFunction.name}(${i})">${i}</button>`;
+                } else if (i === 2 || i === pagination.pages - 1) {
+                    html += `<span>...</span>`;
+                }
+            }
+            
+            if (pagination.page < pagination.pages) {
+                html += `<button onclick="${loadFunction.name}(${pagination.page + 1})">Next</button>`;
+            }
+            
+            container.innerHTML = html;
+            currentPage = pagination.page;
+        }
+        
+        // Update template dropdowns
+        function updateTemplateDropdowns(templateNames) {
+            const filterSelect = document.getElementById('filterTemplate');
+            const currentFilter = filterSelect.value;
+            filterSelect.innerHTML = '<option value="">All Templates</option>' + 
+                templateNames.map(t => `<option value="${t}">${t}</option>`).join('');
+            filterSelect.value = currentFilter;
+        }
+        
+        // Show alert
+        function showAlert(type, message) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            document.getElementById('alertContainer').appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+        
+        // Escape HTML
+        function escapeHtml(html) {
+            const div = document.createElement('div');
+            div.textContent = html;
+            return div.innerHTML;
+        }
+        
+        // Get auth token (implement based on your auth system)
+        function getAuthToken() {
+            // This should return the actual auth token from your authentication system
+            return localStorage.getItem('authToken') || 'demo-token';
+        }
+    </script>
+</body>
+</html>

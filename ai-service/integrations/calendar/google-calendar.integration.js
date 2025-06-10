@@ -120,22 +120,32 @@ class GoogleCalendarIntegration extends BaseTool {
      * Initialize Google Calendar client
      */
     async initialize() {
-        if (this.mockMode) {
-            this.logger.info('Google Calendar integration running in mock mode');
+        // Check if we should use mock mode
+        if (process.env.USE_MOCK_INTEGRATIONS === 'true') {
+            this.mockMode = true;
+            this.logger.info('Google Calendar integration running in mock mode (forced)');
             return;
         }
 
         try {
-            const credentialsPath = process.env.GOOGLE_CALENDAR_CREDENTIALS || './credentials/google-calendar-credentials.json';
-            const tokenPath = process.env.GOOGLE_CALENDAR_TOKEN || './credentials/google-calendar-token.json';
-
-            // Authenticate using OAuth2
-            this.auth = await this.authenticateGoogle(credentialsPath, tokenPath);
+            // Use the shared Google Auth Service
+            const GoogleAuthService = require('../../services/google-auth.service');
+            const authService = new GoogleAuthService();
+            
+            this.auth = await authService.getAuthClient();
             this.calendar = google.calendar({ version: 'v3', auth: this.auth });
             
-            this.logger.info('Google Calendar client initialized');
+            // Test connection
+            const calendars = await this.calendar.calendarList.list({ maxResults: 1 });
+            
+            this.logger.info('Google Calendar client initialized with real authentication', {
+                primaryCalendar: calendars.data.items?.[0]?.summary
+            });
+            this.mockMode = false;
         } catch (error) {
-            this.logger.error('Failed to initialize Google Calendar', { error: error.message });
+            this.logger.warn('Failed to initialize Google Calendar with real auth, falling back to mock mode', { 
+                error: error.message 
+            });
             this.mockMode = true;
         }
     }

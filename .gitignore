@@ -38,5 +38,32 @@ coverage/
 
 # Temporary files
 *.tmp
-*.tempai-service/credentials.json
+*.temp
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Test files
+test-*.html
+test-*.js
+
+# Deployment configs we don't use
+render.yaml
+railway.json
+netlify.toml
+
+# Credentials
 ai-service/credentials.json
+credentials.json
+.env*
+
+# Backup/duplicate directories
+deploy/
+backup/
+old/
+
+# Demo files
+demo/
+*-demo.html

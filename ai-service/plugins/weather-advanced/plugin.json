@@ -1,0 +1,32 @@
+{
+    "id": "weather-advanced",
+    "name": "Advanced Weather Plugin",
+    "version": "1.0.0",
+    "description": "Enhanced weather forecasting with multiple providers and detailed data",
+    "author": "Enhanced ReAct Team",
+    "main": "index.js",
+    "permissions": [
+        "tools",
+        "http",
+        "cache",
+        "events"
+    ],
+    "dependencies": {},
+    "configuration": {
+        "providers": {
+            "type": "array",
+            "default": ["openweather", "weatherapi"],
+            "description": "Weather data providers to use"
+        },
+        "cacheDuration": {
+            "type": "number",
+            "default": 300,
+            "description": "Cache duration in seconds"
+        },
+        "units": {
+            "type": "string",
+            "default": "metric",
+            "description": "Temperature units (metric/imperial)"
+        }
+    }
+}

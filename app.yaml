@@ -1,0 +1,25 @@
+runtime: nodejs20
+service: frontend
+
+handlers:
+- url: /
+  static_files: index.html
+  upload: index.html
+  secure: always
+
+- url: /sw.js
+  static_files: sw.js
+  upload: sw.js
+  secure: always
+  http_headers:
+    Service-Worker-Allowed: /
+
+- url: /manifest.json
+  static_files: manifest.json
+  upload: manifest.json
+  secure: always
+
+- url: /.*
+  static_files: index.html
+  upload: index.html
+  secure: always

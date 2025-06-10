@@ -1,0 +1,1154 @@
+openapi: 3.0.3
+info:
+  title: Enhanced ReAct Agent API
+  description: |
+    Production-ready AI Agent API with advanced features including tool execution, 
+    conversation memory, authentication, and real-time streaming capabilities.
+    
+    ## Features
+    - 🤖 AI-powered query processing with ReAct architecture
+    - 🔧 Extensible tool system for real-time data access
+    - 💬 Conversation memory and context management
+    - 🔐 JWT & API Key authentication
+    - 📊 Export functionality (JSON, Markdown, PDF)
+    - ⚡ WebSocket streaming support
+    - 📈 Performance metrics and monitoring
+    
+    ## Authentication
+    The API supports two authentication methods:
+    1. **JWT Token**: For user sessions with full access
+    2. **API Key**: For programmatic access with rate limiting
+  version: 2.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.example.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: AI Processing
+    description: AI query processing and tool execution
+  - name: Chat
+    description: Conversation management and history
+  - name: Export
+    description: Session export functionality
+  - name: Admin
+    description: Administrative endpoints
+  - name: Health
+    description: Service health and monitoring
+
+paths:
+  # Health Check
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the current health status of the service
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                service: Enhanced ReAct Agent
+                features:
+                  caching: true
+                  websocket: true
+                  authentication: true
+                  rateLimit: true
+                uptime: 12345.67
+
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account with the provided credentials
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              username: john_doe
+              password: SecurePassword123!
+              email: john@example.com
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticates a user and returns JWT token
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: demo
+              password: demo123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                success: true
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                apiKey: demo_api_key_123
+                user:
+                  userId: user_123
+                  username: demo
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # AI Processing Endpoints
+  /react:
+    post:
+      tags:
+        - AI Processing
+      summary: Process AI query
+      description: |
+        Processes a user query using the ReAct agent architecture. The agent will:
+        1. Analyze the query
+        2. Use appropriate tools to gather information
+        3. Provide a comprehensive response
+      operationId: processQuery
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessQueryRequest'
+            examples:
+              weather:
+                summary: Weather query
+                value:
+                  query: What's the weather in New York?
+                  sessionId: session_123
+              calculation:
+                summary: Math calculation
+                value:
+                  query: Calculate the square root of 144
+              crypto:
+                summary: Cryptocurrency price
+                value:
+                  query: What's the current price of Bitcoin?
+      responses:
+        '200':
+          description: Query processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessQueryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Chat History Endpoints
+  /chat/history:
+    get:
+      tags:
+        - Chat
+      summary: Get chat history
+      description: Retrieves chat history for the authenticated user
+      operationId: getChatHistory
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: sessionId
+          in: query
+          description: Filter by specific session ID
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Chat history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /chat/sessions:
+    get:
+      tags:
+        - Chat
+      summary: Get recent sessions
+      description: Retrieves recent chat sessions for the authenticated user
+      operationId: getChatSessions
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of sessions to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /chat/session/{sessionId}:
+    get:
+      tags:
+        - Chat
+      summary: Get specific session
+      description: Retrieves detailed information about a specific chat session
+      operationId: getSession
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Export Endpoints
+  /export/{sessionId}:
+    post:
+      tags:
+        - Export
+      summary: Export session
+      description: |
+        Exports a chat session in the specified format.
+        Supported formats: json, markdown, pdf, summary
+      operationId: exportSession
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID to export
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+            example:
+              format: markdown
+      responses:
+        '200':
+          description: Export successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+            text/markdown:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /exports:
+    get:
+      tags:
+        - Export
+      summary: List exports
+      description: Lists all available exports for a session
+      operationId: listExports
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: sessionId
+          in: query
+          description: Filter by session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Exports listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportsListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /export/download/{filename}:
+    get:
+      tags:
+        - Export
+      summary: Download export file
+      description: Downloads a previously exported file
+      operationId: downloadExport
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          description: Export filename
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File downloaded successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Queue Management
+  /queue/ai:
+    post:
+      tags:
+        - AI Processing
+      summary: Queue AI job
+      description: Queues an AI processing job for asynchronous execution
+      operationId: queueAIJob
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueJobRequest'
+      responses:
+        '200':
+          description: Job queued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueJobResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /queue/status/{queue}/{jobId}:
+    get:
+      tags:
+        - AI Processing
+      summary: Get job status
+      description: Retrieves the status of a queued job
+      operationId: getJobStatus
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: queue
+          in: path
+          required: true
+          description: Queue name (ai or export)
+          schema:
+            type: string
+            enum: [ai, export]
+        - name: jobId
+          in: path
+          required: true
+          description: Job ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Admin Endpoints
+  /admin/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get admin statistics
+      description: |
+        Retrieves comprehensive statistics about the service.
+        Requires admin privileges.
+      operationId: getAdminStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/tools:
+    get:
+      tags:
+        - Admin
+      summary: Get tool statistics
+      description: |
+        Retrieves usage statistics for all available tools.
+        Requires admin privileges.
+      operationId: getToolStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tool statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /cache/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get cache statistics
+      description: Retrieves cache performance statistics
+      operationId: getCacheStats
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        '200':
+          description: Cache statistics retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /cache/flush:
+    post:
+      tags:
+        - Admin
+      summary: Flush cache
+      description: |
+        Clears all cached data.
+        Requires admin privileges.
+      operationId: flushCache
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cache flushed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+# WebSocket Events Documentation
+x-websocket-events:
+  connection:
+    description: WebSocket connection events
+    events:
+      authenticate:
+        description: Authenticate the WebSocket connection
+        payload:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT token
+            apiKey:
+              type: string
+              description: API key (alternative to token)
+            sessionId:
+              type: string
+              description: Optional session ID
+      authenticated:
+        description: Authentication response
+        payload:
+          type: object
+          properties:
+            success:
+              type: boolean
+            sessionId:
+              type: string
+            userId:
+              type: string
+            error:
+              type: string
+      query:
+        description: Submit a query for processing
+        payload:
+          type: object
+          properties:
+            query:
+              type: string
+            sessionId:
+              type: string
+      query-start:
+        description: Query processing started
+        payload:
+          type: object
+          properties:
+            query:
+              type: string
+      iteration-start:
+        description: ReAct iteration started
+        payload:
+          type: object
+          properties:
+            iteration:
+              type: integer
+      thought:
+        description: Agent thought stream
+        payload:
+          type: object
+          properties:
+            iteration:
+              type: integer
+            thought:
+              type: string
+      action:
+        description: Tool action executed
+        payload:
+          type: object
+          properties:
+            iteration:
+              type: integer
+            tool:
+              type: string
+            args:
+              type: object
+            result:
+              type: object
+      observation:
+        description: Tool observation
+        payload:
+          type: object
+          properties:
+            iteration:
+              type: integer
+            tool:
+              type: string
+            result:
+              type: object
+      query-complete:
+        description: Query processing completed
+        payload:
+          type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/ProcessQueryResult'
+      query-error:
+        description: Query processing error
+        payload:
+          type: object
+          properties:
+            error:
+              type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for programmatic access
+
+  schemas:
+    # Common Schemas
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+    # Authentication Schemas
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+        - email
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_]+$'
+        password:
+          type: string
+          minLength: 6
+          description: Password must be at least 6 characters
+        email:
+          type: string
+          format: email
+
+    RegisterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        user:
+          type: object
+          properties:
+            userId:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+          description: JWT token for authentication
+        apiKey:
+          type: string
+          description: API key for programmatic access
+        user:
+          type: object
+          properties:
+            userId:
+              type: string
+            username:
+              type: string
+
+    # AI Processing Schemas
+    ProcessQueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: The user query to process
+        sessionId:
+          type: string
+          description: Optional session ID for conversation context
+
+    ProcessQueryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/ProcessQueryResult'
+
+    ProcessQueryResult:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: The final answer to the query
+        thoughtHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              iteration:
+                type: integer
+              thought:
+                type: string
+              type:
+                type: string
+                enum: [thought, observation, analysis]
+        actionHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              iteration:
+                type: integer
+              action:
+                type: string
+              args:
+                type: object
+              result:
+                type: object
+        executionTrace:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [thought, action, observation, answer, error]
+              content:
+                type: string
+              iteration:
+                type: integer
+              tool:
+                type: string
+              result:
+                type: object
+        iterations:
+          type: integer
+          description: Total number of iterations
+        executionTime:
+          type: integer
+          description: Execution time in milliseconds
+
+    # Chat Schemas
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        userId:
+          type: string
+        messageType:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    ChatHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+
+    SessionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sessions:
+          type: array
+          items:
+            type: object
+            properties:
+              sessionId:
+                type: string
+              userId:
+                type: string
+              messageCount:
+                type: integer
+              createdAt:
+                type: string
+                format: date-time
+              lastMessageAt:
+                type: string
+                format: date-time
+
+    SessionDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        session:
+          type: object
+          properties:
+            sessionId:
+              type: string
+            userId:
+              type: string
+            messageCount:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+            lastMessageAt:
+              type: string
+              format: date-time
+            history:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChatMessage'
+            summary:
+              type: object
+              properties:
+                toolsUsed:
+                  type: array
+                  items:
+                    type: string
+                topics:
+                  type: array
+                  items:
+                    type: string
+
+    # Export Schemas
+    ExportRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [json, markdown, pdf, summary]
+          default: json
+
+    ExportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        format:
+          type: string
+        filename:
+          type: string
+        size:
+          type: integer
+        url:
+          type: string
+        content:
+          type: string
+          description: Content for text formats (json, markdown, summary)
+
+    ExportsListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        exports:
+          type: array
+          items:
+            type: object
+            properties:
+              filename:
+                type: string
+              format:
+                type: string
+              size:
+                type: integer
+              createdAt:
+                type: string
+                format: date-time
+
+    # Queue Schemas
+    QueueJobRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+
+    QueueJobResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        jobId:
+          type: string
+        message:
+          type: string
+
+    JobStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: object
+          properties:
+            id:
+              type: string
+            state:
+              type: string
+              enum: [waiting, active, completed, failed]
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+            result:
+              type: object
+            error:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            completedAt:
+              type: string
+              format: date-time
+
+    # Admin Schemas
+    AdminStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        stats:
+          type: object
+          properties:
+            overview:
+              type: object
+              properties:
+                totalSessions:
+                  type: integer
+                activeSessions:
+                  type: integer
+                totalQueries:
+                  type: integer
+                avgResponseTime:
+                  type: number
+                activeUsers:
+                  type: integer
+            queues:
+              type: object
+            recentActivity:
+              type: array
+              items:
+                type: object
+
+    ToolStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        toolStats:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              calls:
+                type: integer
+              successRate:
+                type: number
+              avgDuration:
+                type: number
+
+    CacheStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        stats:
+          type: object
+          properties:
+            hits:
+              type: integer
+            misses:
+              type: integer
+            hitRate:
+              type: number
+            size:
+              type: integer
+            maxSize:
+              type: integer
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        service:
+          type: string
+        features:
+          type: object
+          additionalProperties:
+            type: boolean
+        uptime:
+          type: number
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Invalid request parameters
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Authentication required
+    
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Insufficient permissions
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Resource not found
+    
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Too many requests
+    
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Internal server error

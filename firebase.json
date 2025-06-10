@@ -1,18 +1,12 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "**/backend/**",
-      "**/.github/**"
+      "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "function": "api"
-      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -40,37 +34,9 @@
             "value": "application/manifest+json"
           }
         ]
-      },
-      {
-        "source": "**/*.@(js|css)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
       }
     ],
     "cleanUrls": true,
     "trailingSlash": false
-  },
-  "functions": {
-    "source": "backend",
-    "node": "18",
-    "predeploy": [
-      "cd backend && npm install"
-    ]
-  },
-  "emulators": {
-    "hosting": {
-      "port": 5000
-    },
-    "functions": {
-      "port": 5001
-    },
-    "ui": {
-      "enabled": true,
-      "port": 4000
-    }
   }
 }
