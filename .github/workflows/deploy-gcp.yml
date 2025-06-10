@@ -12,8 +12,62 @@ env:
   REGION: asia-southeast1
 
 jobs:
+  # Bump version
+  version-bump:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump.outputs.new_version }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Get current version and bump
+      id: bump
+      run: |
+        # Get current version
+        CURRENT_VERSION=$(grep -o '"version": "[^"]*"' package.json | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Bump patch version
+        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+        MAJOR=${VERSION_PARTS[0]}
+        MINOR=${VERSION_PARTS[1]}
+        PATCH=$((VERSION_PARTS[2] + 1))
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        
+        echo "New version: $NEW_VERSION"
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        
+        # Update all version references
+        ./scripts/bump-version.sh patch || echo "Script not found, updating manually"
+        
+        # Ensure version is updated in critical files
+        sed -i "s/VERSION: '[^']*'/VERSION: '$NEW_VERSION'/" index.html
+        sed -i "s/>$CURRENT_VERSION</>$NEW_VERSION</" index.html
+        sed -i "s/What's New in v[^\"]*\"/What's New in v$NEW_VERSION\"/" index.html
+
+    - name: Commit version changes
+      run: |
+        git add .
+        git commit -m "🚀 Auto-bump version to v${{ steps.bump.outputs.new_version }}" || echo "No changes to commit"
+
+    - name: Push changes
+      run: |
+        git push origin main || echo "No changes to push"
+
   # Deploy Frontend to GCP App Engine
   deploy-frontend:
+    needs: version-bump
     name: Deploy Frontend to GCP App Engine
     runs-on: ubuntu-latest
     
@@ -174,7 +228,7 @@ jobs:
   notify:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy-frontend, deploy-backend]
+    needs: [version-bump, deploy-frontend, deploy-backend]
     if: always()
     
     steps:
@@ -182,6 +236,7 @@ jobs:
       if: needs.deploy-frontend.result == 'success' && needs.deploy-backend.result == 'success'
       run: |
         echo "🎉 Deployment successful!"
+        echo "Version: ${{ needs.version-bump.outputs.new_version }}"
         echo "Frontend: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
         echo "Backend: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
         

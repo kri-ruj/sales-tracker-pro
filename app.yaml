@@ -16,7 +16,7 @@ handlers:
   upload: sw.js
   secure: always
   http_headers:
-    Cache-Control: "no-cache"
+    Cache-Control: "no-cache, no-store, must-revalidate"
     Service-Worker-Allowed: "/"
 
 # Manifest
@@ -39,5 +39,7 @@ handlers:
   upload: index.html
   secure: always
   http_headers:
-    Cache-Control: "no-cache, must-revalidate"
+    Cache-Control: "no-cache, no-store, must-revalidate"
+    Pragma: "no-cache"
+    Expires: "0"
 
