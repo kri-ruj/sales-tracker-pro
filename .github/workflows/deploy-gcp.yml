@@ -68,7 +68,7 @@ jobs:
       run: |
         cd backend
         cat > app.yaml << EOF
-        runtime: nodejs18
+        runtime: nodejs20
         service: default
         
         env_variables:
