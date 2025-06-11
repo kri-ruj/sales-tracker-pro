@@ -1,0 +1,58 @@
+name: Deploy to GCP (Simple)
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-southeast1
+
+jobs:
+  deploy:
+    name: Deploy to App Engine
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Setup Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Deploy Frontend
+      run: |
+        echo "Deploying frontend..."
+        gcloud app deploy app.yaml \
+          --quiet \
+          --promote \
+          --version=v3-7-6 \
+          --project=${{ env.PROJECT_ID }}
+
+    - name: Deploy Backend
+      run: |
+        echo "Deploying backend..."
+        cd backend
+        gcloud app deploy app.yaml \
+          --quiet \
+          --promote \
+          --version=v3-7-6 \
+          --project=${{ env.PROJECT_ID }}
+
+    - name: Verify Deployment
+      run: |
+        echo "Frontend URL: https://frontend-dot-${{ env.PROJECT_ID }}.as.r.appspot.com/"
+        echo "Backend URL: https://sales-tracker-api-dot-${{ env.PROJECT_ID }}.as.r.appspot.com/"
+        echo "✅ Deployment complete!"
