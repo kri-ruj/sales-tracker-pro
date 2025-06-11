@@ -34,9 +34,9 @@ if (!serviceAccount && process.env.NODE_ENV === 'production') {
   });
 }
 
-const db = admin.firestore({
-  databaseId: 'sales-tracker-db'
-});
+// Get Firestore instance with specific database
+const getFirestore = require('firebase-admin/firestore').getFirestore;
+const db = getFirestore('sales-tracker-db');
 
 // Collection references
 const collections = {

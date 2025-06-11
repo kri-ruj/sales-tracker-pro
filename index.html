@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v3.7.2 - Gamified sales performance tracking for teams">
+    <meta name="description" content="Sales Activity Tracker v3.6.4 - Gamified sales performance tracking for teams">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.7.2';
+        const CURRENT_VERSION = '3.6.4';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -928,7 +928,7 @@
                         <div id="changelogContent">
                             <div class="changelog-item">
                                 <span class="changelog-date">Now</span>
-                                <span>🚀 v3.6.1 - CI/CD Pipeline with auto version bumping</span>
+                                <span>🚀 v3.6.4 - Firestore Database & Secret Manager Migration</span>
                             </div>
                             <div class="changelog-item">
                                 <span class="changelog-date">Earlier</span>
@@ -1031,21 +1031,21 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.7.4</span>
+            v<span id="appVersion">3.6.4</span>
         </div>
 
         <!-- Toast -->
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.7.4">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.4">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
     </div>
 
     <script>
-        // Sales Tracker App v3.7.4 - Auto-versioning Enabled
+        // Sales Tracker App v3.6.4 - Firestore Migration Complete
         
         // Configuration
         const CONFIG = {
@@ -1061,7 +1061,7 @@
             // LIFF ID - Using your actual production LIFF ID
             LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.7.2',
+            VERSION: '3.6.4',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };

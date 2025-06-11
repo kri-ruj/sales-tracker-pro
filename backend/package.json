@@ -1,6 +1,6 @@
 {
   "name": "sales-tracker-line-backend",
-  "version": "3.6.3",
+  "version": "3.6.4",
   "description": "Backend API for Sales Tracker LINE Mini App on Google Cloud Platform",
   "main": "server.js",
   "scripts": {
