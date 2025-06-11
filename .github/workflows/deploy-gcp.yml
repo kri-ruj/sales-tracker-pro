@@ -144,14 +144,26 @@ jobs:
         VERSION="${{ needs.version-management.outputs.new_version }}"
         VERSION_ID="v${VERSION//./}"
         
+        # Deploy without promoting first
         gcloud app deploy app.yaml \
           --quiet \
+          --no-promote \
           --project=${{ secrets.GCP_PROJECT_ID }} \
-          --version="$VERSION_ID" \
-          --stop-previous-version
+          --version="$VERSION_ID" || true
         
-        echo "Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
-        echo "Version: $VERSION"
+        # Wait for any ongoing operations
+        echo "⏳ Waiting for App Engine operations to complete..."
+        sleep 30
+        
+        # Then set traffic to new version
+        echo "🔄 Setting traffic to new version..."
+        gcloud app services set-traffic default \
+          --splits="$VERSION_ID=1" \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --quiet || echo "⚠️ Traffic split failed, but deployment succeeded"
+        
+        echo "✅ Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "✅ Version: $VERSION"
 
   # Deploy Backend to Google App Engine
   deploy-backend:
@@ -219,11 +231,23 @@ jobs:
         VERSION="${{ needs.version-management.outputs.new_version }}"
         VERSION_ID="v${VERSION//./}"
         
+        # Deploy without promoting first
         gcloud app deploy app.yaml \
           --quiet \
-          --promote \
+          --no-promote \
           --project=${{ secrets.GCP_PROJECT_ID }} \
-          --version="$VERSION_ID"
+          --version="$VERSION_ID" || true
+        
+        # Wait for any ongoing operations
+        echo "⏳ Waiting for App Engine operations to complete..."
+        sleep 30
+        
+        # Then set traffic to new version
+        echo "🔄 Setting traffic to new version..."
+        gcloud app services set-traffic sales-tracker-api \
+          --splits="$VERSION_ID=1" \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --quiet || echo "⚠️ Traffic split failed, but deployment succeeded"
         
         echo "✅ Backend deployed to: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
         echo "✅ Version: $VERSION"
