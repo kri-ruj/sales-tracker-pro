@@ -263,6 +263,177 @@ app.get('/api/team/stats', async (req, res) => {
     }
 });
 
+// Analytics endpoint - Activity trends over time
+app.get('/api/analytics/trends', async (req, res) => {
+    const { lineUserId, days = 30 } = req.query;
+    
+    try {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - parseInt(days));
+        
+        const activities = await firestoreService.getActivitiesByDateRange(
+            lineUserId,
+            startDate.toISOString().split('T')[0],
+            endDate.toISOString().split('T')[0]
+        );
+        
+        // Group by date and activity type
+        const trends = {};
+        activities.forEach(activity => {
+            const date = activity.date;
+            if (!trends[date]) {
+                trends[date] = { date, total: 0, types: {} };
+            }
+            trends[date].total += activity.points;
+            trends[date].types[activity.activityType] = 
+                (trends[date].types[activity.activityType] || 0) + activity.points;
+        });
+        
+        res.json({
+            period: `${days} days`,
+            data: Object.values(trends).sort((a, b) => a.date.localeCompare(b.date))
+        });
+    } catch (error) {
+        console.error('Error getting trends:', error);
+        res.status(500).json({ error: 'Failed to get trends' });
+    }
+});
+
+// Analytics endpoint - Activity type breakdown
+app.get('/api/analytics/breakdown', async (req, res) => {
+    const { lineUserId, period = 'monthly' } = req.query;
+    
+    try {
+        let startDate = new Date();
+        if (period === 'daily') {
+            startDate.setHours(0, 0, 0, 0);
+        } else if (period === 'weekly') {
+            startDate.setDate(startDate.getDate() - 7);
+        } else {
+            startDate.setMonth(startDate.getMonth() - 1);
+        }
+        
+        const activities = await firestoreService.getActivitiesByDateRange(
+            lineUserId,
+            startDate.toISOString().split('T')[0],
+            new Date().toISOString().split('T')[0]
+        );
+        
+        // Calculate breakdown by activity type
+        const breakdown = {};
+        let totalPoints = 0;
+        
+        activities.forEach(activity => {
+            if (!breakdown[activity.activityType]) {
+                breakdown[activity.activityType] = {
+                    type: activity.activityType,
+                    title: activity.title,
+                    count: 0,
+                    points: 0
+                };
+            }
+            breakdown[activity.activityType].count += 1;
+            breakdown[activity.activityType].points += activity.points;
+            totalPoints += activity.points;
+        });
+        
+        // Calculate percentages
+        Object.values(breakdown).forEach(item => {
+            item.percentage = totalPoints > 0 ? 
+                Math.round((item.points / totalPoints) * 100) : 0;
+        });
+        
+        res.json({
+            period,
+            totalPoints,
+            breakdown: Object.values(breakdown).sort((a, b) => b.points - a.points)
+        });
+    } catch (error) {
+        console.error('Error getting breakdown:', error);
+        res.status(500).json({ error: 'Failed to get breakdown' });
+    }
+});
+
+// Analytics endpoint - Performance metrics
+app.get('/api/analytics/performance', async (req, res) => {
+    const { lineUserId } = req.query;
+    
+    try {
+        // Get current month performance
+        const now = new Date();
+        const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+        
+        const [currentActivities, lastMonthActivities, user] = await Promise.all([
+            firestoreService.getActivitiesByDateRange(
+                lineUserId,
+                currentMonthStart.toISOString().split('T')[0],
+                now.toISOString().split('T')[0]
+            ),
+            firestoreService.getActivitiesByDateRange(
+                lineUserId,
+                lastMonthStart.toISOString().split('T')[0],
+                lastMonthEnd.toISOString().split('T')[0]
+            ),
+            firestoreService.getUser(lineUserId)
+        ]);
+        
+        const currentPoints = currentActivities.reduce((sum, a) => sum + a.points, 0);
+        const lastMonthPoints = lastMonthActivities.reduce((sum, a) => sum + a.points, 0);
+        
+        // Calculate growth
+        const growth = lastMonthPoints > 0 ? 
+            Math.round(((currentPoints - lastMonthPoints) / lastMonthPoints) * 100) : 100;
+        
+        // Calculate daily average
+        const daysInCurrentMonth = now.getDate();
+        const dailyAverage = Math.round(currentPoints / daysInCurrentMonth);
+        
+        // Calculate streak
+        const sortedActivities = currentActivities.sort((a, b) => 
+            b.date.localeCompare(a.date)
+        );
+        let streak = 0;
+        let checkDate = new Date();
+        
+        for (let i = 0; i < 30; i++) {
+            const dateStr = checkDate.toISOString().split('T')[0];
+            if (sortedActivities.some(a => a.date === dateStr)) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        res.json({
+            currentMonth: {
+                points: currentPoints,
+                activities: currentActivities.length,
+                dailyAverage
+            },
+            lastMonth: {
+                points: lastMonthPoints,
+                activities: lastMonthActivities.length
+            },
+            growth: {
+                percentage: growth,
+                direction: growth >= 0 ? 'up' : 'down'
+            },
+            streak: {
+                days: streak,
+                isActive: streak > 0
+            },
+            rank: user?.rank || 'Unranked'
+        });
+    } catch (error) {
+        console.error('Error getting performance:', error);
+        res.status(500).json({ error: 'Failed to get performance metrics' });
+    }
+});
+
 // Get leaderboard
 app.get('/api/leaderboard/:period', async (req, res) => {
     const { period } = req.params;

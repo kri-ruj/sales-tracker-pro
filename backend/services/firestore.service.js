@@ -150,6 +150,31 @@ class FirestoreService {
     }
   }
 
+  // Get activities by date range
+  async getActivitiesByDateRange(lineUserId, startDate, endDate) {
+    try {
+      let query = collections.activities;
+      
+      if (lineUserId) {
+        query = query.where('lineUserId', '==', lineUserId);
+      }
+      
+      query = query
+        .where('date', '>=', startDate)
+        .where('date', '<=', endDate)
+        .orderBy('date', 'desc');
+      
+      const snapshot = await query.get();
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting activities by date range:', error);
+      return [];
+    }
+  }
+
   // Team/Stats operations
   async getTeamStats() {
     try {

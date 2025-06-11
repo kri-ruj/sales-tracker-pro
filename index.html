@@ -12,6 +12,9 @@
     <!-- Liquid Glass Styles -->
     <link rel="stylesheet" href="liquid-glass-styles.css?v=3.6.7">
     
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
@@ -973,6 +976,63 @@
                 </div>
             </div>
 
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto; height: calc(100vh - 140px);">
+                    <h2>Performance Analytics</h2>
+                    
+                    <!-- Performance Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Monthly Points</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="monthlyPoints">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;" id="monthlyGrowth">+0%</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Current Streak</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="currentStreak">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">days</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Daily Average</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="dailyAverage">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">points/day</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Total Activities</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="totalActivities">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">this month</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Container -->
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Activity Trends (30 Days)</h3>
+                        <div style="position: relative; height: 200px;">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Activity Breakdown</h3>
+                        <div style="position: relative; height: 200px;">
+                            <canvas id="breakdownChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Type Stats -->
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Top Activities</h3>
+                        <div id="topActivities" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Leaderboard Tab -->
             <div id="leaderboardTab" class="tab-content">
                 <div class="section" style="padding: 1rem; overflow-y: auto;">
@@ -1018,6 +1078,10 @@
             <div class="nav-item" data-tab="dashboard">
                 <div class="nav-icon">📊</div>
                 <div class="nav-label">Dashboard</div>
+            </div>
+            <div class="nav-item" data-tab="analytics">
+                <div class="nav-icon">📈</div>
+                <div class="nav-label">Analytics</div>
             </div>
             <div class="nav-item" data-tab="leaderboard">
                 <div class="nav-icon">🏆</div>
@@ -1909,6 +1973,9 @@
                     case 'dashboard':
                         this.updateDashboardTab();
                         break;
+                    case 'analytics':
+                        this.loadAnalytics();
+                        break;
                     case 'leaderboard':
                         this.updateLeaderboardTab();
                         break;
@@ -2065,6 +2132,170 @@
                 } catch (error) {
                     console.error('Leaderboard error:', error);
                     content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Error loading leaderboard</p>';
+                }
+            }
+
+            // Analytics functionality
+            async loadAnalytics() {
+                if (!this.lineUserId) {
+                    document.getElementById('monthlyPoints').textContent = '0';
+                    document.getElementById('currentStreak').textContent = '0';
+                    document.getElementById('dailyAverage').textContent = '0';
+                    document.getElementById('totalActivities').textContent = '0';
+                    return;
+                }
+
+                try {
+                    // Load performance metrics
+                    const performanceResponse = await fetch(`${this.API_URL}/analytics/performance?lineUserId=${this.lineUserId}`);
+                    const performance = await performanceResponse.json();
+                    
+                    // Update summary cards
+                    document.getElementById('monthlyPoints').textContent = performance.currentMonth.points.toLocaleString();
+                    document.getElementById('currentStreak').textContent = performance.streak.days;
+                    document.getElementById('dailyAverage').textContent = performance.currentMonth.dailyAverage;
+                    document.getElementById('totalActivities').textContent = performance.currentMonth.activities;
+                    
+                    const growthElement = document.getElementById('monthlyGrowth');
+                    growthElement.textContent = `${performance.growth.percentage >= 0 ? '+' : ''}${performance.growth.percentage}%`;
+                    growthElement.style.color = performance.growth.percentage >= 0 ? '#10b981' : '#ef4444';
+                    
+                    // Load and render trends chart
+                    await this.loadTrendsChart();
+                    
+                    // Load and render breakdown chart
+                    await this.loadBreakdownChart();
+                    
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                    this.showToast('❌ Failed to load analytics');
+                }
+            }
+            
+            async loadTrendsChart() {
+                try {
+                    const response = await fetch(`${this.API_URL}/analytics/trends?lineUserId=${this.lineUserId}&days=30`);
+                    const trendsData = await response.json();
+                    
+                    const ctx = document.getElementById('trendsChart').getContext('2d');
+                    
+                    // Destroy existing chart if any
+                    if (this.trendsChartInstance) {
+                        this.trendsChartInstance.destroy();
+                    }
+                    
+                    this.trendsChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: trendsData.data.map(d => {
+                                const date = new Date(d.date);
+                                return `${date.getMonth() + 1}/${date.getDate()}`;
+                            }),
+                            datasets: [{
+                                label: 'Daily Points',
+                                data: trendsData.data.map(d => d.total),
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#9ca3af'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#9ca3af',
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Trends chart error:', error);
+                }
+            }
+            
+            async loadBreakdownChart() {
+                try {
+                    const response = await fetch(`${this.API_URL}/analytics/breakdown?lineUserId=${this.lineUserId}&period=monthly`);
+                    const breakdownData = await response.json();
+                    
+                    const ctx = document.getElementById('breakdownChart').getContext('2d');
+                    
+                    // Destroy existing chart if any
+                    if (this.breakdownChartInstance) {
+                        this.breakdownChartInstance.destroy();
+                    }
+                    
+                    const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+                    
+                    this.breakdownChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: breakdownData.breakdown.map(b => b.title),
+                            datasets: [{
+                                data: breakdownData.breakdown.map(b => b.points),
+                                backgroundColor: colors.slice(0, breakdownData.breakdown.length),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#9ca3af',
+                                        padding: 10,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Update top activities
+                    const topActivitiesHtml = breakdownData.breakdown.slice(0, 3).map((activity, index) => `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: ${colors[index]}"></div>
+                                <span style="font-size: 0.875rem;">${activity.title}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.875rem; font-weight: bold;">${activity.points} pts</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${activity.percentage}%</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('topActivities').innerHTML = topActivitiesHtml;
+                    
+                } catch (error) {
+                    console.error('Breakdown chart error:', error);
                 }
             }
 
