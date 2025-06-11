@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v3.6.5 - Gamified sales performance tracking for teams">
+    <meta name="description" content="Sales Activity Tracker - Gamified sales performance tracking for teams">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
     
+    <!-- Load config first for version info -->
+    <script src="config.js"></script>
+    
     <!-- Liquid Glass Styles -->
-    <link rel="stylesheet" href="liquid-glass-styles.css?v=3.6.7">
+    <script>
+        document.write('<link rel="stylesheet" href="liquid-glass-styles.css?v=' + (window.CONFIG ? window.CONFIG.VERSION : '3.7.10') + '&t=' + Date.now() + '">');
+    </script>
     
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -18,7 +23,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.7.9';
+        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.10';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -862,7 +867,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.7.0</span></div>
+            <div class="version-label">v<span id="versionNumber">3.7.10</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1095,7 +1100,7 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.7.8</span>
+            v<span id="appVersion">3.7.10</span>
         </div>
 
         <!-- Toast -->
@@ -1125,7 +1130,7 @@
             // LIFF ID - Using your actual production LIFF ID
             LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.7.9',
+            VERSION: window.CONFIG ? window.CONFIG.VERSION : '3.7.10',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
