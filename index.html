@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.6.5';
+        const CURRENT_VERSION = '3.6.8';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -928,7 +928,7 @@
                         <div id="changelogContent">
                             <div class="changelog-item">
                                 <span class="changelog-date">Now</span>
-                                <span>🚀 v3.6.5 - Fixed Frontend-Backend API Sync</span>
+                                <span>🚀 v3.6.8 - Fixed Backend URL Configuration</span>
                             </div>
                             <div class="changelog-item">
                                 <span class="changelog-date">Earlier</span>
@@ -1031,27 +1031,27 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.6.5</span>
+            v<span id="appVersion">3.6.8</span>
         </div>
 
         <!-- Toast -->
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.5">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.8">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
     </div>
 
     <script>
-        // Sales Tracker App v3.6.5 - Fixed API Endpoint Sync
+        // Sales Tracker App v3.6.8 - Fixed Backend URL
         
         // Configuration
         const CONFIG = {
             BACKEND_URL: window.location.hostname === 'localhost' 
                 ? 'http://localhost:10000' 
-                : 'https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com',
+                : 'https://salesappfkt.as.r.appspot.com',
             // LINE LIFF IDs for different environments
             LIFF_IDS: {
                 developing: '2007552096-wrG1aV9p',  // Your actual LIFF ID
