@@ -1,0 +1,31 @@
+runtime: python39
+service: finnergy-tracker-v2
+
+handlers:
+- url: /
+  static_files: index.html
+  upload: index.html
+  secure: always
+
+- url: /sw.js
+  static_files: sw.js
+  upload: sw.js
+  mime_type: application/javascript
+  secure: always
+
+- url: /manifest.json
+  static_files: manifest.json
+  upload: manifest.json
+  mime_type: application/manifest+json
+  secure: always
+
+- url: /app.js
+  static_files: app.js
+  upload: app.js
+  mime_type: application/javascript
+  secure: always
+
+- url: /(.*)
+  static_files: \1
+  upload: .*
+  secure: always

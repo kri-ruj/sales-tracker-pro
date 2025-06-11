@@ -33,13 +33,13 @@ export class ActivitiesPage {
     this.logoutButton = page.locator('.logout-btn');
     this.targetButton = page.locator('.target-btn');
     
-    // Activity buttons
+    // Activity buttons - using the compact dock format
     this.activityButtons = {
-      call: page.locator('.activity-card:has-text("โทร")'),
-      appointment: page.locator('.activity-card:has-text("นัด")'),
-      listen: page.locator('.activity-card:has-text("ฟัง")'),
-      present: page.locator('.activity-card:has-text("นำเสนอ")'),
-      startPlan: page.locator('.activity-card:has-text("เริ่มแผน")')
+      call: page.locator('.activity-row:has-text("โทร") .btn-circle:has-text("+")'),
+      appointment: page.locator('.activity-row:has-text("นัด") .btn-circle:has-text("+")'),
+      listen: page.locator('.activity-row:has-text("ฟัง") .btn-circle:has-text("+")'),
+      present: page.locator('.activity-row:has-text("นำเสนอ") .btn-circle:has-text("+")'),
+      startPlan: page.locator('.activity-row:has-text("เริ่มแผน") .btn-circle:has-text("+")')
     };
     
     this.activityFeed = page.locator('.activities-list');
@@ -50,7 +50,7 @@ export class ActivitiesPage {
     this.versionNumber = page.locator('#versionNumber');
     this.syncStatus = page.locator('#syncStatusDot');
     this.networkStatus = page.locator('#networkStatusDot');
-    this.submitButton = page.locator('.submit-btn');
+    this.submitButton = page.locator('button:has-text("Submit")');
     this.successModal = page.locator('.modal.success');
   }
 

@@ -1121,24 +1121,33 @@
     <script>
         // Sales Tracker App v3.6.8 - Fixed Backend URL
         
-        // Configuration
-        const CONFIG = {
-            BACKEND_URL: window.location.hostname === 'localhost' 
-                ? 'http://localhost:10000' 
-                : 'https://salesappfkt.as.r.appspot.com',
-            // LINE LIFF IDs for different environments
-            LIFF_IDS: {
-                developing: '2007552096-wrG1aV9p',  // Your actual LIFF ID
-                review: '2007539403-M1dnODn6',
-                published: '2007539404-bxEyd2yZ'
-            },
-            // LIFF ID - Using your actual production LIFF ID
-            LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
-            ENABLE_BACKEND_SYNC: true,
-            VERSION: window.CONFIG ? window.CONFIG.VERSION : '3.7.11',
-            LAST_UPDATE: new Date().toISOString(),
-            UPDATE_CHECK_INTERVAL: 60000 // Check every minute
-        };
+        // Configuration will be merged from config.js when available
+        function getAppConfig() {
+            const baseConfig = window.CONFIG || {
+                liffId: '2007552096-wrG1aV9p',
+                apiBaseUrl: 'http://localhost:10000/api',
+                VERSION: '3.7.12'
+            };
+            
+            return {
+                ...baseConfig,
+                BACKEND_URL: baseConfig.apiBaseUrl.replace('/api', ''),
+                // LINE LIFF IDs for different environments
+                LIFF_IDS: {
+                    developing: baseConfig.liffId,
+                    review: '2007539403-M1dnODn6',
+                    published: '2007539404-bxEyd2yZ'
+                },
+                // LIFF ID - Using actual production LIFF ID
+                LIFF_ID: baseConfig.liffId,
+                ENABLE_BACKEND_SYNC: true,
+                LAST_UPDATE: new Date().toISOString(),
+                UPDATE_CHECK_INTERVAL: 60000 // Check every minute
+            };
+        }
+        
+        // Get CONFIG (will update when config.js loads)
+        let CONFIG = getAppConfig();
 
         // Main App Class
         class SalesTrackerApp {
@@ -1216,6 +1225,15 @@
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
                     
+                    // Skip LIFF initialization for localhost development
+                    if (window.location.hostname === 'localhost') {
+                        console.log('🔧 Development mode: Skipping LIFF init, using mock login...');
+                        this.liffInitialized = true;
+                        this.updateStatus('liff', 'connected');
+                        await this.handleDevelopmentLogin();
+                        return;
+                    }
+                    
                     // Initialize LIFF with the correct ID first
                     await liff.init({ 
                         liffId: CONFIG.LIFF_ID,
@@ -1238,8 +1256,14 @@
                     if (liff.isLoggedIn()) {
                         await this.handleLoggedInUser();
                     } else {
-                        console.log('User not logged in, showing login button');
-                        this.updateLoginButton('Login with LINE', false);
+                        // Auto-login for localhost development
+                        if (window.location.hostname === 'localhost') {
+                            console.log('🔧 Development mode: Auto-logging in...');
+                            await this.handleDevelopmentLogin();
+                        } else {
+                            console.log('User not logged in, showing login button');
+                            this.updateLoginButton('Login with LINE', false);
+                        }
                     }
                 } catch (error) {
                     console.error('LIFF init failed:', error);
@@ -1288,6 +1312,42 @@
                         btn.disabled = true;
                     }
                 }
+            }
+            
+            async handleDevelopmentLogin() {
+                console.log('🔧 Setting up development user...');
+                
+                // Create a mock user profile for development
+                const mockProfile = {
+                    userId: 'DEV_USER_001',
+                    displayName: 'Development User',
+                    pictureUrl: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=DEV',
+                    statusMessage: 'Local Development'
+                };
+                
+                // Set up the user state as if logged in
+                this.userProfile = mockProfile;
+                this.lineUserId = mockProfile.userId;
+                
+                // Store in localStorage
+                localStorage.setItem('lineUserProfile', JSON.stringify(mockProfile));
+                
+                // Show user info and hide login
+                this.displayUserInfo(mockProfile);
+                this.hideLoginScreen();
+                
+                // Send login notification to backend (if connected)
+                if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                    this.sendLoginNotification(mockProfile);
+                    // Load user's activities from backend
+                    await this.loadActivities();
+                }
+                
+                // Update all stats with user data
+                this.updateAllStats();
+                this.renderActivityDock();
+                
+                console.log('✅ Development login complete');
             }
             
             async handleLoggedInUser() {
@@ -1422,9 +1482,10 @@
             hideLoginScreen() {
                 const container = document.getElementById('loginContainer');
                 if (container) {
-                    setTimeout(() => {
-                        container.classList.add('hide');
-                    }, 500);
+                    container.classList.add('hide');
+                    console.log('🔓 Login screen hidden');
+                } else {
+                    console.log('❌ Login container not found');
                 }
             }
             
@@ -2606,6 +2667,8 @@
                 document.getElementById('debugError').textContent = 'LIFF SDK failed to load';
             }
             
+            // Update CONFIG with loaded config.js values
+            CONFIG = getAppConfig();
             console.log('Creating SalesTrackerApp instance...');
             app = new SalesTrackerApp();
             window.app = app; // Make it globally accessible

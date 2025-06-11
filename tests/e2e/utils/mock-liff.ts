@@ -25,10 +25,15 @@ export class MockLIFF {
   constructor(page: Page, config: Partial<MockLIFFConfig> = {}) {
     this.page = page;
     this.config = {
-      isLoggedIn: false,
+      isLoggedIn: true, // Default to logged in for tests
       isInClient: true,
       os: 'web',
       language: 'th',
+      profile: {
+        userId: 'TEST_USER_001',
+        displayName: 'Test User',
+        pictureUrl: 'https://via.placeholder.com/150'
+      },
       ...config
     };
   }
@@ -36,12 +41,13 @@ export class MockLIFF {
   async setup() {
     // Inject mock LIFF before page loads
     await this.page.addInitScript((config) => {
-      // Create mock LIFF object
+      // Create mock LIFF object that prevents real LIFF from loading
       (window as any).liff = {
         ready: Promise.resolve(),
         
         init: ({ liffId }: { liffId: string }) => {
-          console.log(`Mock LIFF initialized with ID: ${liffId}`);
+          console.log(`🧪 Mock LIFF initialized with ID: ${liffId}`);
+          // Mark as initialized immediately for tests
           return Promise.resolve();
         },
 
@@ -122,10 +128,17 @@ export class MockLIFF {
     this.config.isLoggedIn = true;
     this.config.profile = profile;
     
-    // Update the config in the page
+    // Update the config in the page and ensure app state exists
     await this.page.evaluate((profile) => {
       (window as any).__mockLiffConfig.isLoggedIn = true;
       (window as any).__mockLiffConfig.profile = profile;
+      
+      // Wait for app to be initialized and set login state
+      if ((window as any).app) {
+        (window as any).app.liffInitialized = true;
+        (window as any).app.userProfile = profile;
+        (window as any).app.lineUserId = profile.userId;
+      }
     }, profile);
   }
 

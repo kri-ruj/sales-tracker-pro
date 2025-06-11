@@ -1,0 +1,76 @@
+name: Deploy to Google Cloud
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: finnergy-pro-v2
+  REGION: asia-southeast1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Setup Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      
+    - name: Configure Google Cloud Project
+      run: |
+        gcloud config set project ${{ env.PROJECT_ID }}
+        
+    - name: Deploy Backend API
+      working-directory: ./backend
+      run: |
+        # Install dependencies
+        npm ci --production
+        
+        # Create environment configuration
+        cat > .env.yaml << EOF
+        env_variables:
+          LINE_CHANNEL_ACCESS_TOKEN: "${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}"
+          LINE_CHANNEL_SECRET: "${{ secrets.LINE_CHANNEL_SECRET }}"
+          FIREBASE_PROJECT_ID: "${{ env.PROJECT_ID }}"
+          FIREBASE_CLIENT_EMAIL: "${{ secrets.FIREBASE_CLIENT_EMAIL }}"
+          FIREBASE_PRIVATE_KEY: "${{ secrets.FIREBASE_PRIVATE_KEY }}"
+        EOF
+        
+        # Deploy backend service
+        gcloud app deploy app.yaml .env.yaml --quiet --no-promote
+        
+        # Clean up sensitive files
+        rm .env.yaml
+        
+    - name: Deploy Frontend
+      working-directory: ./public
+      run: |
+        # Update API URL
+        sed -i "s|https://finnergy-api-v2.as.r.appspot.com|https://finnergy-api-v2-dot-${{ env.PROJECT_ID }}.as.r.appspot.com|g" app.js
+        
+        # Deploy frontend service
+        gcloud app deploy app.yaml --quiet --no-promote
+        
+    - name: Promote to Production
+      run: |
+        gcloud app services set-traffic finnergy-tracker-v2 --splits=latest=100 --quiet
+        gcloud app services set-traffic finnergy-api-v2 --splits=latest=100 --quiet
+        
+    - name: Output URLs
+      run: |
+        echo "🚀 Deployment Complete!"
+        echo "Frontend: https://finnergy-tracker-v2-dot-${{ env.PROJECT_ID }}.as.r.appspot.com"
+        echo "Backend API: https://finnergy-api-v2-dot-${{ env.PROJECT_ID }}.as.r.appspot.com"

@@ -42,7 +42,16 @@ export default defineConfig({
     locale: 'th-TH',
     
     /* Emulate timezone */
-    timezoneId: 'Asia/Bangkok'
+    timezoneId: 'Asia/Bangkok',
+    
+    /* Browser context permissions */
+    permissions: ['storage-access'],
+    
+    /* Allow insecure contexts for localStorage */
+    ignoreHTTPSErrors: true,
+    
+    /* Accept downloads */
+    acceptDownloads: true
   },
 
   /* Configure projects for major browsers */

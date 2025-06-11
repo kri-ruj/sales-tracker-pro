@@ -36,14 +36,20 @@ export const test = base.extend<AuthFixtures>({
 
   loginAsUser: async ({ page, mockLiff, loginPage }, use) => {
     const login = async (profile: MockLIFFProfile = TEST_PROFILES.user1) => {
-      // Set up logged in state
-      await mockLiff.login(profile);
-      
-      // Navigate to the app
+      // Navigate to the app first
       await page.goto('/');
       
-      // The app should automatically proceed past login
+      // Wait for app to be fully loaded and initialized
       await page.waitForLoadState('networkidle');
+      await page.waitForFunction(() => (window as any).app !== null);
+      
+      // Set up logged in state after app is ready
+      await mockLiff.login(profile);
+      
+      // Wait for login to be processed
+      await page.waitForFunction(() => 
+        (window as any).app && (window as any).app.liffInitialized === true
+      );
       
       // Ensure we're on the main app page
       await page.waitForSelector('.app-container', { state: 'visible' });

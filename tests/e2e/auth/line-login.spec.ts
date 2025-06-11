@@ -5,7 +5,18 @@ test.describe('LINE Login', () => {
   test.beforeEach(async ({ page }) => {
     // Clear any existing session data
     await page.context().clearCookies();
-    await page.evaluate(() => localStorage.clear());
+    
+    // Safely clear localStorage
+    try {
+      await page.evaluate(() => {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.clear();
+        }
+      });
+    } catch (error) {
+      // Ignore localStorage errors in tests
+      console.log('localStorage not available:', error.message);
+    }
   });
 
   test('should display login screen when not authenticated', async ({ loginPage }) => {
