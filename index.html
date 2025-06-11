@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.6.8';
+        const CURRENT_VERSION = '3.7.5';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -2374,6 +2374,387 @@
                     .catch(err => console.error('Service Worker registration failed:', err));
             });
         }
+    </script>
+
+    <!-- Ultra-Compact Quick Add Component -->
+    <style>
+    /* Floating Quick Add Button */
+    .quick-add-fab {
+        position: fixed;
+        bottom: 60px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .quick-add-fab:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 6px 30px rgba(59, 130, 246, 0.7);
+    }
+
+    .quick-add-fab.active {
+        transform: scale(0.9) rotate(45deg);
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+    }
+
+    .fab-icon {
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    /* Ultra-Compact Quick Form */
+    .quick-form-container {
+        position: fixed;
+        bottom: 105px;
+        right: 10px;
+        width: 180px;
+        background: rgba(17, 24, 39, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 6px;
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .quick-form-container.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+    }
+
+    /* Activity Type Grid - Ultra Compact */
+    .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+        margin-bottom: 4px;
+    }
+
+    .activity-type-btn {
+        aspect-ratio: 1;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .activity-type-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: scale(1.05);
+    }
+
+    .activity-type-btn.selected {
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border-color: #3B82F6;
+        color: white;
+    }
+
+    .activity-type-btn .icon {
+        font-size: 14px;
+    }
+
+    .activity-type-btn .points {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        font-size: 7px;
+        font-weight: bold;
+        color: #10B981;
+    }
+
+    /* Count Selector - Horizontal Pills */
+    .count-selector {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 4px;
+    }
+
+    .count-pill {
+        flex: 1;
+        padding: 3px 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        text-align: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .count-pill:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .count-pill.selected {
+        background: linear-gradient(135deg, #10B981, #059669);
+        border-color: #10B981;
+        color: white;
+        font-weight: bold;
+    }
+
+    /* Submit Button */
+    .quick-submit {
+        width: 100%;
+        padding: 5px;
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+    }
+
+    .quick-submit:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2563EB, #1E3A8A);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .quick-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Success Animation */
+    @keyframes successPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .success-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        color: #10B981;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .success-indicator.show {
+        animation: successPulse 0.5s ease-out;
+        opacity: 1;
+    }
+    </style>
+
+    <div id="quickAddComponent">
+        <!-- Floating Action Button -->
+        <div class="quick-add-fab" id="quickAddFab">
+            <span class="fab-icon">+</span>
+        </div>
+        
+        <!-- Quick Form Container -->
+        <div class="quick-form-container" id="quickFormContainer">
+            <!-- Activity Type Grid -->
+            <div class="activity-grid" id="activityGrid">
+                <div class="activity-type-btn" data-type="call" data-points="20">
+                    <span class="icon">📱</span>
+                    <span class="points">20</span>
+                </div>
+                <div class="activity-type-btn" data-type="meeting" data-points="50">
+                    <span class="icon">🤝</span>
+                    <span class="points">50</span>
+                </div>
+                <div class="activity-type-btn" data-type="follow-up" data-points="10">
+                    <span class="icon">📋</span>
+                    <span class="points">10</span>
+                </div>
+                <div class="activity-type-btn" data-type="social" data-points="15">
+                    <span class="icon">👥</span>
+                    <span class="points">15</span>
+                </div>
+                <div class="activity-type-btn" data-type="presentation" data-points="30">
+                    <span class="icon">📊</span>
+                    <span class="points">30</span>
+                </div>
+                <div class="activity-type-btn" data-type="training" data-points="40">
+                    <span class="icon">🎓</span>
+                    <span class="points">40</span>
+                </div>
+                <div class="activity-type-btn" data-type="paperwork" data-points="25">
+                    <span class="icon">📄</span>
+                    <span class="points">25</span>
+                </div>
+                <div class="activity-type-btn" data-type="other" data-points="15">
+                    <span class="icon">✨</span>
+                    <span class="points">15</span>
+                </div>
+            </div>
+            
+            <!-- Count Selector -->
+            <div class="count-selector" id="countSelector">
+                <div class="count-pill selected" data-count="1">1</div>
+                <div class="count-pill" data-count="2">2</div>
+                <div class="count-pill" data-count="3">3</div>
+                <div class="count-pill" data-count="5">5</div>
+                <div class="count-pill" data-count="10">10</div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button class="quick-submit" id="quickSubmit" disabled>
+                <span>เพิ่ม</span>
+                <span id="submitPoints">0</span>
+            </button>
+            
+            <!-- Success Indicator -->
+            <div class="success-indicator" id="successIndicator">✓</div>
+        </div>
+    </div>
+
+    <script>
+    // Ultra-Compact Quick Add Component - Wait for app to initialize
+    window.addEventListener('load', () => {
+        // Wait a bit for the app to fully initialize
+        setTimeout(() => {
+            const fab = document.getElementById('quickAddFab');
+            const formContainer = document.getElementById('quickFormContainer');
+            const activityBtns = document.querySelectorAll('.activity-type-btn');
+            const countPills = document.querySelectorAll('.count-pill');
+            const submitBtn = document.getElementById('quickSubmit');
+            const submitPoints = document.getElementById('submitPoints');
+            const successIndicator = document.getElementById('successIndicator');
+            
+            let selectedActivity = null;
+            let selectedCount = 1;
+            let isOpen = false;
+            
+            // Toggle Form
+            fab.addEventListener('click', () => {
+                isOpen = !isOpen;
+                fab.classList.toggle('active', isOpen);
+                formContainer.classList.toggle('show', isOpen);
+                
+                if (!isOpen) {
+                    resetForm();
+                }
+            });
+            
+            // Activity Selection
+            activityBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activityBtns.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedActivity = {
+                        type: btn.dataset.type,
+                        points: parseInt(btn.dataset.points)
+                    };
+                    updateSubmitButton();
+                });
+            });
+            
+            // Count Selection
+            countPills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    countPills.forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    selectedCount = parseInt(pill.dataset.count);
+                    updateSubmitButton();
+                });
+            });
+            
+            // Update Submit Button
+            function updateSubmitButton() {
+                if (selectedActivity) {
+                    const totalPoints = selectedActivity.points * selectedCount;
+                    submitPoints.textContent = `+${totalPoints}`;
+                    submitBtn.disabled = false;
+                } else {
+                    submitPoints.textContent = '0';
+                    submitBtn.disabled = true;
+                }
+            }
+            
+            // Submit Activity
+            submitBtn.addEventListener('click', async () => {
+                if (!selectedActivity || !window.app) return;
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>บันทึก...</span>';
+                
+                try {
+                    // Use the app's addActivity method multiple times
+                    for (let i = 0; i < selectedCount; i++) {
+                        window.app.addActivity(selectedActivity.type);
+                    }
+                    
+                    // Submit all pending activities
+                    await window.app.submitActivities();
+                    
+                    // Show success
+                    successIndicator.classList.add('show');
+                    setTimeout(() => {
+                        successIndicator.classList.remove('show');
+                        // Close form
+                        isOpen = false;
+                        fab.classList.remove('active');
+                        formContainer.classList.remove('show');
+                        resetForm();
+                    }, 500);
+                } catch (error) {
+                    console.error('Error adding activity:', error);
+                    submitBtn.innerHTML = '<span>ผิดพลาด</span>';
+                    setTimeout(() => {
+                        updateSubmitButton();
+                    }, 1500);
+                }
+            });
+            
+            // Reset Form
+            function resetForm() {
+                activityBtns.forEach(b => b.classList.remove('selected'));
+                countPills.forEach(p => p.classList.remove('selected'));
+                countPills[0].classList.add('selected');
+                selectedActivity = null;
+                selectedCount = 1;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>เพิ่ม</span><span id="submitPoints">0</span>';
+                const newSubmitPoints = document.getElementById('submitPoints');
+                if (newSubmitPoints) newSubmitPoints.textContent = '0';
+            }
+            
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (isOpen && !formContainer.contains(e.target) && !fab.contains(e.target)) {
+                    isOpen = false;
+                    fab.classList.remove('active');
+                    formContainer.classList.remove('show');
+                    resetForm();
+                }
+            });
+        }, 1000);
+    });
     </script>
 </body>
 </html>
