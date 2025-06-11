@@ -1,47 +1,55 @@
-# 🚀 Development Guidelines
-
-## Quick Start
-1. Clone repo
-2. `npm install` in root and backend/
-3. Copy `.env.example` to `.env` and fill values
-4. `npm run dev` to start backend
-5. `npm start` to start frontend
-
-## Key Workflows
-- Feature dev: Create branch from `main`
-- Testing: Run `npm test` before PR
-- Deployment: Use `npm run deploy:gcp`
-- Database: Migrations via `npm run db:migrate`
-
-## Code Standards
-- Use TypeScript for new code
-- Follow existing file structure
-- Document public APIs
-- Write tests for critical paths
-
-## Code Organization
-
-### Frontend Structure
-
-
-# CLAUDE.md
+# CLAUDE.md - Sales Tracker Pro Project Context
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 🚨 CRITICAL PROJECT CONTEXT (Updated after v1.0.18)
+
+### Current State (v3.7.4+)
+- **Auto-versioning**: Each commit automatically bumps version (3.7.4 → 3.7.5 → etc)
+- **Ultra-compact UI**: No scrolling, combined header, minimal spacing
+- **5x smaller flex messages**: Using "nano" size for LINE notifications
+- **Backend-only mode**: No localStorage for activities (except settings)
+- **Persistent SQLite**: Changed from `:memory:` to `/tmp/sales-tracker.db`
+
+### Recent Major Changes
+1. **Fixed data persistence**: Activities now save to localStorage AND sync with backend
+2. **Fixed notifications**: SQLite file-based (not in-memory) so groups stay registered
+3. **CI/CD deploys both**: Frontend AND backend services automatically
+4. **Compact UI**: Everything fits on mobile without scrolling
+5. **Version display**: Shows in bottom-right corner (v3.7.4)
+
+### URLs & Services
+- **Frontend (App)**: https://frontend-dot-salesappfkt.as.r.appspot.com/
+- **Backend API**: https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com/
+- **LINE LIFF**: https://liff.line.me/2007552096-wrG1aV9p
+- **LIFF ID**: 2007552096-wrG1aV9p
+- **GCP Project**: salesappfkt
+
+### Known Issues & Solutions
+1. **LINE API Limit**: 298/300 messages used (free tier)
+   - Solution: Using 5x smaller flex messages
+2. **Group notifications not working**:
+   - Must configure webhook URL in LINE Console
+   - Type `/register` in group after bot joins
+3. **Version caching**: Aggressive PWA caching
+   - Solution: Force reload, clear cache, or use force-update.html
+
+### Architecture Decisions
+- **No landing page**: App loads directly to activities interface
+- **Service architecture**: 
+  - `frontend` service (python39 runtime for static files)
+  - `sales-tracker-api` service (nodejs20 for backend)
+- **Database**: SQLite file at `/tmp/sales-tracker.db` (App Engine)
+- **Flex messages**: Compact format using `activity-flex-message-compact.js`
 
 ## Project Overview
 
 FINNERGY Sales Tracker - A gamified sales activity tracking application with LINE platform integration. The app consists of:
 
-- **Frontend**: Single-page application with real-time data sync
-- **Backend**: Express.js API with shared SQLite database
-- **AI Service**: Enhanced microservice with plugin architecture
-- **LINE Integration**: LIFF mini-app with webhook notifications
-
-## Key URLs and Endpoints
-
-- **Production Backend**: https://sales-tracker-app-dot-salesappfkt.as.r.appspot.com/
-- **LINE LIFF App**: https://liff.line.me/2007552096-wrG1aV9p
-- **LIFF ID**: 2007552096-wrG1aV9p
+- **Frontend**: Single-page application with vanilla JS (no framework)
+- **Backend**: Express.js API with SQLite database (file-based for persistence)
+- **LINE Integration**: LIFF mini-app with webhook bot for notifications
+- **AI Service**: Enhanced microservice (exists but not currently deployed)
 
 ## Common Development Commands
 
@@ -132,8 +140,7 @@ The AI service provides intelligent features through a plugin-based architecture
   - Multiple AI agent implementations (Gemini, Vertex AI)
   - WebSocket support for real-time features
   - Queue system for background processing
-
-- **Integration Points**:
+       - **Integration Points**:
   - Email services (Gmail, Outlook, SMTP)
   - Calendar integrations (Google, Outlook)
   - CRM systems (HubSpot, Salesforce)
@@ -190,7 +197,38 @@ The project supports multiple deployment platforms:
 ## Critical Files
 
 - `config.js` - Frontend configuration (LIFF ID, API URLs)
-- `backend/server.js` - Main backend server
+- `backend/server.js` - Main backend server with all features
 - `backend/server-simple.js` - Simplified server for basic deployments
-- `ai-service/react-agent-enhanced.js` - Primary AI service
-- `index.html` - Main frontend application
+- `backend/activity-flex-message-compact.js` - 5x smaller flex messages
+- `index.html` - Main frontend application (single file with all UI/logic)
+- `.github/workflows/deploy-gcp.yml` - CI/CD pipeline with auto-versioning
+- `update-version.sh` - Version update script
+
+## Session Progress Tracker
+
+### What We've Accomplished:
+1. ✅ Set up CI/CD with automatic version bumping
+2. ✅ Fixed persistent storage (activities survive refresh)
+3. ✅ Made UI ultra-compact for mobile (no scrolling)
+4. ✅ Created 5x smaller flex messages for LINE
+5. ✅ Fixed backend to use file-based SQLite
+6. ✅ Added version display in UI
+7. ✅ Updated CI/CD to deploy BOTH frontend and backend
+
+### Webhook Setup Required:
+1. LINE Developers Console → Messaging API
+2. Set webhook URL: `https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com/webhook`
+3. Enable webhook, disable auto-reply
+4. Type `/register` in LINE group
+
+### Debug Endpoints:
+- Health check: `/health`
+- Check groups: `/api/debug/groups`
+- API info: `/` (root)
+
+### Important Notes:
+- User wanted NO local/mock data - everything backend-driven
+- User hit LINE API limit (298/300) - that's why compact messages
+- App should be ultra-compact to fit mobile screens
+- Each commit = new version (auto-increment)
+- Frontend IS the app (no separate landing page needed)
