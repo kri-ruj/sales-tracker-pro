@@ -46,8 +46,9 @@ jobs:
     - name: Validate current versions
       id: validate
       run: |
-        echo "🔍 Skipping version validation temporarily..."
-        echo "✅ Proceeding with deployment"
+        echo "🔍 Validating version consistency..."
+        node scripts/version-manager.js validate
+        echo "✅ All versions are synchronized"
 
     - name: Bump version and sync
       id: version
