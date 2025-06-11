@@ -79,6 +79,13 @@ jobs:
         node scripts/version-manager.js sync
         echo "✅ Version sync completed"
 
+    - name: Update version.json
+      run: |
+        echo "📝 Updating version.json..."
+        chmod +x scripts/update-version-json.js
+        node scripts/update-version-json.js ${{ steps.version.outputs.new_version }}
+        echo "✅ version.json updated"
+
     - name: Run pre-deployment check
       run: |
         echo "🔍 Validating version consistency..."

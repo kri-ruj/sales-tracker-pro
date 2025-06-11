@@ -9,8 +9,13 @@
     <meta http-equiv="Expires" content="0">
     <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
     
-    <!-- Load config first for version info -->
-    <script src="config.js"></script>
+    <!-- Load config first for version info with cache busting -->
+    <script>
+        // Force fresh config.js every time
+        var script = document.createElement('script');
+        script.src = 'config.js?v=' + new Date().getTime();
+        document.head.appendChild(script);
+    </script>
     
     <!-- Liquid Glass Styles -->
     <script>
@@ -23,7 +28,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.10';
+        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.11';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -867,7 +872,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.7.10</span></div>
+            <div class="version-label">v<span id="versionNumber">3.7.11</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1100,7 +1105,7 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.7.10</span>
+            v<span id="appVersion">3.7.11</span>
         </div>
 
         <!-- Toast -->
@@ -1130,7 +1135,7 @@
             // LIFF ID - Using your actual production LIFF ID
             LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: window.CONFIG ? window.CONFIG.VERSION : '3.7.10',
+            VERSION: window.CONFIG ? window.CONFIG.VERSION : '3.7.11',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };

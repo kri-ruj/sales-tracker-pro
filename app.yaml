@@ -2,7 +2,18 @@ runtime: python39
 service: frontend
 
 handlers:
-# Service worker - no cache (MUST BE FIRST)
+# Version endpoint - NEVER cache (MUST BE FIRST)
+- url: /version.json
+  static_files: version.json
+  upload: version.json
+  secure: always
+  http_headers:
+    Cache-Control: "no-cache, no-store, must-revalidate, max-age=0"
+    Pragma: "no-cache"
+    Expires: "0"
+    Vary: "*"
+
+# Service worker - no cache
 - url: /sw.js
   static_files: sw.js
   upload: sw.js
