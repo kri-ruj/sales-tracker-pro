@@ -1,21 +1,23 @@
 runtime: nodejs20
 service: sales-tracker-api
 
-# Environment variables
+# Environment variables (non-sensitive only)
 env_variables:
-  LINE_CHANNEL_ACCESS_TOKEN: "p16MHJa6Wbc8IqZ0EzBGcMC/oAs9zo9MAQ0fSqZ8GCi7tgvQIDeuqNXhI93FetCMeBluaMRgyCsI0z6aA7dh9IvCFKUYoLBgTwaERUkjCYphrdJNQINsDbeFIOHCcamYjZJe7K0UXldyN61WD/uRPwdB04t89/1O/w1cDnyilFU="
-  LINE_CHANNEL_SECRET: "729d399073b6755757f9b215ee43f037"
-  LINE_GROUP_ID: "C3625de59977b799d812357ac738c5c9b"
   NODE_ENV: production
+  USE_SECRET_MANAGER: "true"
+  GOOGLE_CLOUD_PROJECT: salesappfkt
 
 # Automatic scaling configuration
 automatic_scaling:
   min_instances: 0
-  max_instances: 10
-  target_cpu_utilization: 0.6
-  target_throughput_utilization: 0.6
+  max_instances: 2
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.65
+  min_pending_latency: 30ms
+  max_pending_latency: automatic
+  max_concurrent_requests: 10
 
-# Resource allocation
+# Resource allocation for small scale
 resources:
   cpu: 1
   memory_gb: 0.5
@@ -23,7 +25,7 @@ resources:
 
 # Network settings
 network:
-  session_affinity: false
+  session_affinity: true
 
 # Health checks
 readiness_check:
@@ -40,7 +42,7 @@ liveness_check:
   failure_threshold: 4
   success_threshold: 2
 
-# Handlers for static files and API routes
+# Handlers
 handlers:
 - url: /.*
   script: auto

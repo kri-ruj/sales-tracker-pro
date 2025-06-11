@@ -10,7 +10,8 @@ if (!admin.apps.length) {
   if (process.env.NODE_ENV === 'production') {
     // In production, use Application Default Credentials
     admin.initializeApp({
-      projectId: 'salesappfkt'
+      projectId: 'salesappfkt',
+      databaseId: 'sales-tracker-db'
     });
   } else {
     // In development, you can use a service account file
@@ -21,11 +22,13 @@ if (!admin.apps.length) {
     if (serviceAccount) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: 'salesappfkt'
+        projectId: 'salesappfkt',
+        databaseId: 'sales-tracker-db'
       });
     } else {
       admin.initializeApp({
-        projectId: 'salesappfkt'
+        projectId: 'salesappfkt',
+        databaseId: 'sales-tracker-db'
       });
     }
   }

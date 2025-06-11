@@ -17,17 +17,20 @@ const serviceAccount = process.env.GOOGLE_APPLICATION_CREDENTIALS
 if (!serviceAccount && process.env.NODE_ENV === 'production') {
   // In production, use Application Default Credentials
   admin.initializeApp({
-    projectId: 'salesappfkt'
+    projectId: 'salesappfkt',
+    databaseId: 'sales-tracker-db'
   });
 } else if (serviceAccount) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: 'salesappfkt'
+    projectId: 'salesappfkt',
+    databaseId: 'sales-tracker-db'
   });
 } else {
   console.log('⚠️  No credentials found. Using emulator or expecting them in production.');
   admin.initializeApp({
-    projectId: 'salesappfkt'
+    projectId: 'salesappfkt',
+    databaseId: 'sales-tracker-db'
   });
 }
 
