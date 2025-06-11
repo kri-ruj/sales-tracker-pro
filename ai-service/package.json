@@ -1,6 +1,6 @@
 {
   "name": "sales-ai-service",
-  "version": "3.6.3",
+  "version": "3.7.10",
   "description": "AI Agent Microservice for Sales Tracker App",
   "main": "server.js",
   "scripts": {
