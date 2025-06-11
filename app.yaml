@@ -2,7 +2,15 @@ runtime: python39
 service: frontend
 
 handlers:
-# Static assets with caching
+# Config file - no cache for version updates
+- url: /config.js
+  static_files: config.js
+  upload: config.js
+  secure: always
+  http_headers:
+    Cache-Control: "no-cache, no-store, must-revalidate"
+
+# Static assets with caching (excluding config.js)
 - url: /(.*\.(js|css|png|jpg|jpeg|gif|ico|svg|webp))$
   static_files: \1
   upload: .*\.(js|css|png|jpg|jpeg|gif|ico|svg|webp)$
