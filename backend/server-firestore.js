@@ -116,7 +116,21 @@ app.get('/', (req, res) => {
         status: 'running',
         version: packageVersion,
         database: 'firestore',
-        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook', '/api/debug/groups', '/api/version', '/api/version/health', '/api/version/monitor']
+        endpoints: [
+            '/health', 
+            '/api/users', 
+            '/api/activities', 
+            '/api/team/stats', 
+            '/api/analytics/trends',
+            '/api/analytics/breakdown', 
+            '/api/analytics/performance',
+            '/api/leaderboard/:period',
+            '/webhook', 
+            '/api/debug/groups', 
+            '/api/version', 
+            '/api/version/health', 
+            '/api/version/monitor'
+        ]
     });
 });
 
@@ -140,7 +154,11 @@ app.post('/api/users', async (req, res) => {
         });
     } catch (error) {
         console.error('Error in /api/users:', error);
-        res.status(500).json({ error: 'Failed to save user' });
+        res.status(500).json({ 
+            error: 'Failed to save user',
+            details: error.message,
+            code: error.code
+        });
     }
 });
 

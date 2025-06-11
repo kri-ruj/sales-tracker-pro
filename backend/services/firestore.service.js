@@ -50,16 +50,24 @@ class FirestoreService {
       const userRef = collections.users.doc(lineUserId);
       const doc = await userRef.get();
       
+      // Clean undefined values
+      const cleanData = Object.entries(userData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+      
       if (doc.exists) {
         // Update existing user
         await userRef.update({
-          ...userData,
+          ...cleanData,
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
       } else {
         // Create new user
         await userRef.set({
-          ...userData,
+          ...cleanData,
           settings: {},
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
