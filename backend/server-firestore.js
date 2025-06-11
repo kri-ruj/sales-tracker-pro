@@ -70,7 +70,8 @@ app.use('/api', versionMonitorRoutes);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
-    const packageVersion = require('./package.json').version;
+    // Use APP_VERSION from environment if available, fallback to package.json
+    const packageVersion = process.env.APP_VERSION || require('./package.json').version;
     
     // Quick Firestore health check
     let dbStatus = 'unknown';
@@ -109,7 +110,7 @@ app.get('/api/debug/groups', async (req, res) => {
 
 // Basic API info
 app.get('/', (req, res) => {
-    const packageVersion = require('./package.json').version;
+    const packageVersion = process.env.APP_VERSION || require('./package.json').version;
     res.json({ 
         message: 'Sales Tracker API (Firestore)',
         status: 'running',

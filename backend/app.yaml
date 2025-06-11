@@ -7,6 +7,7 @@ env_variables:
   NODE_ENV: production
   USE_SECRET_MANAGER: "true"
   GOOGLE_CLOUD_PROJECT: salesappfkt
+  APP_VERSION: "3.7.8"
 
 # Automatic scaling configuration
 automatic_scaling:
