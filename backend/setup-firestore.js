@@ -17,26 +17,22 @@ const serviceAccount = process.env.GOOGLE_APPLICATION_CREDENTIALS
 if (!serviceAccount && process.env.NODE_ENV === 'production') {
   // In production, use Application Default Credentials
   admin.initializeApp({
-    projectId: 'salesappfkt',
-    databaseId: 'sales-tracker-db'
+    projectId: 'salesappfkt'
   });
 } else if (serviceAccount) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: 'salesappfkt',
-    databaseId: 'sales-tracker-db'
+    projectId: 'salesappfkt'
   });
 } else {
   console.log('⚠️  No credentials found. Using emulator or expecting them in production.');
   admin.initializeApp({
-    projectId: 'salesappfkt',
-    databaseId: 'sales-tracker-db'
+    projectId: 'salesappfkt'
   });
 }
 
-// Get Firestore instance with specific database
-const getFirestore = require('firebase-admin/firestore').getFirestore;
-const db = getFirestore('sales-tracker-db');
+// Get Firestore instance (default database)
+const db = admin.firestore();
 
 // Collection references
 const collections = {

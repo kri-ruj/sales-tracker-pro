@@ -1,5 +1,6 @@
 runtime: nodejs20
 service: sales-tracker-api
+entrypoint: node server-firestore.js
 
 # Environment variables (non-sensitive only)
 env_variables:

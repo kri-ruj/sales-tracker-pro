@@ -10,8 +10,7 @@ if (!admin.apps.length) {
   if (process.env.NODE_ENV === 'production') {
     // In production, use Application Default Credentials
     admin.initializeApp({
-      projectId: 'salesappfkt',
-      databaseId: 'sales-tracker-db'
+      projectId: 'salesappfkt'
     });
   } else {
     // In development, you can use a service account file
@@ -22,21 +21,18 @@ if (!admin.apps.length) {
     if (serviceAccount) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        projectId: 'salesappfkt',
-        databaseId: 'sales-tracker-db'
+        projectId: 'salesappfkt'
       });
     } else {
       admin.initializeApp({
-        projectId: 'salesappfkt',
-        databaseId: 'sales-tracker-db'
+        projectId: 'salesappfkt'
       });
     }
   }
 }
 
-// Get Firestore instance with specific database
-const getFirestore = require('firebase-admin/firestore').getFirestore;
-const db = getFirestore('sales-tracker-db');
+// Get Firestore instance (default database)
+const db = admin.firestore();
 
 // Collection references
 const collections = {

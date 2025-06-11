@@ -1142,17 +1142,20 @@
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
                     
-                    // Clean up OAuth callback parameters from URL
-                    if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
-                        console.log('Cleaning up OAuth callback parameters...');
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    }
-                    
-                    // Initialize LIFF with the correct ID
+                    // Initialize LIFF with the correct ID first
                     await liff.init({ 
                         liffId: CONFIG.LIFF_ID,
                         withLoginOnExternalBrowser: true // Allow login on external browsers
                     });
+                    
+                    // Clean up OAuth callback parameters from URL AFTER init
+                    if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
+                        console.log('Cleaning up OAuth callback parameters after successful init...');
+                        // Use setTimeout to ensure LIFF has processed the parameters
+                        setTimeout(() => {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }, 100);
+                    }
                     
                     this.liffInitialized = true;
                     this.updateStatus('liff', 'connected');
