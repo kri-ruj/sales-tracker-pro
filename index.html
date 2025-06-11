@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker v3.6.4 - Gamified sales performance tracking for teams">
+    <meta name="description" content="Sales Activity Tracker v3.6.5 - Gamified sales performance tracking for teams">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.6.4';
+        const CURRENT_VERSION = '3.6.5';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -928,7 +928,7 @@
                         <div id="changelogContent">
                             <div class="changelog-item">
                                 <span class="changelog-date">Now</span>
-                                <span>🚀 v3.6.4 - Firestore Database & Secret Manager Migration</span>
+                                <span>🚀 v3.6.5 - Fixed Frontend-Backend API Sync</span>
                             </div>
                             <div class="changelog-item">
                                 <span class="changelog-date">Earlier</span>
@@ -1031,21 +1031,21 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.6.4</span>
+            v<span id="appVersion">3.6.5</span>
         </div>
 
         <!-- Toast -->
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.4">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.5">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
     </div>
 
     <script>
-        // Sales Tracker App v3.6.4 - Firestore Migration Complete
+        // Sales Tracker App v3.6.5 - Fixed API Endpoint Sync
         
         // Configuration
         const CONFIG = {
@@ -1061,7 +1061,7 @@
             // LIFF ID - Using your actual production LIFF ID
             LIFF_ID: '2007552096-wrG1aV9p', // Your production LIFF ID
             ENABLE_BACKEND_SYNC: true,
-            VERSION: '3.6.4',
+            VERSION: '3.6.5',
             LAST_UPDATE: new Date().toISOString(),
             UPDATE_CHECK_INTERVAL: 60000 // Check every minute
         };
@@ -1480,7 +1480,7 @@
                 // Then, try to sync with backend if connected and user is logged in
                 if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
                     try {
-                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/${this.lineUserId}?limit=100`);
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/user/${this.lineUserId}?limit=100`);
                         if (response.ok) {
                             const activities = await response.json();
                             const backendActivities = activities.map(a => ({
@@ -1639,39 +1639,42 @@
             }
 
             async syncActivitiesToBackend(activities) {
-                const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/sync`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: this.lineUserId,
-                        userName: this.userProfile ? this.userProfile.displayName : 'Unknown',
-                        userPicture: this.userProfile ? this.userProfile.pictureUrl : null,
-                        activities: activities.map(a => ({
-                            type: a.id.split('_')[0],
-                            title: a.title,
-                            points: a.points,
-                            date: new Date().toISOString().split('T')[0]
-                        }))
-                    })
-                });
+                // Post each activity individually to the backend
+                for (const activity of activities) {
+                    try {
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                lineUserId: this.lineUserId,
+                                activityType: activity.id.split('_')[0],
+                                title: activity.title,
+                                subtitle: activity.subtitle || '',
+                                points: activity.points,
+                                count: activity.count || 1,
+                                date: new Date().toISOString().split('T')[0]
+                            })
+                        });
 
-                if (!response.ok) {
-                    throw new Error('Sync failed');
+                        if (!response.ok) {
+                            console.error('Failed to sync activity:', activity.title);
+                        }
+                    } catch (error) {
+                        console.error('Error syncing activity:', error);
+                    }
                 }
             }
 
             async sendLoginNotification(profile) {
                 try {
-                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/user/login`, {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/users`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            userId: this.lineUserId,
-                            userProfile: {
-                                displayName: profile.displayName,
-                                pictureUrl: profile.pictureUrl,
-                                statusMessage: profile.statusMessage
-                            }
+                            lineUserId: this.lineUserId,
+                            displayName: profile.displayName,
+                            pictureUrl: profile.pictureUrl,
+                            statusMessage: profile.statusMessage
                         })
                     });
 

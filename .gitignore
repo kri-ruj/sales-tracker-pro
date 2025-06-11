@@ -67,3 +67,5 @@ old/
 # Demo files
 demo/
 *-demo.html
+
+.mcp.json
