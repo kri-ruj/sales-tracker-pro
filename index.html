@@ -1029,18 +1029,23 @@
             </div>
         </nav>
 
+        <!-- Version Display -->
+        <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
+            v<span id="appVersion">3.7.4</span>
+        </div>
+
         <!-- Toast -->
         <div class="toast" id="toast"></div>
         
         <!-- What's New Button -->
-        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.7.1 - CI/CD">
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.7.4">
             <span class="new-badge">NEW</span>
             <span>🎉</span>
         </button>
     </div>
 
     <script>
-        // Sales Tracker App v3.7.2 - With Local Storage Persistence
+        // Sales Tracker App v3.7.4 - Auto-versioning Enabled
         
         // Configuration
         const CONFIG = {
@@ -1091,6 +1096,12 @@
             async init() {
                 console.log('App init() called');
                 try {
+                    // Set version display
+                    const versionElement = document.getElementById('appVersion');
+                    if (versionElement) {
+                        versionElement.textContent = CONFIG.VERSION;
+                    }
+                    
                     // Initialize status monitoring
                     this.initializeStatusMonitoring();
                     
