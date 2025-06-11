@@ -561,6 +561,191 @@ app.get('/api/user/:lineUserId/dashboard', (req, res) => {
     });
 });
 
+// Analytics endpoint - Activity trends over time
+app.get('/api/analytics/trends', async (req, res) => {
+    const { lineUserId, days = 30 } = req.query;
+    
+    if (!lineUserId) {
+        return res.status(400).json({ error: 'lineUserId is required' });
+    }
+    
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+    
+    db.all(
+        `SELECT date, activity_type, points 
+         FROM activities 
+         WHERE line_user_id = ? AND date >= ? AND date <= ?
+         ORDER BY date ASC`,
+        [lineUserId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]],
+        (err, activities) => {
+            if (err) {
+                console.error('Error getting trends:', err);
+                return res.status(500).json({ error: 'Failed to get trends' });
+            }
+            
+            // Group by date and activity type
+            const trends = {};
+            activities.forEach(activity => {
+                const date = activity.date;
+                if (!trends[date]) {
+                    trends[date] = { date, total: 0, types: {} };
+                }
+                trends[date].total += activity.points;
+                trends[date].types[activity.activity_type] = 
+                    (trends[date].types[activity.activity_type] || 0) + activity.points;
+            });
+            
+            res.json({
+                period: `${days} days`,
+                data: Object.values(trends).sort((a, b) => a.date.localeCompare(b.date))
+            });
+        }
+    );
+});
+
+// Analytics endpoint - Activity type breakdown
+app.get('/api/analytics/breakdown', async (req, res) => {
+    const { lineUserId, period = 'monthly' } = req.query;
+    
+    if (!lineUserId) {
+        return res.status(400).json({ error: 'lineUserId is required' });
+    }
+    
+    let startDate = new Date();
+    if (period === 'daily') {
+        startDate.setHours(0, 0, 0, 0);
+    } else if (period === 'weekly') {
+        startDate.setDate(startDate.getDate() - 7);
+    } else {
+        startDate.setMonth(startDate.getMonth() - 1);
+    }
+    
+    db.all(
+        `SELECT activity_type, title, points 
+         FROM activities 
+         WHERE line_user_id = ? AND date >= ?`,
+        [lineUserId, startDate.toISOString().split('T')[0]],
+        (err, activities) => {
+            if (err) {
+                console.error('Error getting breakdown:', err);
+                return res.status(500).json({ error: 'Failed to get breakdown' });
+            }
+            
+            // Calculate breakdown by activity type
+            const breakdown = {};
+            let totalPoints = 0;
+            
+            activities.forEach(activity => {
+                if (!breakdown[activity.activity_type]) {
+                    breakdown[activity.activity_type] = {
+                        type: activity.activity_type,
+                        title: activity.title,
+                        count: 0,
+                        points: 0
+                    };
+                }
+                breakdown[activity.activity_type].count += 1;
+                breakdown[activity.activity_type].points += activity.points;
+                totalPoints += activity.points;
+            });
+            
+            // Calculate percentages
+            Object.values(breakdown).forEach(item => {
+                item.percentage = totalPoints > 0 ? 
+                    Math.round((item.points / totalPoints) * 100) : 0;
+            });
+            
+            res.json({
+                period,
+                totalPoints,
+                breakdown: Object.values(breakdown).sort((a, b) => b.points - a.points)
+            });
+        }
+    );
+});
+
+// Analytics endpoint - Performance metrics
+app.get('/api/analytics/performance', async (req, res) => {
+    const { lineUserId } = req.query;
+    
+    if (!lineUserId) {
+        return res.status(400).json({ error: 'lineUserId is required' });
+    }
+    
+    // Get current month performance
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    // Get current month data
+    db.get(
+        `SELECT COUNT(*) as activityCount, SUM(points) as totalPoints
+         FROM activities 
+         WHERE line_user_id = ? AND date >= ?`,
+        [lineUserId, monthStart.toISOString().split('T')[0]],
+        (err, currentMonth) => {
+            if (err) {
+                console.error('Error getting current month:', err);
+                return res.status(500).json({ error: 'Failed to get performance' });
+            }
+            
+            // Get last month data
+            db.get(
+                `SELECT COUNT(*) as activityCount, SUM(points) as totalPoints
+                 FROM activities 
+                 WHERE line_user_id = ? AND date >= ? AND date <= ?`,
+                [lineUserId, lastMonthStart.toISOString().split('T')[0], lastMonthEnd.toISOString().split('T')[0]],
+                (err, lastMonth) => {
+                    if (err) {
+                        console.error('Error getting last month:', err);
+                        return res.status(500).json({ error: 'Failed to get performance' });
+                    }
+                    
+                    // Get best day
+                    db.get(
+                        `SELECT date, SUM(points) as points
+                         FROM activities 
+                         WHERE line_user_id = ?
+                         GROUP BY date
+                         ORDER BY points DESC
+                         LIMIT 1`,
+                        [lineUserId],
+                        (err, bestDay) => {
+                            if (err) {
+                                console.error('Error getting best day:', err);
+                                return res.status(500).json({ error: 'Failed to get performance' });
+                            }
+                            
+                            const currentPoints = currentMonth?.totalPoints || 0;
+                            const lastPoints = lastMonth?.totalPoints || 0;
+                            const growth = lastPoints > 0 ? 
+                                Math.round(((currentPoints - lastPoints) / lastPoints) * 100) : 0;
+                            
+                            res.json({
+                                currentMonth: {
+                                    points: currentPoints,
+                                    activities: currentMonth?.activityCount || 0
+                                },
+                                lastMonth: {
+                                    points: lastPoints,
+                                    activities: lastMonth?.activityCount || 0
+                                },
+                                growth,
+                                bestDay: bestDay || { date: null, points: 0 },
+                                averagePerDay: currentMonth?.activityCount > 0 ?
+                                    Math.round(currentPoints / (new Date().getDate())) : 0
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
 // LINE Webhook for bot commands
 app.post('/webhook', async (req, res) => {
     try {
