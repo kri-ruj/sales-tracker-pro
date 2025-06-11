@@ -19,6 +19,7 @@ const versionFile = path.join(projectRoot, 'VERSION');
 const filesToUpdate = [
   { path: 'config.js', pattern: /VERSION:\s*'[^']+'/g, replacement: (v) => `VERSION: '${v}'` },
   { path: 'index.html', pattern: /const CURRENT_VERSION = '[^']+'/g, replacement: (v) => `const CURRENT_VERSION = '${v}'` },
+  { path: 'index.html', pattern: /VERSION:\s*'[^']+'/g, replacement: (v) => `VERSION: '${v}'` },
   { path: 'package.json', pattern: /"version":\s*"[^"]+"/g, replacement: (v) => `"version": "${v}"` },
   { path: 'backend/package.json', pattern: /"version":\s*"[^"]+"/g, replacement: (v) => `"version": "${v}"` }
 ];
