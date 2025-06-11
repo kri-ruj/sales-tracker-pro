@@ -7,6 +7,7 @@ require('dotenv').config();
 // Import Firestore service
 const firestoreService = require('./services/firestore.service');
 const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message-compact');
+const lineQuotaService = require('./services/line-quota.service');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -213,27 +214,62 @@ app.post('/api/activities', async (req, res) => {
             date: date || new Date().toISOString().split('T')[0]
         });
         
-        // Send notification to registered groups
+        // Send notification to registered groups with quota check
         try {
             const groups = await firestoreService.getAllGroups();
             const user = await firestoreService.getUser(lineUserId);
             
-            for (const group of groups) {
-                if (group.notificationsEnabled) {
-                    const flexMessage = createActivitySubmissionFlex(
-                        user?.displayName || 'Unknown User',
-                        title,
-                        subtitle || '',
-                        points,
-                        user?.pictureUrl
-                    );
+            // Get team stats and today's leaderboard for compact message
+            const teamStats = await firestoreService.getTeamStats();
+            const todayLeaderboard = await firestoreService.getLeaderboard('daily');
+            
+            // Check quota before sending any messages
+            const quotaCheck = await lineQuotaService.canSendMessage('activity', false);
+            
+            if (!quotaCheck.allowed) {
+                console.warn(`LINE quota exceeded: ${quotaCheck.reason}`);
+                // Still save the activity, just skip notifications
+            } else {
+                // Count enabled groups
+                const enabledGroups = groups.filter(g => g.notificationsEnabled);
+                
+                if (enabledGroups.length > 0) {
+                    // Check if we have enough quota for all groups
+                    if (quotaCheck.remaining < enabledGroups.length) {
+                        console.warn(`Not enough quota for all groups. Remaining: ${quotaCheck.remaining}, Need: ${enabledGroups.length}`);
+                    }
                     
-                    await sendFlexMessage(
-                        lineClient,
-                        group.id,
-                        'กิจกรรมใหม่! 🎯',
-                        flexMessage
-                    );
+                    // Send to groups (up to remaining quota)
+                    let sentCount = 0;
+                    for (const group of enabledGroups) {
+                        if (sentCount >= quotaCheck.remaining) break;
+                        
+                        try {
+                            const flexMessage = createActivitySubmissionFlex(
+                                user?.displayName || 'Unknown User',
+                                [{title, subtitle, points}], // Pass as array for compact format
+                                points,
+                                teamStats,
+                                user,
+                                todayLeaderboard
+                            );
+                            
+                            await sendFlexMessage(
+                                flexMessage,
+                                lineConfig.channelAccessToken,
+                                group.id
+                            );
+                            
+                            await lineQuotaService.recordMessage('activity', group.id, 1);
+                            sentCount++;
+                        } catch (sendError) {
+                            console.error(`Failed to send to group ${group.id}:`, sendError);
+                        }
+                    }
+                    
+                    if (quotaCheck.warning) {
+                        console.warn(`LINE quota warning: ${quotaCheck.remaining} messages remaining today`);
+                    }
                 }
             }
         } catch (notificationError) {
@@ -471,6 +507,17 @@ app.get('/api/leaderboard/:period', async (req, res) => {
     }
 });
 
+// Get LINE quota status
+app.get('/api/quota/status', async (req, res) => {
+    try {
+        const stats = await lineQuotaService.getQuotaStats();
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting quota status:', error);
+        res.status(500).json({ error: 'Failed to get quota status' });
+    }
+});
+
 // LINE webhook
 app.post('/webhook', async (req, res) => {
     try {
@@ -515,9 +562,10 @@ app.post('/webhook', async (req, res) => {
     }
 });
 
-// Cleanup expired cache periodically
+// Cleanup expired cache and old quota records periodically
 setInterval(() => {
     firestoreService.cleanupExpiredCache().catch(console.error);
+    lineQuotaService.cleanupOldRecords().catch(console.error);
 }, 15 * 60 * 1000); // Every 15 minutes
 
 // Start server after LINE client is initialized

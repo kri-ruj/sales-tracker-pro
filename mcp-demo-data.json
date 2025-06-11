@@ -1,0 +1,16 @@
+{
+  "demo_session": {
+    "timestamp": "2025-06-11T21:50:15+07:00",
+    "user": "MCP Demo",
+    "sales_data": {
+      "daily_target": 10,
+      "achieved": 7,
+      "percentage": 70
+    },
+    "team_performance": {
+      "top_performer": "John Doe",
+      "total_activities": 45,
+      "total_points": 1250
+    }
+  }
+}

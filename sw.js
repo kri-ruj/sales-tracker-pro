@@ -1,37 +1,37 @@
-const CACHE_NAME = 'sales-tracker-pro-v3.7.2';
-const urlsToCache = [
+// Dynamic version based on timestamp to ensure cache busting
+const VERSION = '3.7.9';
+const CACHE_NAME = `sales-tracker-v${VERSION}-${Date.now()}`;
+const API_CACHE_NAME = `sales-tracker-api-v${VERSION}`;
+
+// Cache only essential static assets
+const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/index-refactored.html',
   '/manifest.json',
-  '/css/main.css',
-  '/js/app.js',
-  '/js/config/appConfig.js',
-  '/js/modules/ActivityManager.js',
-  '/js/modules/APIService.js',
-  '/js/modules/LIFFManager.js',
-  '/js/modules/ErrorHandler.js',
-  '/js/modules/OfflineManager.js',
-  '/js/modules/StateManager.js',
-  '/js/modules/UIRenderer.js',
-  'https://static.line-scdn.net/liff/edge/2/sdk.js',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.js'
+  'https://static.line-scdn.net/liff/edge/2/sdk.js'
 ];
 
-// Install event - cache resources
+// API endpoints that should always fetch fresh data
+const API_ROUTES = [
+  '/api/',
+  '/webhook',
+  '/health'
+];
+
+// Install event - cache essential resources only
 self.addEventListener('install', event => {
-  console.log('Service Worker: Installing v3.7.2...');
+  console.log(`Service Worker: Installing ${VERSION}...`);
   // Force immediate activation
   self.skipWaiting();
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Service Worker: Caching files for v3.7.2');
-        return cache.addAll(urlsToCache);
+        console.log(`Service Worker: Caching essential files for ${VERSION}`);
+        return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('Service Worker: Installation complete v3.7.2');
+        console.log(`Service Worker: Installation complete ${VERSION}`);
       })
       .catch(error => {
         console.error('Service Worker: Installation failed', error);
@@ -39,74 +39,131 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - aggressive cleanup of old caches
 self.addEventListener('activate', event => {
-  console.log('Service Worker: Activating...');
+  console.log(`Service Worker: Activating ${VERSION}...`);
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          // Delete ALL old caches
+          if (cacheName !== CACHE_NAME && cacheName !== API_CACHE_NAME) {
             console.log('Service Worker: Deleting old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('Service Worker: Activation complete');
+      console.log(`Service Worker: Activation complete ${VERSION}`);
+      // Take control of all pages immediately
       return self.clients.claim();
+    }).then(() => {
+      // Notify all clients about the update
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: VERSION
+          });
+        });
+      });
     })
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first for everything, cache as fallback
 self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
   // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (request.method !== 'GET') {
     return;
   }
 
   // Skip chrome-extension and other protocols
-  if (!event.request.url.startsWith('http')) {
+  if (!request.url.startsWith('http')) {
     return;
   }
 
+  // Always fetch fresh for API routes
+  if (API_ROUTES.some(route => url.pathname.includes(route))) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Cache successful API responses
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(API_CACHE_NAME).then(cache => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache for API calls if offline
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // Network first strategy for all other requests
   event.respondWith(
-    caches.match(event.request)
+    fetch(request)
       .then(response => {
-        // Return cached version or fetch from network
-        if (response) {
-          console.log('Service Worker: Serving from cache', event.request.url);
+        // Don't cache if not a valid response
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
 
-        console.log('Service Worker: Fetching from network', event.request.url);
-        return fetch(event.request).then(response => {
-          // Don't cache if not a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+        // Clone and cache the response
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, responseToCache);
+        });
+
+        return response;
+      })
+      .catch(() => {
+        // Fallback to cache if network fails
+        return caches.match(request).then(response => {
+          if (response) {
             return response;
           }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-
-          return response;
+          // Return index.html for navigation requests
+          if (request.destination === 'document') {
+            return caches.match('/index.html');
+          }
         });
       })
-      .catch(error => {
-        console.error('Service Worker: Fetch failed', error);
-        
-        // Return offline page for navigation requests
-        if (event.request.destination === 'document') {
-          return caches.match('/index.html');
-        }
-      })
   );
+});
+
+// Message handler for cache control
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }).then(() => {
+        return self.clients.matchAll();
+      }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'CACHE_CLEARED',
+            version: VERSION
+          });
+        });
+      })
+    );
+  }
 });
 
 // Background sync for offline data
@@ -118,74 +175,21 @@ self.addEventListener('sync', event => {
   }
 });
 
-// Push notification handler
-self.addEventListener('push', event => {
-  console.log('Service Worker: Push received', event);
-  
-  const options = {
-    body: event.data ? event.data.text() : 'New activity milestone reached!',
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%234A90E2"/><text y=".9em" font-size="60" x="50%" text-anchor="middle" fill="white">📊</text></svg>',
-    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%234A90E2"/><text y=".9em" font-size="60" x="50%" text-anchor="middle" fill="white">📊</text></svg>',
-    vibrate: [200, 100, 200],
-    tag: 'sales-tracker-notification',
-    actions: [
-      {
-        action: 'view',
-        title: 'View',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>'
-      },
-      {
-        action: 'dismiss',
-        title: 'Dismiss',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'
-      }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification('Sales Tracker Pro', options)
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', event => {
-  console.log('Service Worker: Notification clicked', event);
-  
-  event.notification.close();
-
-  if (event.action === 'view') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  }
-});
-
 // Helper function to sync activities when back online
 async function syncActivities() {
   console.log('Service Worker: Syncing activities...');
   
   try {
-    // Get pending activities from IndexedDB or localStorage
-    const pendingActivities = JSON.parse(localStorage.getItem('pendingActivities') || '[]');
-    
-    if (pendingActivities.length > 0) {
-      // Simulate API sync (replace with actual API call)
-      console.log('Service Worker: Syncing', pendingActivities.length, 'activities');
-      
-      // Clear pending activities after successful sync
-      localStorage.removeItem('pendingActivities');
-      
-      // Show sync success notification
-      self.registration.showNotification('Sales Tracker Pro', {
-        body: `Synced ${pendingActivities.length} activities`,
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%234A90E2"/><text y=".9em" font-size="60" x="50%" text-anchor="middle" fill="white">📊</text></svg>',
-        tag: 'sync-success'
+    // This will be handled by the main app
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => {
+      client.postMessage({
+        type: 'SYNC_ACTIVITIES'
       });
-    }
+    });
   } catch (error) {
     console.error('Service Worker: Sync failed', error);
   }
 }
 
-// Utility functions
-console.log('Service Worker: Loaded successfully');
+console.log(`Service Worker: Loaded successfully (v${VERSION})`);
