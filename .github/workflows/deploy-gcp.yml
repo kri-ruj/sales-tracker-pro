@@ -53,9 +53,19 @@ jobs:
     - name: Bump version and sync
       id: version
       run: |
-        # Temporarily use fixed version
-        NEW_VERSION="3.7.6"
-        echo "Using fixed version: $NEW_VERSION"
+        # Read current version
+        CURRENT_VERSION=$(cat VERSION | head -n 1)
+        echo "Current version: $CURRENT_VERSION"
+        
+        # Bump patch version
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        NEW_PATCH=$((patch + 1))
+        NEW_VERSION="${major}.${minor}.${NEW_PATCH}"
+        echo "New version: $NEW_VERSION"
+        
+        # Update VERSION file
+        echo "$NEW_VERSION" > VERSION
+        echo "Updated at: $(date)" >> VERSION
         
         # Generate version hash for validation
         VERSION_HASH=$(echo -n "$NEW_VERSION-$(date +%s)" | sha256sum | cut -c1-8)
@@ -63,9 +73,16 @@ jobs:
         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
         echo "version_hash=$VERSION_HASH" >> $GITHUB_OUTPUT
 
+    - name: Sync version to all files
+      run: |
+        echo "🔄 Syncing version to all files..."
+        node scripts/version-manager.js sync
+        echo "✅ Version sync completed"
+
     - name: Run pre-deployment check
       run: |
-        echo "🔍 Skipping pre-deployment check temporarily..."
+        echo "🔍 Validating version consistency..."
+        node scripts/version-manager.js validate
         echo "✅ Pre-deployment check passed"
 
     - name: Commit version changes
