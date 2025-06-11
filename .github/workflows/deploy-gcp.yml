@@ -124,12 +124,19 @@ jobs:
       run: |
         # Ensure version is in app.yaml for App Engine
         VERSION="${{ needs.version-management.outputs.new_version }}"
-        if ! grep -q "APP_VERSION:" app.yaml; then
-          echo "" >> app.yaml
-          echo "env_variables:" >> app.yaml
-          echo "  APP_VERSION: '$VERSION'" >> app.yaml
+        
+        # Check if app.yaml already has env_variables
+        if ! grep -q "env_variables:" app.yaml; then
+          # Add env_variables section properly before any existing sections
+          echo -e "\nenv_variables:\n  APP_VERSION: '$VERSION'" >> app.yaml
         else
-          sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+          # Update existing APP_VERSION or add it under env_variables
+          if grep -q "APP_VERSION:" app.yaml; then
+            sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+          else
+            # Add APP_VERSION under existing env_variables
+            sed -i "/env_variables:/a\  APP_VERSION: '$VERSION'" app.yaml
+          fi
         fi
         
     - name: Deploy Frontend to App Engine
@@ -185,24 +192,26 @@ jobs:
         cd backend
         VERSION="${{ needs.version-management.outputs.new_version }}"
         
-        # Ensure env_variables section exists
+        # Check current app.yaml structure
+        echo "Current app.yaml structure:"
+        cat app.yaml
+        echo "---"
+        
+        # Ensure we add env_variables properly without breaking YAML structure
         if ! grep -q "env_variables:" app.yaml; then
-          echo "" >> app.yaml
-          echo "env_variables:" >> app.yaml
-        fi
-        
-        # Update or add APP_VERSION
-        if ! grep -q "APP_VERSION:" app.yaml; then
-          echo "  APP_VERSION: '$VERSION'" >> app.yaml
+          # Add env_variables section before handlers section
+          awk '/^handlers:/{print "env_variables:\n  APP_VERSION: '\'$VERSION\''\n  USE_SECRET_MANAGER: '\''true'\''\n  GOOGLE_CLOUD_PROJECT: '\''salesappfkt'\''\n"}1' app.yaml > app.yaml.tmp && mv app.yaml.tmp app.yaml
         else
-          sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+          # Update existing APP_VERSION
+          if grep -q "APP_VERSION:" app.yaml; then
+            sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+          else
+            sed -i "/env_variables:/a\  APP_VERSION: '$VERSION'" app.yaml
+          fi
         fi
         
-        # Ensure Firestore settings are present
-        if ! grep -q "USE_SECRET_MANAGER:" app.yaml; then
-          echo "  USE_SECRET_MANAGER: 'true'" >> app.yaml
-          echo "  GOOGLE_CLOUD_PROJECT: 'salesappfkt'" >> app.yaml
-        fi
+        echo "Updated app.yaml:"
+        cat app.yaml
 
     - name: Deploy Backend to App Engine
       run: |
