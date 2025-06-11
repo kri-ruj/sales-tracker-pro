@@ -289,8 +289,8 @@ jobs:
         EXPECTED_VERSION="${{ needs.version-management.outputs.new_version }}"
         echo "Expected version: $EXPECTED_VERSION"
         
-        # Create validation script
-        cat > validate-deployment.js << 'EOF'
+        # Create validation script with .cjs extension for CommonJS
+        cat > validate-deployment.cjs << 'EOF'
         const https = require('https');
         
         async function checkService(url, name) {
@@ -338,7 +338,7 @@ jobs:
         validateDeployment();
         EOF
         
-        node validate-deployment.js "$EXPECTED_VERSION"
+        node validate-deployment.cjs "$EXPECTED_VERSION"
 
   # Run tests
   test:
