@@ -11,18 +11,22 @@ const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-fl
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Initialize Secret Manager for production
+// Initialize LINE client variable
+let lineClient;
+
+// Initialize configuration
 let lineConfig = {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
     channelSecret: process.env.LINE_CHANNEL_SECRET,
 };
 
-// In production, use Secret Manager
-if (process.env.NODE_ENV === 'production') {
-    const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
-    const secretClient = new SecretManagerServiceClient();
-    
-    async function loadSecrets() {
+// Function to initialize LINE client
+async function initializeLineClient() {
+    // In production, use Secret Manager
+    if (process.env.NODE_ENV === 'production') {
+        const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+        const secretClient = new SecretManagerServiceClient();
+        
         try {
             // Load LINE secrets from Secret Manager
             const [accessToken] = await secretClient.accessSecretVersion({
@@ -36,16 +40,18 @@ if (process.env.NODE_ENV === 'production') {
             lineConfig.channelSecret = channelSecret.payload.data.toString();
             
             console.log('✅ Secrets loaded from Secret Manager');
+            console.log('🔐 LINE integration ready');
         } catch (error) {
             console.error('Failed to load secrets:', error);
             // Fall back to environment variables
         }
     }
     
-    loadSecrets();
+    // Create LINE client after secrets are loaded
+    lineClient = new Client(lineConfig);
+    console.log('✅ LINE client initialized');
 }
 
-const lineClient = new Client(lineConfig);
 
 // Middleware
 app.use(cors());
@@ -81,6 +87,7 @@ app.get('/health', async (req, res) => {
         version: packageVersion,
         database: 'firestore',
         dbStatus,
+        lineStatus: lineClient ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString() 
     });
 });
@@ -323,9 +330,21 @@ setInterval(() => {
     firestoreService.cleanupExpiredCache().catch(console.error);
 }, 15 * 60 * 1000); // Every 15 minutes
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-    console.log(`📊 Using Firestore database`);
-    console.log(`🔒 Secrets managed by: ${process.env.NODE_ENV === 'production' ? 'Secret Manager' : 'Environment Variables'}`);
-});
+// Start server after LINE client is initialized
+async function startServer() {
+    try {
+        // Wait for LINE client initialization
+        await initializeLineClient();
+        
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+            console.log(`📊 Using Firestore database`);
+            console.log(`🔒 Secrets managed by: ${process.env.NODE_ENV === 'production' ? 'Secret Manager' : 'Environment Variables'}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+startServer();
