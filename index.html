@@ -15,7 +15,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = '3.7.6';
+        const CURRENT_VERSION = '3.7.7';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -1141,6 +1141,12 @@
                 try {
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
+                    
+                    // Clean up OAuth callback parameters from URL
+                    if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
+                        console.log('Cleaning up OAuth callback parameters...');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
                     
                     // Initialize LIFF with the correct ID
                     await liff.init({ 
