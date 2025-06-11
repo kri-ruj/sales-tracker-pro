@@ -170,7 +170,7 @@ jobs:
     - name: Install backend dependencies
       run: |
         cd backend
-        npm install
+        npm install --production
 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
@@ -186,12 +186,24 @@ jobs:
       run: |
         cd backend
         VERSION="${{ needs.version-management.outputs.new_version }}"
-        if ! grep -q "APP_VERSION:" app.yaml; then
+        
+        # Ensure env_variables section exists
+        if ! grep -q "env_variables:" app.yaml; then
           echo "" >> app.yaml
           echo "env_variables:" >> app.yaml
+        fi
+        
+        # Update or add APP_VERSION
+        if ! grep -q "APP_VERSION:" app.yaml; then
           echo "  APP_VERSION: '$VERSION'" >> app.yaml
         else
           sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+        fi
+        
+        # Ensure Firestore settings are present
+        if ! grep -q "USE_SECRET_MANAGER:" app.yaml; then
+          echo "  USE_SECRET_MANAGER: 'true'" >> app.yaml
+          echo "  GOOGLE_CLOUD_PROJECT: 'salesappfkt'" >> app.yaml
         fi
 
     - name: Deploy Backend to App Engine
@@ -225,7 +237,21 @@ jobs:
         node-version: '20'
 
     - name: Wait for services to stabilize
-      run: sleep 30
+      run: sleep 45
+
+    - name: Validate backend health
+      run: |
+        echo "Checking backend health..."
+        HEALTH_RESPONSE=$(curl -s https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com/health)
+        echo "Health response: $HEALTH_RESPONSE"
+        
+        # Check if database is healthy
+        if echo "$HEALTH_RESPONSE" | grep -q '"dbStatus":"healthy"'; then
+          echo "✅ Database connection is healthy"
+        else
+          echo "❌ Database connection issue detected"
+          exit 1
+        fi
 
     - name: Validate deployed versions
       run: |
