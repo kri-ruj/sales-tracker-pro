@@ -29,10 +29,10 @@
   "author": "Sales Tracker Pro",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "@types/node": "^20.10.0",
+    "@playwright/test": "^1.53.0",
+    "@types/node": "^20.19.0",
     "http-server": "^14.1.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
