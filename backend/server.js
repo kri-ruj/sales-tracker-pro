@@ -22,6 +22,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Version management middleware
+const { versionCheckMiddleware } = require('./middleware/version-check');
+app.use(versionCheckMiddleware);
+
 // Initialize SQLite database - use file for persistence
 const dbPath = process.env.NODE_ENV === 'production' ? '/tmp/sales-tracker.db' : './sales-tracker.db';
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -73,12 +77,17 @@ db.serialize(() => {
 
 // Routes
 
+// Version monitoring routes
+const versionMonitorRoutes = require('./routes/version-monitor');
+app.use('/api', versionMonitorRoutes);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
+    const packageVersion = require('./package.json').version;
     res.status(200).json({ 
         status: 'OK', 
         message: 'Sales Tracker LINE Backend is running',
-        version: '3.7.2',
+        version: packageVersion,
         timestamp: new Date().toISOString() 
     });
 });
@@ -101,11 +110,12 @@ app.get('/api/debug/groups', (req, res) => {
 
 // Basic API info
 app.get('/', (req, res) => {
+    const packageVersion = require('./package.json').version;
     res.json({ 
         message: 'Sales Tracker API',
         status: 'running',
-        version: '3.7.2',
-        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook', '/api/debug/groups']
+        version: packageVersion,
+        endpoints: ['/health', '/api/users', '/api/activities', '/api/team/stats', '/webhook', '/api/debug/groups', '/api/version', '/api/version/health', '/api/version/monitor']
     });
 });
 

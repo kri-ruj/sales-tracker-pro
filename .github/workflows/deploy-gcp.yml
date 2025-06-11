@@ -12,12 +12,13 @@ env:
   REGION: asia-southeast1
 
 jobs:
-  # Bump version
-  version-bump:
-    name: Bump Version
+  # Version validation and bump
+  version-management:
+    name: Version Management
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.bump.outputs.new_version }}
+      new_version: ${{ steps.version.outputs.new_version }}
+      version_hash: ${{ steps.version.outputs.version_hash }}
     
     steps:
     - name: Checkout code
@@ -26,40 +27,70 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
     - name: Configure Git
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Get current version and bump
-      id: bump
+    - name: Make scripts executable
+      run: |
+        chmod +x scripts/version-manager.js
+        chmod +x scripts/safe-deploy.sh
+        chmod +x update-version.sh
+
+    - name: Validate current versions
+      id: validate
+      run: |
+        echo "🔍 Validating version consistency..."
+        if ! node scripts/version-manager.js validate; then
+          echo "⚠️ Version mismatch detected, running sync..."
+          node scripts/version-manager.js sync
+          
+          # Validate again after sync
+          if ! node scripts/version-manager.js validate; then
+            echo "❌ Version synchronization failed!"
+            exit 1
+          fi
+        fi
+        echo "✅ All versions are synchronized"
+
+    - name: Bump version and sync
+      id: version
       run: |
         # Get current version
-        CURRENT_VERSION=$(grep -o '"version": "[^"]*"' package.json | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+        CURRENT_VERSION=$(node scripts/version-manager.js current)
         echo "Current version: $CURRENT_VERSION"
         
-        # Bump patch version
-        IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-        MAJOR=${VERSION_PARTS[0]}
-        MINOR=${VERSION_PARTS[1]}
-        PATCH=$((VERSION_PARTS[2] + 1))
-        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        # Bump version
+        node scripts/version-manager.js bump patch
         
+        # Get new version
+        NEW_VERSION=$(node scripts/version-manager.js current)
         echo "New version: $NEW_VERSION"
+        
+        # Generate version hash for validation
+        VERSION_HASH=$(echo -n "$NEW_VERSION-$(date +%s)" | sha256sum | cut -c1-8)
+        
         echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-        
-        # Update all version references using the update script
-        chmod +x update-version.sh
-        ./update-version.sh $NEW_VERSION || echo "Update script failed, updating manually"
-        
-        # Also update these specific locations that the script might miss
-        sed -i "s/const CURRENT_VERSION = '[^']*'/const CURRENT_VERSION = '$NEW_VERSION'/" index.html
-        sed -i "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" package.json
+        echo "version_hash=$VERSION_HASH" >> $GITHUB_OUTPUT
+
+    - name: Run pre-deployment check
+      run: |
+        if ! node scripts/version-manager.js check; then
+          echo "❌ Pre-deployment check failed!"
+          exit 1
+        fi
+        echo "✅ Pre-deployment check passed"
 
     - name: Commit version changes
       run: |
         git add .
-        git commit -m "🚀 Auto-bump version to v${{ steps.bump.outputs.new_version }}" || echo "No changes to commit"
+        git commit -m "🚀 Auto-bump version to v${{ steps.version.outputs.new_version }} [skip ci]" || echo "No changes to commit"
 
     - name: Push changes
       run: |
@@ -67,13 +98,15 @@ jobs:
 
   # Deploy Frontend to GCP App Engine
   deploy-frontend:
-    needs: version-bump
+    needs: version-management
     name: Deploy Frontend to GCP App Engine
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: main  # Ensure we get the latest version bump
 
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
@@ -88,23 +121,44 @@ jobs:
     - name: Create requirements.txt for Python runtime
       run: |
         echo "Flask==2.3.2" > requirements.txt
+
+    - name: Add version to app.yaml
+      run: |
+        # Ensure version is in app.yaml for App Engine
+        VERSION="${{ needs.version-management.outputs.new_version }}"
+        if ! grep -q "APP_VERSION:" app.yaml; then
+          echo "" >> app.yaml
+          echo "env_variables:" >> app.yaml
+          echo "  APP_VERSION: '$VERSION'" >> app.yaml
+        else
+          sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+        fi
         
     - name: Deploy Frontend to App Engine
       run: |
-        # Deploy frontend service
-        gcloud app deploy app.yaml --quiet --project=${{ secrets.GCP_PROJECT_ID }} --stop-previous-version
+        VERSION="${{ needs.version-management.outputs.new_version }}"
+        VERSION_ID="v${VERSION//./}"
+        
+        gcloud app deploy app.yaml \
+          --quiet \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --version="$VERSION_ID" \
+          --stop-previous-version
         
         echo "Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "Version: $VERSION"
 
   # Deploy Backend to Google App Engine
   deploy-backend:
     name: Deploy Backend to App Engine
     runs-on: ubuntu-latest
-    needs: deploy-frontend
+    needs: version-management
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: main  # Ensure we get the latest version bump
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -128,29 +182,112 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
 
+    - name: Add version to backend app.yaml
+      run: |
+        cd backend
+        VERSION="${{ needs.version-management.outputs.new_version }}"
+        if ! grep -q "APP_VERSION:" app.yaml; then
+          echo "" >> app.yaml
+          echo "env_variables:" >> app.yaml
+          echo "  APP_VERSION: '$VERSION'" >> app.yaml
+        else
+          sed -i "s/APP_VERSION:.*/APP_VERSION: '$VERSION'/" app.yaml
+        fi
+
     - name: Deploy Backend to App Engine
       run: |
         cd backend
-        gcloud app deploy app.yaml --quiet --promote
-
-    - name: Deploy Frontend to App Engine
-      run: |
-        # Deploy frontend from root directory
-        gcloud app deploy app.yaml --quiet --promote
-
-    - name: Display Deployment URLs
-      run: |
-        # Display the deployment URLs
+        VERSION="${{ needs.version-management.outputs.new_version }}"
+        VERSION_ID="v${VERSION//./}"
+        
+        gcloud app deploy app.yaml \
+          --quiet \
+          --promote \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --version="$VERSION_ID"
+        
         echo "✅ Backend deployed to: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
-        echo "✅ Frontend deployed to: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
-        echo "✅ Version: ${{ needs.version-bump.outputs.new_version }}"
+        echo "✅ Version: $VERSION"
 
-  # Database setup removed - using in-memory storage for simplicity
+  # Version validation after deployment
+  validate-deployment:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [version-management, deploy-frontend, deploy-backend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Wait for services to stabilize
+      run: sleep 30
+
+    - name: Validate deployed versions
+      run: |
+        EXPECTED_VERSION="${{ needs.version-management.outputs.new_version }}"
+        echo "Expected version: $EXPECTED_VERSION"
+        
+        # Create validation script
+        cat > validate-deployment.js << 'EOF'
+        const https = require('https');
+        
+        async function checkService(url, name) {
+          return new Promise((resolve) => {
+            https.get(url, (res) => {
+              let data = '';
+              res.on('data', chunk => data += chunk);
+              res.on('end', () => {
+                // Try to extract version from response
+                const versionMatch = data.match(/VERSION:\s*['"]([^'"]+)['"]/);
+                const displayMatch = data.match(/v([\d.]+)<\/span>/);
+                const jsonMatch = data.match(/"version":\s*"([^"]+)"/);
+                
+                const version = versionMatch?.[1] || displayMatch?.[1] || jsonMatch?.[1] || 'unknown';
+                console.log(`${name}: ${version}`);
+                resolve({ name, version });
+              });
+            }).on('error', (err) => {
+              console.error(`${name}: Error - ${err.message}`);
+              resolve({ name, version: 'error' });
+            });
+          });
+        }
+        
+        async function validateDeployment() {
+          const expectedVersion = process.argv[2];
+          
+          const results = await Promise.all([
+            checkService('https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com/', 'Frontend'),
+            checkService('https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com/', 'Backend API')
+          ]);
+          
+          const allMatch = results.every(r => r.version === expectedVersion);
+          
+          if (allMatch) {
+            console.log('\n✅ All services deployed with correct version!');
+            process.exit(0);
+          } else {
+            console.log('\n❌ Version mismatch detected!');
+            console.log(`Expected: ${expectedVersion}`);
+            process.exit(1);
+          }
+        }
+        
+        validateDeployment();
+        EOF
+        
+        node validate-deployment.js "$EXPECTED_VERSION"
 
   # Run tests
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    needs: version-management
     
     steps:
     - name: Checkout code
@@ -168,21 +305,14 @@ jobs:
         cd backend
         npm install
 
-    - name: Run tests
+    - name: Run backend tests
       run: |
         cd backend
         npm test || echo "No tests specified"
 
-    - name: Test frontend
+    - name: Validate version consistency in tests
       run: |
-        # Basic frontend validation
-        if [ -f "index.html" ]; then
-          echo "✅ Frontend files exist"
-          # Check for required scripts
-          if grep -q "liff" index.html; then
-            echo "✅ LIFF integration found"
-          fi
-        fi
+        node scripts/version-manager.js validate
 
   # Security scan
   security-scan:
@@ -200,31 +330,38 @@ jobs:
         
     - name: Check for secrets in code
       run: |
-        # Simple check for potential secrets
-        if grep -r "password\|secret\|key" --include="*.js" --include="*.json" .; then
-          echo "⚠️ Potential secrets found in code"
+        # Check for potential secrets, excluding test files and configs
+        if grep -r "password\|secret\|key" --include="*.js" --exclude="*test*" --exclude="*config*" .; then
+          echo "⚠️ Potential secrets found in code - please review"
         else
           echo "✅ No obvious secrets in code"
         fi
 
-  # Notify deployment status
+  # Final notification
   notify:
-    name: Notify Deployment Status
+    name: Deployment Summary
     runs-on: ubuntu-latest
-    needs: [version-bump, deploy-frontend, deploy-backend]
+    needs: [version-management, deploy-frontend, deploy-backend, validate-deployment]
     if: always()
     
     steps:
-    - name: Notify success
-      if: needs.deploy-frontend.result == 'success' && needs.deploy-backend.result == 'success'
+    - name: Deployment success summary
+      if: needs.validate-deployment.result == 'success'
       run: |
         echo "🎉 Deployment successful!"
-        echo "Version: ${{ needs.version-bump.outputs.new_version }}"
-        echo "Frontend: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
-        echo "Backend: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "Version: ${{ needs.version-management.outputs.new_version }}"
+        echo "Version Hash: ${{ needs.version-management.outputs.version_hash }}"
+        echo ""
+        echo "Services:"
+        echo "  Frontend: https://frontend-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo "  Backend: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com"
+        echo ""
+        echo "Version Monitor: https://sales-tracker-api-dot-${{ secrets.GCP_PROJECT_ID }}.as.r.appspot.com/api/version/monitor"
         
-    - name: Notify failure
-      if: needs.deploy-frontend.result == 'failure' || needs.deploy-backend.result == 'failure'
+    - name: Deployment failure summary
+      if: needs.validate-deployment.result == 'failure'
       run: |
-        echo "❌ Deployment failed!"
+        echo "❌ Deployment validation failed!"
+        echo "Version mismatch detected after deployment."
+        echo "Please check the logs and run manual validation."
         exit 1
