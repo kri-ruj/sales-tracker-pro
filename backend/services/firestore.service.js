@@ -34,7 +34,9 @@ if (!admin.apps.length) {
   }
 }
 
-const db = admin.firestore();
+const db = admin.firestore({
+  databaseId: 'sales-tracker-db'
+});
 
 // Collection references
 const collections = {

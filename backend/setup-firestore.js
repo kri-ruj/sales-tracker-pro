@@ -34,7 +34,9 @@ if (!serviceAccount && process.env.NODE_ENV === 'production') {
   });
 }
 
-const db = admin.firestore();
+const db = admin.firestore({
+  databaseId: 'sales-tracker-db'
+});
 
 // Collection references
 const collections = {
