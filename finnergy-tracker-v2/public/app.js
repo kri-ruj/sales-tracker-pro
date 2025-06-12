@@ -443,7 +443,7 @@ function showSuccessAnimation() {
 // API Functions
 async function saveActivity(activity) {
     try {
-        const response = await fetch(`${API_URL}/api/activities`, {
+        const response = await fetch(`${API_URL}/api/frontend/activities`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -493,7 +493,7 @@ async function loadUserData() {
             
             // Load streak data from backend
             try {
-                const streakResponse = await fetch(`${API_URL}/api/streak/${currentUser.userId}`);
+                const streakResponse = await fetch(`${API_URL}/api/frontend/streak/${currentUser.userId}`);
                 if (streakResponse.ok) {
                     const backendStreak = await streakResponse.json();
                     streakData = {
@@ -510,7 +510,7 @@ async function loadUserData() {
             
             // Load achievements from backend
             try {
-                const achievementsResponse = await fetch(`${API_URL}/api/achievements/${currentUser.userId}`);
+                const achievementsResponse = await fetch(`${API_URL}/api/frontend/achievements/${currentUser.userId}`);
                 if (achievementsResponse.ok) {
                     const backendAchievements = await achievementsResponse.json();
                     const unlockedIds = backendAchievements.map(a => a.achievement_id);
@@ -523,7 +523,7 @@ async function loadUserData() {
             }
             
             // Load activities
-            const activitiesResponse = await fetch(`${API_URL}/api/activities/${currentUser.userId}`);
+            const activitiesResponse = await fetch(`${API_URL}/api/frontend/activities/${currentUser.userId}`);
             if (activitiesResponse.ok) {
                 const backendActivities = await activitiesResponse.json();
                 activities = backendActivities.map(a => ({
@@ -1246,7 +1246,7 @@ function updateChallengeTimer() {
 // Backend sync functions
 async function saveAchievementToBackend(achievementId) {
     try {
-        const response = await fetch(`${API_URL}/api/achievements`, {
+        const response = await fetch(`${API_URL}/api/frontend/achievements`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1268,7 +1268,7 @@ async function saveAchievementToBackend(achievementId) {
 
 async function saveStreakToBackend() {
     try {
-        const response = await fetch(`${API_URL}/api/streak`, {
+        const response = await fetch(`${API_URL}/api/frontend/streak`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
