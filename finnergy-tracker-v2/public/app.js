@@ -1,6 +1,6 @@
 // Finnergy Tracker Pro - Next Gen App
-const LIFF_ID = '2007552096-wrG1aV9p'; // Using existing LIFF ID for now
-const API_URL = 'https://finnergy-api-v2-dot-salesappfkt.as.r.appspot.com'; // New API URL
+const LIFF_ID = '2007552096-wrG1aV9p'; // Using existing LIFF ID
+const API_URL = 'https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com'; // Using existing backend
 
 // Activity Types with Emojis and Points
 const ACTIVITY_TYPES = [
@@ -28,6 +28,17 @@ let streakData = {
 // Initialize App
 async function initializeApp() {
     try {
+        // Check if we're coming back from LINE login with auth code
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        if (code && state) {
+            // We're returning from LINE login, redirect to the official LIFF URL
+            window.location.href = `https://liff.line.me/${LIFF_ID}?code=${code}&state=${state}`;
+            return;
+        }
+        
         await liff.init({ liffId: LIFF_ID });
         
         if (liff.isLoggedIn()) {
@@ -40,9 +51,22 @@ async function initializeApp() {
         }
     } catch (error) {
         console.error('LIFF initialization failed:', error);
-        // For development, show app anyway
-        showMainApp();
-        mockUserData();
+        // Show login screen with option to use without LINE
+        showLoginScreen();
+        
+        // Add a demo mode button
+        const loginScreen = document.getElementById('loginScreen');
+        if (!document.getElementById('demoButton')) {
+            const demoBtn = document.createElement('button');
+            demoBtn.id = 'demoButton';
+            demoBtn.className = 'w-full py-3 px-6 rounded-xl glass hover:bg-white/10 transition-colors font-semibold mt-4';
+            demoBtn.textContent = 'Try Demo Mode';
+            demoBtn.onclick = () => {
+                showMainApp();
+                mockUserData();
+            };
+            loginScreen.querySelector('.glass').appendChild(demoBtn);
+        }
     }
 }
 
@@ -359,8 +383,30 @@ function showSuccessAnimation() {
 
 // API Functions
 async function saveActivity(activity) {
-    // TODO: Implement API call to new backend
-    console.log('Saving activity:', activity);
+    try {
+        const response = await fetch(`${API_URL}/api/activities`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: currentUser.userId,
+                type: activity.type,
+                points: activity.points,
+                quantity: activity.quantity,
+                timestamp: activity.timestamp
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to save activity');
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to save activity:', error);
+        throw error;
+    }
 }
 
 async function loadUserData() {
@@ -376,15 +422,74 @@ async function loadUserData() {
         console.log('Could not load streak data');
     }
     
-    // TODO: Implement API call to load user data
-    mockUserData(); // For now, use mock data
-    
-    // Update streak calendar after loading data
-    updateStreakCalendar();
-    
-    // Generate heatmap if in main app
-    if (!document.getElementById('loginScreen').style.display || document.getElementById('loginScreen').style.display === 'none') {
-        generateHeatmap();
+    try {
+        // Register/update user
+        const userResponse = await fetch(`${API_URL}/api/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: currentUser.userId,
+                name: currentUser.displayName,
+                pictureUrl: currentUser.pictureUrl
+            })
+        });
+        
+        if (userResponse.ok) {
+            const userData = await userResponse.json();
+            
+            // Update UI with user info
+            document.getElementById('userName').textContent = currentUser.displayName;
+            document.getElementById('userAvatar').src = currentUser.pictureUrl;
+            document.getElementById('userAvatar').classList.remove('hidden');
+            
+            // Load activities
+            const activitiesResponse = await fetch(`${API_URL}/api/activities?userId=${currentUser.userId}`);
+            if (activitiesResponse.ok) {
+                const data = await activitiesResponse.json();
+                activities = data.activities || [];
+                renderRecentActivities();
+                updateStreakCalendar();
+                generateHeatmap();
+                
+                // Calculate today's points
+                const today = new Date().toDateString();
+                const todayPoints = activities
+                    .filter(a => new Date(a.timestamp).toDateString() === today)
+                    .reduce((sum, a) => sum + a.points, 0);
+                
+                // Calculate week points
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                const weekPoints = activities
+                    .filter(a => new Date(a.timestamp) >= weekAgo)
+                    .reduce((sum, a) => sum + a.points, 0);
+                
+                updateStats({
+                    todayPoints,
+                    weekPoints,
+                    goalProgress: Math.min(100, Math.round((todayPoints / 300) * 100)),
+                    userRank: userData.rank || '-'
+                });
+            }
+            
+            // Load leaderboard
+            const leaderboardResponse = await fetch(`${API_URL}/api/leaderboard/weekly`);
+            if (leaderboardResponse.ok) {
+                const leaderboard = await leaderboardResponse.json();
+                renderLeaderboard(leaderboard.map((user, index) => ({
+                    name: user.name,
+                    points: user.points,
+                    rank: index + 1,
+                    isCurrentUser: user.userId === currentUser.userId
+                })));
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user data:', error);
+        // Fallback to mock data if API fails
+        mockUserData();
     }
 }
 
