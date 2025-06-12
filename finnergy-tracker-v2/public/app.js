@@ -527,10 +527,10 @@ async function loadUserData() {
             if (activitiesResponse.ok) {
                 const backendActivities = await activitiesResponse.json();
                 activities = backendActivities.map(a => ({
-                    type: a.activity_type,
+                    type: a.type,
                     points: a.points,
-                    quantity: a.count,
-                    timestamp: a.created_at
+                    quantity: 1,
+                    timestamp: a.timestamp
                 }));
                 
                 renderRecentActivities();
