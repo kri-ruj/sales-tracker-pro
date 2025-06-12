@@ -19,6 +19,11 @@ let currentUser = null;
 let selectedActivity = null;
 let selectedQuantity = 1;
 let activities = [];
+let streakData = {
+    currentStreak: 0,
+    longestStreak: 0,
+    lastActivityDate: null
+};
 
 // Initialize App
 async function initializeApp() {
@@ -200,6 +205,7 @@ async function confirmAddActivity() {
     // Update UI
     renderRecentActivities();
     updateStatsAfterActivity(activity);
+    updateStreak();
     
     // Close modal
     closeActivityModal();
@@ -227,6 +233,7 @@ async function quickAddActivity(activity) {
     activities.unshift(activityData);
     renderRecentActivities();
     updateStatsAfterActivity(activityData);
+    updateStreak();
     showSuccessAnimation();
     
     try {
@@ -329,8 +336,23 @@ async function saveActivity(activity) {
 }
 
 async function loadUserData() {
+    // Load streak data from localStorage
+    try {
+        const savedStreak = localStorage.getItem('streakData');
+        if (savedStreak) {
+            streakData = JSON.parse(savedStreak);
+            document.getElementById('currentStreak').textContent = streakData.currentStreak;
+            document.getElementById('longestStreak').textContent = streakData.longestStreak;
+        }
+    } catch (e) {
+        console.log('Could not load streak data');
+    }
+    
     // TODO: Implement API call to load user data
     mockUserData(); // For now, use mock data
+    
+    // Update streak calendar after loading data
+    updateStreakCalendar();
 }
 
 // Authentication
@@ -351,6 +373,103 @@ async function handleLogout() {
         console.error('Logout failed:', error);
         window.location.reload();
     }
+}
+
+// Streak Management
+function updateStreak() {
+    const today = new Date().toDateString();
+    const lastDate = streakData.lastActivityDate ? new Date(streakData.lastActivityDate).toDateString() : null;
+    
+    if (!lastDate) {
+        // First activity ever
+        streakData.currentStreak = 1;
+        streakData.longestStreak = 1;
+    } else if (lastDate === today) {
+        // Already logged today, no change
+        return;
+    } else {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (lastDate === yesterday.toDateString()) {
+            // Consecutive day!
+            streakData.currentStreak++;
+            if (streakData.currentStreak > streakData.longestStreak) {
+                streakData.longestStreak = streakData.currentStreak;
+            }
+        } else {
+            // Streak broken
+            streakData.currentStreak = 1;
+        }
+    }
+    
+    streakData.lastActivityDate = new Date().toISOString();
+    
+    // Update UI
+    document.getElementById('currentStreak').textContent = streakData.currentStreak;
+    document.getElementById('longestStreak').textContent = streakData.longestStreak;
+    
+    // Update mini calendar
+    updateStreakCalendar();
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('streakData', JSON.stringify(streakData));
+    } catch (e) {
+        console.log('Could not save streak data');
+    }
+    
+    // Show streak animation for milestones
+    if (streakData.currentStreak % 7 === 0) {
+        showStreakMilestone();
+    }
+}
+
+function updateStreakCalendar() {
+    const calendar = document.getElementById('streakCalendar');
+    const days = [];
+    const today = new Date();
+    
+    // Show last 7 days
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toDateString();
+        
+        // Check if there was activity on this day
+        const hasActivity = activities.some(act => {
+            const actDate = new Date(act.timestamp).toDateString();
+            return actDate === dateStr;
+        });
+        
+        days.push(`
+            <div class="w-6 h-6 rounded ${hasActivity ? 'bg-violet-500' : 'bg-gray-700'} ${i === 0 && hasActivity ? 'ring-2 ring-violet-400' : ''}"></div>
+        `);
+    }
+    
+    calendar.innerHTML = days.join('');
+}
+
+function showStreakMilestone() {
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 glass rounded-full px-8 py-4 neon-glow z-50';
+    toast.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl">🔥</span>
+            <div>
+                <p class="text-lg font-bold">${streakData.currentStreak} Day Streak!</p>
+                <p class="text-sm text-gray-400">Keep up the great work!</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s, transform 0.5s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
 }
 
 // Initialize on load
