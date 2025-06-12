@@ -121,6 +121,10 @@ app.get('/', (req, res) => {
             '/health', 
             '/api/users', 
             '/api/activities', 
+            '/api/achievements/:lineUserId',
+            '/api/achievements',
+            '/api/streak/:lineUserId',
+            '/api/streak',
             '/api/team/stats', 
             '/api/analytics/trends',
             '/api/analytics/breakdown', 
@@ -137,15 +141,21 @@ app.get('/', (req, res) => {
 
 // User registration/update
 app.post('/api/users', async (req, res) => {
-    const { lineUserId, displayName, pictureUrl } = req.body;
+    const { lineUserId, displayName, pictureUrl, userId, name } = req.body;
     
-    if (!lineUserId || !displayName) {
-        return res.status(400).json({ error: 'lineUserId and displayName are required' });
+    // Support both parameter formats
+    const userIdParam = lineUserId || userId;
+    const nameParam = displayName || name;
+    
+    console.log('User params:', { lineUserId, userId, displayName, name, userIdParam, nameParam });
+    
+    if (!userIdParam || !nameParam) {
+        return res.status(400).json({ error: 'userId/lineUserId and name/displayName are required' });
     }
     
     try {
-        const user = await firestoreService.createOrUpdateUser(lineUserId, {
-            displayName,
+        const user = await firestoreService.createOrUpdateUser(userIdParam, {
+            displayName: nameParam,
             pictureUrl
         });
         
@@ -193,31 +203,38 @@ app.put('/api/users/:lineUserId/settings', async (req, res) => {
     }
 });
 
-// Create activity
+// Create activity  
 app.post('/api/activities', async (req, res) => {
-    const { lineUserId, activityType, title, subtitle, points, count, date } = req.body;
+    const { lineUserId, activityType, title, subtitle, points, count, date, userId, type, quantity, timestamp } = req.body;
     
-    if (!lineUserId || !activityType || !title || points === undefined) {
+    // Support both parameter formats
+    const userIdParam = lineUserId || userId;
+    const typeParam = activityType || type;
+    const countParam = count || quantity || 1;
+    const dateParam = date || (timestamp ? new Date(timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const titleParam = title || `${typeParam} activity`;
+    
+    if (!userIdParam || !typeParam || points === undefined) {
         return res.status(400).json({ 
-            error: 'lineUserId, activityType, title, and points are required' 
+            error: 'userId, type, and points are required' 
         });
     }
     
     try {
         const activity = await firestoreService.createActivity({
-            lineUserId,
-            activityType,
-            title,
+            lineUserId: userIdParam,
+            activityType: typeParam,
+            title: titleParam,
             subtitle,
             points: parseInt(points),
-            count: parseInt(count) || 1,
-            date: date || new Date().toISOString().split('T')[0]
+            count: parseInt(countParam),
+            date: dateParam
         });
         
         // Send notification to registered groups with quota check
         try {
             const groups = await firestoreService.getAllGroups();
-            const user = await firestoreService.getUser(lineUserId);
+            const user = await firestoreService.getUser(userIdParam);
             
             // Get team stats and today's leaderboard for compact message
             const teamStats = await firestoreService.getTeamStats();
@@ -247,7 +264,7 @@ app.post('/api/activities', async (req, res) => {
                         try {
                             const flexMessage = createActivitySubmissionFlex(
                                 user?.displayName || 'Unknown User',
-                                [{title, subtitle, points}], // Pass as array for compact format
+                                [{title: titleParam, subtitle, points}], // Pass as array for compact format
                                 points,
                                 teamStats,
                                 user,
@@ -515,6 +532,74 @@ app.get('/api/quota/status', async (req, res) => {
     } catch (error) {
         console.error('Error getting quota status:', error);
         res.status(500).json({ error: 'Failed to get quota status' });
+    }
+});
+
+// Get user achievements
+app.get('/api/achievements/:lineUserId', async (req, res) => {
+    const { lineUserId } = req.params;
+    
+    try {
+        const achievements = await firestoreService.getUserAchievements(lineUserId);
+        res.json(achievements);
+    } catch (error) {
+        console.error('Error fetching achievements:', error);
+        res.status(500).json({ error: 'Failed to fetch achievements' });
+    }
+});
+
+// Unlock achievement
+app.post('/api/achievements', async (req, res) => {
+    const { lineUserId, achievementId } = req.body;
+    
+    if (!lineUserId || !achievementId) {
+        return res.status(400).json({ error: 'Missing lineUserId or achievementId' });
+    }
+    
+    try {
+        const result = await firestoreService.unlockAchievement(lineUserId, achievementId);
+        res.json({
+            success: true,
+            newUnlock: result.newUnlock,
+            achievementId
+        });
+    } catch (error) {
+        console.error('Error unlocking achievement:', error);
+        res.status(500).json({ error: 'Failed to unlock achievement' });
+    }
+});
+
+// Get user streak data
+app.get('/api/streak/:lineUserId', async (req, res) => {
+    const { lineUserId } = req.params;
+    
+    try {
+        const streak = await firestoreService.getUserStreak(lineUserId);
+        res.json(streak || { current_streak: 0, longest_streak: 0, last_activity_date: null });
+    } catch (error) {
+        console.error('Error fetching streak:', error);
+        res.status(500).json({ error: 'Failed to fetch streak' });
+    }
+});
+
+// Update user streak
+app.post('/api/streak', async (req, res) => {
+    const { lineUserId, currentStreak, longestStreak, lastActivityDate } = req.body;
+    
+    if (!lineUserId) {
+        return res.status(400).json({ error: 'Missing lineUserId' });
+    }
+    
+    try {
+        await firestoreService.updateUserStreak(lineUserId, {
+            currentStreak,
+            longestStreak,
+            lastActivityDate
+        });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating streak:', error);
+        res.status(500).json({ error: 'Failed to update streak' });
     }
 });
 

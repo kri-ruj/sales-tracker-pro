@@ -1246,6 +1246,12 @@
             async init() {
                 console.log('App init() called');
                 try {
+                    // Restore JWT token from localStorage
+                    this.jwtToken = localStorage.getItem('jwtToken');
+                    if (this.jwtToken) {
+                        console.log('JWT token restored from localStorage');
+                    }
+                    
                     // Set version display
                     const versionElement = document.getElementById('appVersion');
                     if (versionElement) {
@@ -1452,14 +1458,19 @@
                 // Store in localStorage
                 localStorage.setItem('lineUserProfile', JSON.stringify(googleProfile));
                 
+                // Authenticate with backend first
+                const authSuccess = await this.authenticateWithBackend(googleProfile);
+                if (!authSuccess) {
+                    this.showToast('⚠️ Backend authentication failed, using offline mode');
+                }
+                
                 // Show user info and hide login
                 this.displayUserInfo(googleProfile);
                 this.hideLoginScreen();
                 
-                // Send login notification to backend (if connected)
-                if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                // Load user's activities from backend if authenticated
+                if (authSuccess && this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
                     this.sendLoginNotification(googleProfile);
-                    // Load user's activities from backend
                     await this.loadActivities();
                 }
                 
@@ -1487,16 +1498,21 @@
                         statusMessage: profile.statusMessage
                     }));
                     
+                    // Authenticate with backend first
+                    const authSuccess = await this.authenticateWithBackend(profile);
+                    if (!authSuccess) {
+                        this.showToast('⚠️ Backend authentication failed, using offline mode');
+                    }
+                    
                     // Show user info
                     this.displayUserInfo(profile);
                     
                     // Hide login screen
                     this.hideLoginScreen();
                     
-                    // Send login notification to backend
-                    if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                    // Load user's activities from backend if authenticated
+                    if (authSuccess && this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
                         this.sendLoginNotification(profile);
-                        // Load user's activities from backend
                         await this.loadActivities();
                     }
                     
@@ -1645,6 +1661,53 @@
                 return;
             }
 
+            // JWT Authentication Methods
+            async authenticateWithBackend(userProfile) {
+                try {
+                    console.log('Authenticating with backend...');
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lineUserId: userProfile.userId || userProfile.lineUserId,
+                            displayName: userProfile.displayName
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.jwtToken = data.token;
+                        
+                        // Store token in localStorage for persistence
+                        localStorage.setItem('jwtToken', data.token);
+                        
+                        console.log('✅ Backend authentication successful');
+                        return true;
+                    } else {
+                        console.error('❌ Backend authentication failed:', response.status);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Backend authentication error:', error);
+                    return false;
+                }
+            }
+            
+            getAuthHeaders() {
+                const token = this.jwtToken || localStorage.getItem('jwtToken');
+                if (token) {
+                    return {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    };
+                }
+                return {
+                    'Content-Type': 'application/json'
+                };
+            }
+
             async checkBackendConnection() {
                 this.updateStatus('backend', 'checking');
                 
@@ -1754,7 +1817,9 @@
                 // Then, try to sync with backend if connected and user is logged in
                 if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
                     try {
-                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/user/${this.lineUserId}?limit=100`);
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/user/${this.lineUserId}?limit=100`, {
+                            headers: this.getAuthHeaders()
+                        });
                         if (response.ok) {
                             const activities = await response.json();
                             const backendActivities = activities.map(a => ({
@@ -1918,7 +1983,7 @@
                     try {
                         const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: this.getAuthHeaders(),
                             body: JSON.stringify({
                                 lineUserId: this.lineUserId,
                                 activityType: activity.id.split('_')[0],
@@ -1943,7 +2008,7 @@
                 try {
                     const response = await fetch(`${CONFIG.BACKEND_URL}/api/users`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: this.getAuthHeaders(),
                         body: JSON.stringify({
                             lineUserId: this.lineUserId,
                             displayName: profile.displayName,
@@ -2194,7 +2259,9 @@
                     if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
                         content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>';
                         
-                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/user/${this.lineUserId}/dashboard`);
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/user/${this.lineUserId}/dashboard`, {
+                            headers: this.getAuthHeaders()
+                        });
                         if (response.ok) {
                             const data = await response.json();
                             
@@ -2262,7 +2329,9 @@
                     if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
                         content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading leaderboard...</p>';
                         
-                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/leaderboard`);
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/leaderboard`, {
+                            headers: this.getAuthHeaders()
+                        });
                         if (response.ok) {
                             const leaderboardData = await response.json();
                             
@@ -2598,7 +2667,9 @@
                 }
 
                 try {
-                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/team/recent-activities`);
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/team/recent-activities`, {
+                        headers: this.getAuthHeaders()
+                    });
                     if (response.ok) {
                         const activities = await response.json();
                         this.updateActivityFeed(activities);

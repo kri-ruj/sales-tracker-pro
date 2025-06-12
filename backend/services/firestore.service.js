@@ -477,6 +477,108 @@ class FirestoreService {
     }
   }
 
+  // Achievement operations
+  async getUserAchievements(lineUserId) {
+    try {
+      const userRef = collections.users.doc(lineUserId);
+      const userDoc = await userRef.get();
+      
+      if (!userDoc.exists) {
+        return [];
+      }
+      
+      const userData = userDoc.data();
+      return userData.achievements || [];
+    } catch (error) {
+      console.error('Error getting user achievements:', error);
+      throw error;
+    }
+  }
+
+  async unlockAchievement(lineUserId, achievementId) {
+    try {
+      const userRef = collections.users.doc(lineUserId);
+      const userDoc = await userRef.get();
+      
+      let achievements = [];
+      let newUnlock = false;
+      
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        achievements = userData.achievements || [];
+        
+        // Check if achievement is already unlocked
+        const existingAchievement = achievements.find(a => a.achievement_id === achievementId);
+        if (!existingAchievement) {
+          achievements.push({
+            achievement_id: achievementId,
+            unlocked_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+          newUnlock = true;
+          
+          await userRef.update({
+            achievements,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      } else {
+        // Create user with achievement
+        achievements = [{
+          achievement_id: achievementId,
+          unlocked_at: admin.firestore.FieldValue.serverTimestamp()
+        }];
+        newUnlock = true;
+        
+        await userRef.set({
+          achievements,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      return { newUnlock };
+    } catch (error) {
+      console.error('Error unlocking achievement:', error);
+      throw error;
+    }
+  }
+
+  // Streak operations
+  async getUserStreak(lineUserId) {
+    try {
+      const userRef = collections.users.doc(lineUserId);
+      const userDoc = await userRef.get();
+      
+      if (!userDoc.exists) {
+        return { current_streak: 0, longest_streak: 0, last_activity_date: null };
+      }
+      
+      const userData = userDoc.data();
+      return userData.streak || { current_streak: 0, longest_streak: 0, last_activity_date: null };
+    } catch (error) {
+      console.error('Error getting user streak:', error);
+      throw error;
+    }
+  }
+
+  async updateUserStreak(lineUserId, streakData) {
+    try {
+      const userRef = collections.users.doc(lineUserId);
+      
+      await userRef.update({
+        streak: {
+          current_streak: streakData.currentStreak || 0,
+          longest_streak: streakData.longestStreak || 0,
+          last_activity_date: streakData.lastActivityDate
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating user streak:', error);
+      throw error;
+    }
+  }
+
   // Cache cleanup
   async cleanupExpiredCache() {
     try {

@@ -6,6 +6,18 @@ const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
 const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message-compact');
 
+// Activity Types (for reference)
+const ACTIVITY_TYPES = [
+    { id: 'phone', name: 'Phone Call', emoji: '📱', points: 20 },
+    { id: 'meeting', name: 'Meeting', emoji: '🤝', points: 50 },
+    { id: 'quote', name: 'Quotation', emoji: '📋', points: 10 },
+    { id: 'collab', name: 'Collaboration', emoji: '👥', points: 15 },
+    { id: 'present', name: 'Presentation', emoji: '📊', points: 30 },
+    { id: 'training', name: 'Training', emoji: '🎓', points: 40 },
+    { id: 'contract', name: 'Contract', emoji: '📄', points: 25 },
+    { id: 'other', name: 'Other', emoji: '✨', points: 15 }
+];
+
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -73,6 +85,27 @@ db.serialize(() => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (registered_by) REFERENCES users (line_user_id)
     )`);
+
+    // User achievements table
+    db.run(`CREATE TABLE IF NOT EXISTS user_achievements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        line_user_id TEXT NOT NULL,
+        achievement_id TEXT NOT NULL,
+        unlocked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(line_user_id, achievement_id),
+        FOREIGN KEY(line_user_id) REFERENCES users(line_user_id)
+    )`);
+
+    // User streaks table
+    db.run(`CREATE TABLE IF NOT EXISTS user_streaks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        line_user_id TEXT UNIQUE NOT NULL,
+        current_streak INTEGER DEFAULT 0,
+        longest_streak INTEGER DEFAULT 0,
+        last_activity_date DATE,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(line_user_id) REFERENCES users(line_user_id)
+    )`);
 });
 
 // Routes
@@ -121,16 +154,20 @@ app.get('/', (req, res) => {
 
 // User registration/update
 app.post('/api/users', (req, res) => {
-    const { lineUserId, displayName, pictureUrl } = req.body;
+    const { lineUserId, displayName, pictureUrl, userId, name } = req.body;
+    
+    // Support both parameter formats
+    const userIdParam = lineUserId || userId;
+    const nameParam = displayName || name;
 
-    if (!lineUserId || !displayName) {
-        return res.status(400).json({ error: 'lineUserId and displayName are required' });
+    if (!userIdParam || !nameParam) {
+        return res.status(400).json({ error: 'userId/lineUserId and name/displayName are required' });
     }
 
     const query = `INSERT OR REPLACE INTO users (line_user_id, display_name, picture_url, updated_at)
                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)`;
 
-    db.run(query, [lineUserId, displayName, pictureUrl], function(err) {
+    db.run(query, [userIdParam, nameParam, pictureUrl], function(err) {
         if (err) {
             console.error('Error saving user:', err);
             return res.status(500).json({ error: 'Failed to save user' });
@@ -294,16 +331,23 @@ app.post('/api/activities/sync', async (req, res) => {
 
 // Save activity
 app.post('/api/activities', async (req, res) => {
-    const { lineUserId, activityType, title, subtitle, points, count, date, groupId } = req.body;
+    const { lineUserId, activityType, title, subtitle, points, count, date, groupId, userId, type, quantity, timestamp } = req.body;
+    
+    // Support both parameter formats
+    const userIdParam = lineUserId || userId;
+    const typeParam = activityType || type;
+    const countParam = count || quantity || 1;
+    const dateParam = date || (timestamp ? new Date(timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const titleParam = title || (ACTIVITY_TYPES.find(t => t.id === typeParam)?.name || typeParam);
 
-    if (!lineUserId || !activityType || !title || !points || !date) {
-        return res.status(400).json({ error: 'Missing required fields' });
+    if (!userIdParam || !typeParam || !points) {
+        return res.status(400).json({ error: 'Missing required fields: userId, type, points' });
     }
 
     const query = `INSERT INTO activities (line_user_id, activity_type, title, subtitle, points, count, date)
                    VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    db.run(query, [lineUserId, activityType, title, subtitle, points, count || 1, date], async function(err) {
+    db.run(query, [userIdParam, typeParam, titleParam, subtitle || '', points, countParam, dateParam], async function(err) {
         if (err) {
             console.error('Error saving activity:', err);
             return res.status(500).json({ error: 'Failed to save activity' });
@@ -315,11 +359,11 @@ app.post('/api/activities', async (req, res) => {
         if (groupId && process.env.LINE_CHANNEL_ACCESS_TOKEN) {
             try {
                 await sendGroupNotification(groupId, {
-                    lineUserId,
-                    title,
-                    subtitle,
+                    lineUserId: userIdParam,
+                    title: titleParam,
+                    subtitle: subtitle || '',
                     points,
-                    count: count || 1
+                    count: countParam
                 });
             } catch (error) {
                 console.error('Failed to send LINE notification:', error);
@@ -353,6 +397,86 @@ app.get('/api/activities/:lineUserId', (req, res) => {
         }
 
         res.json(rows);
+    });
+});
+
+// Get user achievements
+app.get('/api/achievements/:lineUserId', (req, res) => {
+    const { lineUserId } = req.params;
+    
+    const query = `SELECT achievement_id, unlocked_at FROM user_achievements WHERE line_user_id = ?`;
+    
+    db.all(query, [lineUserId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching achievements:', err);
+            return res.status(500).json({ error: 'Failed to fetch achievements' });
+        }
+        
+        res.json(rows);
+    });
+});
+
+// Unlock achievement
+app.post('/api/achievements', (req, res) => {
+    const { lineUserId, achievementId } = req.body;
+    
+    if (!lineUserId || !achievementId) {
+        return res.status(400).json({ error: 'Missing lineUserId or achievementId' });
+    }
+    
+    const query = `INSERT OR IGNORE INTO user_achievements (line_user_id, achievement_id) VALUES (?, ?)`;
+    
+    db.run(query, [lineUserId, achievementId], function(err) {
+        if (err) {
+            console.error('Error unlocking achievement:', err);
+            return res.status(500).json({ error: 'Failed to unlock achievement' });
+        }
+        
+        res.json({ 
+            success: true, 
+            newUnlock: this.changes > 0,
+            achievementId 
+        });
+    });
+});
+
+// Get user streak data
+app.get('/api/streak/:lineUserId', (req, res) => {
+    const { lineUserId } = req.params;
+    
+    const query = `SELECT current_streak, longest_streak, last_activity_date FROM user_streaks WHERE line_user_id = ?`;
+    
+    db.get(query, [lineUserId], (err, row) => {
+        if (err) {
+            console.error('Error fetching streak:', err);
+            return res.status(500).json({ error: 'Failed to fetch streak' });
+        }
+        
+        res.json(row || { current_streak: 0, longest_streak: 0, last_activity_date: null });
+    });
+});
+
+// Update user streak
+app.post('/api/streak', (req, res) => {
+    const { lineUserId, currentStreak, longestStreak, lastActivityDate } = req.body;
+    
+    if (!lineUserId) {
+        return res.status(400).json({ error: 'Missing lineUserId' });
+    }
+    
+    const query = `
+        INSERT OR REPLACE INTO user_streaks 
+        (line_user_id, current_streak, longest_streak, last_activity_date, updated_at) 
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `;
+    
+    db.run(query, [lineUserId, currentStreak, longestStreak, lastActivityDate], function(err) {
+        if (err) {
+            console.error('Error updating streak:', err);
+            return res.status(500).json({ error: 'Failed to update streak' });
+        }
+        
+        res.json({ success: true });
     });
 });
 
