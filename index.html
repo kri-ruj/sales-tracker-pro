@@ -64,14 +64,14 @@
         const urlParams = new URLSearchParams(window.location.search);
         const useAltLogin = urlParams.get('login') === 'alt';
         
-        if (!useAltLogin) {
-            // Only load LIFF if not using alternative login
-            const liffScript = document.createElement('script');
-            liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
-            liffScript.charset = 'utf-8';
-            document.head.appendChild(liffScript);
-        } else {
-            console.log('🔐 Alternative login mode - LIFF SDK not loaded');
+        // Always load LIFF SDK for debug display and potential LINE login
+        const liffScript = document.createElement('script');
+        liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+        liffScript.charset = 'utf-8';
+        document.head.appendChild(liffScript);
+        
+        if (useAltLogin) {
+            console.log('🔐 Alternative login mode - LIFF SDK loaded but won\'t auto-initialize');
         }
     </script>
     
