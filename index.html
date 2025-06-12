@@ -1193,7 +1193,7 @@
             const baseConfig = window.CONFIG || {
                 liffId: '2007552096-wrG1aV9p',
                 apiBaseUrl: 'http://localhost:10000/api',
-                VERSION: '3.7.12'
+                VERSION: '3.7.13'
             };
             
             return {
@@ -1525,6 +1525,13 @@
                 btnText.innerHTML = '<span class="loading-spinner"></span> Connecting...';
                 
                 if (typeof liff === 'undefined') {
+                    // If LIFF is not loaded (alt login mode), reload without the parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('login') === 'alt') {
+                        console.log('Reloading page for LINE login...');
+                        window.location.href = window.location.origin + window.location.pathname;
+                        return;
+                    }
                     this.showToast('❌ LINE SDK not available');
                     btn.disabled = false;
                     btnText.textContent = 'Login with LINE';
@@ -2769,26 +2776,22 @@
         function handleGoogleLogin() {
             console.log('🔍 Google login initiated');
             
-            // For localhost development, provide a demo Google login
-            if (window.location.hostname === 'localhost') {
-                console.log('🔍 Using demo Google login for localhost');
-                const demoGoogleProfile = {
-                    userId: 'GOOGLE_DEMO_001',
-                    displayName: 'Demo Google User',
-                    pictureUrl: 'https://via.placeholder.com/150/4285F4/FFFFFF?text=G',
-                    statusMessage: 'Google Demo User',
-                    email: 'demo@gmail.com',
-                    provider: 'google'
-                };
-                
-                if (window.app) {
-                    window.app.handleGoogleUserLogin(demoGoogleProfile);
-                }
-                return;
-            }
+            // Always use demo login for now (both localhost and production)
+            console.log('🔍 Using demo Google login');
+            const demoGoogleProfile = {
+                userId: 'GOOGLE_DEMO_' + Math.random().toString(36).substr(2, 9),
+                displayName: 'Google Demo User',
+                pictureUrl: 'https://via.placeholder.com/150/4285F4/FFFFFF?text=G',
+                statusMessage: 'Google Demo User',
+                email: 'demo@gmail.com',
+                provider: 'google'
+            };
             
-            // For production, show alert about Google auth not being available yet
-            alert('Google authentication coming soon! Please use LINE login for now.');
+            if (window.app) {
+                window.app.handleGoogleUserLogin(demoGoogleProfile);
+            } else {
+                alert('App is still loading, please try again');
+            }
         }
         
         // Handle Google Sign-In response

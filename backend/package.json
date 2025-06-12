@@ -1,6 +1,6 @@
 {
   "name": "sales-tracker-line-backend",
-  "version": "3.7.12",
+  "version": "3.7.13",
   "description": "Backend API for Sales Tracker LINE Mini App on Google Cloud Platform",
   "main": "server-firestore.js",
   "scripts": {

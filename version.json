@@ -1,5 +1,7 @@
 {
-  "version": "3.7.12",
-  "timestamp": "2024-12-06T19:00:00Z",
-  "deployment": "production"
+  "version": "3.7.13",
+  "timestamp": "2025-06-12T01:40:08.213Z",
+  "deployment": "production",
+  "commit": "local",
+  "buildNumber": "0"
 }
