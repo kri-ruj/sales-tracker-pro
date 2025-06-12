@@ -11,10 +11,20 @@
     
     <!-- Load config first for version info with cache busting -->
     <script>
-        // Force fresh config.js every time
-        var script = document.createElement('script');
-        script.src = 'config.js?v=' + new Date().getTime();
-        document.head.appendChild(script);
+        // Force fresh config.js every time with proper loading
+        window.configLoaded = new Promise((resolve) => {
+            var script = document.createElement('script');
+            script.src = 'config.js?v=' + new Date().getTime();
+            script.onload = () => {
+                console.log('✅ Config.js loaded successfully');
+                resolve();
+            };
+            script.onerror = () => {
+                console.warn('⚠️ Config.js failed to load, using defaults');
+                resolve(); // Still resolve to prevent hanging
+            };
+            document.head.appendChild(script);
+        });
     </script>
     
     <!-- Liquid Glass Styles -->
@@ -1709,25 +1719,36 @@
             }
 
             async checkBackendConnection() {
+                console.log('🔍 Checking backend connection...', {
+                    BACKEND_URL: CONFIG.BACKEND_URL,
+                    ENABLE_BACKEND_SYNC: CONFIG.ENABLE_BACKEND_SYNC
+                });
                 this.updateStatus('backend', 'checking');
                 
                 if (!CONFIG.ENABLE_BACKEND_SYNC) {
+                    console.log('⚠️ Backend sync disabled in config');
                     this.updateStatus('backend', 'disconnected');
                     return;
                 }
 
                 try {
                     const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
+                    console.log('🏥 Health check response:', response.status, response.ok);
                     if (response.ok) {
+                        const healthData = await response.json();
+                        console.log('✅ Backend connected successfully:', healthData);
                         this.backendConnected = true;
                         this.updateStatus('backend', 'connected');
+                        this.showToast('🔗 Connected to backend');
                         if (this.lineUserId) {
                             this.updateDashboardTab();
                         }
                     } else {
+                        console.log('❌ Backend health check failed:', response.status);
                         this.updateStatus('backend', 'disconnected');
                     }
                 } catch (error) {
+                    console.error('❌ Backend connection error:', error);
                     this.backendConnected = false;
                     this.updateStatus('backend', 'disconnected');
                 }
@@ -2915,8 +2936,13 @@
         // Make Google login globally accessible
         window.handleGoogleLogin = handleGoogleLogin;
         
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded event fired');
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 DOMContentLoaded event fired');
+            
+            // Wait for config to load first
+            console.log('⏳ Waiting for config.js to load...');
+            await window.configLoaded;
+            
             console.log('LIFF SDK available:', typeof liff !== 'undefined');
             
             // Show debug info immediately
@@ -2940,10 +2966,19 @@
             
             // Update CONFIG with loaded config.js values
             CONFIG = getAppConfig();
-            console.log('Creating SalesTrackerApp instance...');
+            console.log('🔧 Creating SalesTrackerApp instance with CONFIG:', {
+                BACKEND_URL: CONFIG.BACKEND_URL,
+                ENABLE_BACKEND_SYNC: CONFIG.ENABLE_BACKEND_SYNC,
+                VERSION: CONFIG.VERSION
+            });
             app = new SalesTrackerApp();
             window.app = app; // Make it globally accessible
-            console.log('App initialized, window.app is now available');
+            console.log('✅ App initialized, window.app is now available');
+            
+            // Initialize the app
+            console.log('🚀 Starting app initialization...');
+            await app.init();
+            console.log('✅ App initialization complete!');
         });
 
         // Service Worker Registration with version
