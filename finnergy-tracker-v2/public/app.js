@@ -29,6 +29,16 @@ let streakData = {
 async function initializeApp() {
     console.log('initializeApp called');
     
+    // Check if we're accessing from GitHub Pages directly
+    const isGitHubPages = window.location.hostname === 'kri-ruj.github.io';
+    
+    if (isGitHubPages) {
+        console.log('GitHub Pages detected - starting in demo mode');
+        showMainApp();
+        mockUserData();
+        return;
+    }
+    
     try {
         // Check if LIFF is available
         if (typeof liff === 'undefined') {
@@ -36,18 +46,6 @@ async function initializeApp() {
         }
         
         console.log('LIFF SDK is available');
-        
-        // Check if we're coming back from LINE login with auth code
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        if (code && state) {
-            console.log('Auth code detected, redirecting to LIFF...');
-            // We're returning from LINE login, redirect to the official LIFF URL
-            window.location.href = `https://liff.line.me/${LIFF_ID}?code=${code}&state=${state}`;
-            return;
-        }
         
         console.log('Initializing LIFF with ID:', LIFF_ID);
         await liff.init({ liffId: LIFF_ID });
