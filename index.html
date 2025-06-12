@@ -1278,6 +1278,16 @@
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
                     
+                    // Check if user wants to use alternative login
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const useAltLogin = urlParams.get('login') === 'alt';
+                    
+                    if (useAltLogin) {
+                        console.log('🔐 Alternative login mode - showing login options');
+                        this.updateLoginButton('Choose Login Method', false);
+                        return;
+                    }
+                    
                     // Skip LIFF initialization for localhost development
                     if (window.location.hostname === 'localhost' && !window.DISABLE_AUTO_LOGIN) {
                         console.log('🔧 Development mode: Skipping LIFF init, using mock login...');
@@ -2744,54 +2754,26 @@
         function handleGoogleLogin() {
             console.log('🔍 Google login initiated');
             
-            if (typeof google === 'undefined') {
-                console.error('Google SDK not loaded');
+            // For localhost development, provide a demo Google login
+            if (window.location.hostname === 'localhost') {
+                console.log('🔍 Using demo Google login for localhost');
+                const demoGoogleProfile = {
+                    userId: 'GOOGLE_DEMO_001',
+                    displayName: 'Demo Google User',
+                    pictureUrl: 'https://via.placeholder.com/150/4285F4/FFFFFF?text=G',
+                    statusMessage: 'Google Demo User',
+                    email: 'demo@gmail.com',
+                    provider: 'google'
+                };
                 
-                // For localhost development, provide a demo Google login
-                if (window.location.hostname === 'localhost') {
-                    console.log('🔍 Using demo Google login for localhost');
-                    const demoGoogleProfile = {
-                        userId: 'GOOGLE_DEMO_001',
-                        displayName: 'Demo Google User',
-                        pictureUrl: 'https://via.placeholder.com/150/4285F4/FFFFFF?text=G',
-                        statusMessage: 'Google Demo User',
-                        email: 'demo@gmail.com',
-                        provider: 'google'
-                    };
-                    
-                    if (window.app) {
-                        window.app.handleGoogleUserLogin(demoGoogleProfile);
-                    }
-                    return;
+                if (window.app) {
+                    window.app.handleGoogleUserLogin(demoGoogleProfile);
                 }
-                
-                alert('Google authentication is not available. Please try LINE login.');
                 return;
             }
             
-            // Initialize Google Sign-In
-            google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleSignInResponse,
-                auto_select: false,
-                cancel_on_tap_outside: false
-            });
-            
-            // Show the sign-in prompt
-            google.accounts.id.prompt((notification) => {
-                console.log('Google Sign-In notification:', notification);
-                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    // Fallback to popup
-                    google.accounts.id.renderButton(
-                        document.getElementById('googleLoginBtn'),
-                        { 
-                            theme: 'outline', 
-                            size: 'large',
-                            width: '100%'
-                        }
-                    );
-                }
-            });
+            // For production, show alert about Google auth not being available yet
+            alert('Google authentication coming soon! Please use LINE login for now.');
         }
         
         // Handle Google Sign-In response
