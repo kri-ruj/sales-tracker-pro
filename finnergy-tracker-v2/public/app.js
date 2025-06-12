@@ -1,6 +1,6 @@
 // Finnergy Tracker Pro - Next Gen App
 const LIFF_ID = '2007552096-wrG1aV9p'; // Using existing LIFF ID for now
-const API_URL = 'https://finnergy-api-v2.as.r.appspot.com'; // New API URL
+const API_URL = 'https://finnergy-api-v2-dot-salesappfkt.as.r.appspot.com'; // New API URL
 
 // Activity Types with Emojis and Points
 const ACTIVITY_TYPES = [
