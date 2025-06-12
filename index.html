@@ -1318,6 +1318,12 @@
                         withLoginOnExternalBrowser: true // Allow login on external browsers
                     });
                     
+                    // Update debug display with actual LIFF ID
+                    const debugLiffId = document.getElementById('debugLiffId');
+                    if (debugLiffId) {
+                        debugLiffId.textContent = CONFIG.LIFF_ID;
+                    }
+                    
                     // Clean up OAuth callback parameters from URL AFTER init
                     if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
                         console.log('Cleaning up OAuth callback parameters after successful init...');
@@ -1350,6 +1356,12 @@
                         code: error.code,
                         liffId: CONFIG.LIFF_ID
                     });
+                    
+                    // Update debug display even on error
+                    const debugLiffId = document.getElementById('debugLiffId');
+                    if (debugLiffId) {
+                        debugLiffId.textContent = CONFIG.LIFF_ID;
+                    }
                     
                     this.updateStatus('liff', 'disconnected');
                     
@@ -2838,6 +2850,12 @@
             const debugUrl = document.getElementById('debugUrl');
             if (debugUrl) {
                 debugUrl.textContent = window.location.href;
+            }
+            
+            // Update debug LIFF ID from config
+            const debugLiffId = document.getElementById('debugLiffId');
+            if (debugLiffId && window.CONFIG) {
+                debugLiffId.textContent = window.CONFIG.liffId;
             }
             
             // Check if LIFF SDK loaded
