@@ -27,18 +27,29 @@ let streakData = {
 
 // Initialize App
 async function initializeApp() {
+    console.log('initializeApp called');
+    
     try {
+        // Check if LIFF is available
+        if (typeof liff === 'undefined') {
+            throw new Error('LIFF SDK not loaded. Please check your internet connection.');
+        }
+        
+        console.log('LIFF SDK is available');
+        
         // Check if we're coming back from LINE login with auth code
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         
         if (code && state) {
+            console.log('Auth code detected, redirecting to LIFF...');
             // We're returning from LINE login, redirect to the official LIFF URL
             window.location.href = `https://liff.line.me/${LIFF_ID}?code=${code}&state=${state}`;
             return;
         }
         
+        console.log('Initializing LIFF with ID:', LIFF_ID);
         await liff.init({ liffId: LIFF_ID });
         
         if (liff.isLoggedIn()) {
@@ -796,4 +807,20 @@ function showToast(message) {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', initializeApp);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, starting app initialization...');
+    initializeApp().catch(error => {
+        console.error('Failed to initialize app:', error);
+        // Show error to user
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 left-4 right-4 bg-red-600 text-white p-4 rounded-lg z-50';
+        errorDiv.innerHTML = `
+            <h3 class="font-bold">Initialization Error</h3>
+            <p class="text-sm mt-1">${error.message}</p>
+            <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-red-800 rounded hover:bg-red-700">
+                Reload Page
+            </button>
+        `;
+        document.body.appendChild(errorDiv);
+    });
+});
