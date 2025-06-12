@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Sync Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <h1 class="text-2xl mb-4">Backend Sync Test</h1>
+    
+    <div id="status" class="mb-4 p-4 bg-gray-800 rounded">
+        <p>Status: <span id="statusText">Ready</span></p>
+    </div>
+    
+    <div class="space-y-4">
+        <button onclick="testAchievement()" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">
+            Test Achievement
+        </button>
+        
+        <button onclick="testStreak()" class="px-4 py-2 bg-green-600 rounded hover:bg-green-700">
+            Test Streak
+        </button>
+        
+        <button onclick="testActivity()" class="px-4 py-2 bg-purple-600 rounded hover:bg-purple-700">
+            Test Activity
+        </button>
+    </div>
+    
+    <div id="logs" class="mt-4 p-4 bg-gray-800 rounded text-sm font-mono">
+        <h2 class="mb-2">Results:</h2>
+        <div id="logContent"></div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com';
+        const testUserId = 'test_' + Date.now();
+        
+        function log(message, isError = false) {
+            const logDiv = document.getElementById('logContent');
+            const entry = document.createElement('div');
+            entry.className = isError ? 'text-red-400' : 'text-green-400';
+            entry.textContent = `${new Date().toISOString()}: ${message}`;
+            logDiv.appendChild(entry);
+            console.log(message);
+        }
+        
+        async function testAchievement() {
+            try {
+                document.getElementById('statusText').textContent = 'Testing Achievement...';
+                
+                const response = await fetch(`${API_URL}/api/achievements`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lineUserId: testUserId,
+                        achievementId: 'first_step'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Achievement API works: ${JSON.stringify(result)}`);
+                } else {
+                    log(`❌ Achievement API error: ${JSON.stringify(result)}`, true);
+                }
+                
+                document.getElementById('statusText').textContent = 'Ready';
+            } catch (error) {
+                log(`❌ Achievement test failed: ${error.message}`, true);
+                document.getElementById('statusText').textContent = 'Error';
+            }
+        }
+        
+        async function testStreak() {
+            try {
+                document.getElementById('statusText').textContent = 'Testing Streak...';
+                
+                const response = await fetch(`${API_URL}/api/streak`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lineUserId: testUserId,
+                        currentStreak: 5,
+                        longestStreak: 10,
+                        lastActivityDate: new Date().toISOString()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Streak API works: ${JSON.stringify(result)}`);
+                } else {
+                    log(`❌ Streak API error: ${JSON.stringify(result)}`, true);
+                }
+                
+                document.getElementById('statusText').textContent = 'Ready';
+            } catch (error) {
+                log(`❌ Streak test failed: ${error.message}`, true);
+                document.getElementById('statusText').textContent = 'Error';
+            }
+        }
+        
+        async function testActivity() {
+            try {
+                document.getElementById('statusText').textContent = 'Testing Activity...';
+                
+                const response = await fetch(`${API_URL}/api/activities`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: testUserId,
+                        type: 'meeting',
+                        points: 50,
+                        quantity: 1,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Activity API works: ${JSON.stringify(result)}`);
+                } else {
+                    log(`❌ Activity API error: ${JSON.stringify(result)}`, true);
+                }
+                
+                document.getElementById('statusText').textContent = 'Ready';
+            } catch (error) {
+                log(`❌ Activity test failed: ${error.message}`, true);
+                document.getElementById('statusText').textContent = 'Error';
+            }
+        }
+        
+        log('🚀 Backend sync test ready. Use the buttons to test each API endpoint.');
+    </script>
+</body>
+</html>
