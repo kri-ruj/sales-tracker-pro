@@ -68,17 +68,41 @@
         }
     </script>
     
-    <!-- LINE LIFF SDK - Load conditionally -->
+    <!-- LINE LIFF SDK - Load with proper error handling -->
     <script>
         // Check if we should skip LIFF loading
         const urlParams = new URLSearchParams(window.location.search);
         const useAltLogin = urlParams.get('login') === 'alt';
         
+        // Detect if we're running inside LINE app or LIFF URL
+        const isInLineApp = /Line/i.test(navigator.userAgent);
+        const isLiffUrl = window.location.href.includes('liff.line.me');
+        const isProduction = window.location.hostname.includes('appspot.com') || 
+                           window.location.hostname.includes('github.io');
+        
+        console.log('📱 Environment Detection:', {
+            isInLineApp,
+            isLiffUrl,
+            isProduction,
+            hostname: window.location.hostname
+        });
+        
         // Always load LIFF SDK for debug display and potential LINE login
-        const liffScript = document.createElement('script');
-        liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
-        liffScript.charset = 'utf-8';
-        document.head.appendChild(liffScript);
+        window.liffLoadPromise = new Promise((resolve, reject) => {
+            const liffScript = document.createElement('script');
+            liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+            liffScript.charset = 'utf-8';
+            liffScript.onload = () => {
+                console.log('✅ LIFF SDK loaded successfully');
+                resolve();
+            };
+            liffScript.onerror = () => {
+                console.warn('⚠️ LIFF SDK failed to load - might be blocked by CORS or network');
+                // Still resolve to not block the app
+                resolve();
+            };
+            document.head.appendChild(liffScript);
+        });
         
         if (useAltLogin) {
             console.log('🔐 Alternative login mode - LIFF SDK loaded but won\'t auto-initialize');
@@ -902,12 +926,12 @@
             
             <!-- Debug Info -->
             <div style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
-                <div>LIFF Environment: <code style="color: var(--primary);" id="debugEnv">Developing</code></div>
+                <div>Environment: <code style="color: var(--primary);" id="debugEnv">Detecting...</code></div>
                 <div>LIFF ID: <code style="color: var(--primary);" id="debugLiffId">2007552096-wrG1aV9p</code></div>
                 <div>Current URL: <code id="debugUrl" style="color: var(--primary);"></code></div>
                 <div id="debugError" style="color: #ef4444; margin-top: 0.5rem;"></div>
-                <div style="margin-top: 0.5rem; font-size: 0.7rem;">
-                    Using Developing Environment LIFF ID
+                <div id="debugInfo" style="margin-top: 0.5rem; font-size: 0.7rem;">
+                    Initializing...
                 </div>
             </div>
         </div>
@@ -2943,6 +2967,10 @@
             console.log('⏳ Waiting for config.js to load...');
             await window.configLoaded;
             
+            // Wait for LIFF SDK to load (or fail)
+            console.log('⏳ Waiting for LIFF SDK...');
+            await window.liffLoadPromise;
+            
             console.log('LIFF SDK available:', typeof liff !== 'undefined');
             
             // Show debug info immediately
@@ -2950,6 +2978,29 @@
             if (debugUrl) {
                 debugUrl.textContent = window.location.href;
             }
+            
+            // Detect environment
+            const debugEnv = document.getElementById('debugEnv');
+            const debugInfo = document.getElementById('debugInfo');
+            let environment = 'Unknown';
+            let envInfo = '';
+            
+            if (window.location.hostname === 'localhost') {
+                environment = 'Development';
+                envInfo = 'Local development environment';
+            } else if (window.location.href.includes('liff.line.me')) {
+                environment = 'LINE LIFF';
+                envInfo = 'Running inside LINE app';
+            } else if (window.location.hostname.includes('appspot.com')) {
+                environment = 'Production (App Engine)';
+                envInfo = 'Google App Engine deployment';
+            } else if (window.location.hostname.includes('github.io')) {
+                environment = 'Production (GitHub Pages)';
+                envInfo = 'GitHub Pages deployment';
+            }
+            
+            if (debugEnv) debugEnv.textContent = environment;
+            if (debugInfo) debugInfo.textContent = envInfo;
             
             // Update debug LIFF ID from config
             const debugLiffId = document.getElementById('debugLiffId');
@@ -2961,7 +3012,17 @@
             // Check if LIFF SDK loaded
             if (typeof liff === 'undefined') {
                 console.error('LIFF SDK not loaded! Check network tab for failed requests.');
-                document.getElementById('debugError').textContent = 'LIFF SDK failed to load';
+                const debugError = document.getElementById('debugError');
+                if (debugError) {
+                    debugError.textContent = 'LIFF SDK failed to load - Use Google login instead';
+                }
+                
+                // Update login button to show Google login is available
+                const loginBtn = document.getElementById('lineLoginBtn');
+                if (loginBtn) {
+                    loginBtn.textContent = 'LINE login unavailable - Use Google';
+                    loginBtn.disabled = true;
+                }
             }
             
             // Update CONFIG with loaded config.js values
