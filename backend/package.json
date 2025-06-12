@@ -6,11 +6,16 @@
   "scripts": {
     "start": "node server-firestore.js",
     "start:sqlite": "node server.js",
+    "start:secure": "node server-secure.js",
     "dev": "nodemon server-firestore.js",
     "dev:sqlite": "nodemon server.js",
+    "dev:secure": "nodemon server-secure.js",
     "setup:firestore": "node setup-firestore.js",
     "build": "echo 'Build completed'",
-    "test": "echo 'Running tests...' && exit 0",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "migrate:secure": "node migrate-to-secure.js",
     "deploy:gcp": "gcloud app deploy",
     "logs": "gcloud logs tail sales-tracker-api",
     "db:migrate": "node setup-firestore.js"
