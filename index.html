@@ -1300,6 +1300,8 @@
                 }
 
                 try {
+                    // Ensure CONFIG is up to date
+                    CONFIG = getAppConfig();
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
                     
@@ -2854,8 +2856,9 @@
             
             // Update debug LIFF ID from config
             const debugLiffId = document.getElementById('debugLiffId');
-            if (debugLiffId && window.CONFIG) {
-                debugLiffId.textContent = window.CONFIG.liffId;
+            if (debugLiffId) {
+                const config = getAppConfig();
+                debugLiffId.textContent = config.LIFF_ID;
             }
             
             // Check if LIFF SDK loaded
