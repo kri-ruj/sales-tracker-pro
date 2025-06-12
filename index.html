@@ -58,8 +58,22 @@
         }
     </script>
     
-    <!-- LINE LIFF SDK -->
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <!-- LINE LIFF SDK - Load conditionally -->
+    <script>
+        // Check if we should skip LIFF loading
+        const urlParams = new URLSearchParams(window.location.search);
+        const useAltLogin = urlParams.get('login') === 'alt';
+        
+        if (!useAltLogin) {
+            // Only load LIFF if not using alternative login
+            const liffScript = document.createElement('script');
+            liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+            liffScript.charset = 'utf-8';
+            document.head.appendChild(liffScript);
+        } else {
+            console.log('🔐 Alternative login mode - LIFF SDK not loaded');
+        }
+    </script>
     
     <!-- Google Sign-In SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1267,8 +1281,19 @@
                 this.showLoginScreen();
                 this.updateStatus('liff', 'checking');
                 
+                // Check if user wants to use alternative login first
+                const urlParams = new URLSearchParams(window.location.search);
+                const useAltLogin = urlParams.get('login') === 'alt';
+                
+                if (useAltLogin) {
+                    console.log('🔐 Alternative login mode - showing all login options');
+                    this.updateLoginButton('Choose Login Method', false);
+                    this.updateStatus('liff', 'alternative');
+                    return;
+                }
+                
                 if (typeof liff === 'undefined') {
-                    console.log('LIFF SDK not loaded, showing login options');
+                    console.log('LIFF SDK not loaded');
                     this.updateLoginButton('LIFF SDK not loaded', true);
                     this.updateStatus('liff', 'disconnected');
                     return;
@@ -1277,16 +1302,6 @@
                 try {
                     console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
                     console.log('Current URL:', window.location.href);
-                    
-                    // Check if user wants to use alternative login
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const useAltLogin = urlParams.get('login') === 'alt';
-                    
-                    if (useAltLogin) {
-                        console.log('🔐 Alternative login mode - showing login options');
-                        this.updateLoginButton('Choose Login Method', false);
-                        return;
-                    }
                     
                     // Skip LIFF initialization for localhost development
                     if (window.location.hostname === 'localhost' && !window.DISABLE_AUTO_LOGIN) {
