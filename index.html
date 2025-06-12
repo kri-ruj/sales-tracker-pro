@@ -29,7 +29,7 @@
     
     <!-- Liquid Glass Styles -->
     <script>
-        document.write('<link rel="stylesheet" href="liquid-glass-styles.css?v=' + (window.CONFIG ? window.CONFIG.VERSION : '3.7.10') + '&t=' + Date.now() + '">');
+        document.write('<link rel="stylesheet" href="liquid-glass-styles.css?v=' + (window.CONFIG ? window.CONFIG.VERSION : '3.7.14') + '&t=' + Date.now() + '">');
     </script>
     
     <!-- Chart.js for Analytics -->
@@ -38,7 +38,7 @@
     <!-- Force reload with version parameter -->
     <script>
         // Aggressive cache bypass
-        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.12';
+        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.14';
         const STORED_VERSION = localStorage.getItem('appVersion');
         
         if (STORED_VERSION !== CURRENT_VERSION) {
@@ -973,7 +973,7 @@
                     <span class="status-label">Storage</span>
                 </div>
             </div>
-            <div class="version-label">v<span id="versionNumber">3.7.11</span></div>
+            <div class="version-label">v<span id="versionNumber">3.7.14</span></div>
         </div>
         
         <!-- Stats Bar -->
@@ -1206,7 +1206,7 @@
 
         <!-- Version Display -->
         <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
-            v<span id="appVersion">3.7.11</span>
+            v<span id="appVersion">3.7.14</span>
         </div>
 
         <!-- Toast -->
@@ -1227,7 +1227,7 @@
             const baseConfig = window.CONFIG || {
                 liffId: '2007552096-wrG1aV9p',
                 apiBaseUrl: 'http://localhost:10000/api',
-                VERSION: '3.7.13'
+                VERSION: '3.7.14'
             };
             
             return {

@@ -1,13 +1,13 @@
 runtime: nodejs20
 service: sales-tracker-api
-entrypoint: node server-secure.js
+entrypoint: node server-firestore-jwt.js
 
 # Environment variables (non-sensitive only)
 env_variables:
   NODE_ENV: production
   USE_SECRET_MANAGER: "true"
   GOOGLE_CLOUD_PROJECT: salesappfkt
-  APP_VERSION: "3.8.0"
+  APP_VERSION: "3.7.14"
   JWT_SECRET: "finnergy-sales-tracker-jwt-secret-2025-production-key-secure"
 
 # Automatic scaling configuration

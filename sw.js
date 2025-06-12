@@ -1,5 +1,5 @@
 // Dynamic version based on timestamp to ensure cache busting
-const VERSION = '3.7.12';
+const VERSION = '3.7.14';
 const CACHE_NAME = `sales-tracker-v${VERSION}-${Date.now()}`;
 const API_CACHE_NAME = `sales-tracker-api-v${VERSION}`;
 
