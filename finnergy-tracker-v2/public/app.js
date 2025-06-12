@@ -469,18 +469,6 @@ async function saveActivity(activity) {
 }
 
 async function loadUserData() {
-    // Load streak data from localStorage
-    try {
-        const savedStreak = localStorage.getItem('streakData');
-        if (savedStreak) {
-            streakData = JSON.parse(savedStreak);
-            document.getElementById('currentStreak').textContent = streakData.currentStreak;
-            document.getElementById('longestStreak').textContent = streakData.longestStreak;
-        }
-    } catch (e) {
-        console.log('Could not load streak data');
-    }
-    
     try {
         // Register/update user
         const userResponse = await fetch(`${API_URL}/api/users`, {
@@ -503,14 +491,58 @@ async function loadUserData() {
             document.getElementById('userAvatar').src = currentUser.pictureUrl;
             document.getElementById('userAvatar').classList.remove('hidden');
             
+            // Load streak data from backend
+            try {
+                const streakResponse = await fetch(`${API_URL}/api/streak/${currentUser.userId}`);
+                if (streakResponse.ok) {
+                    const backendStreak = await streakResponse.json();
+                    streakData = {
+                        currentStreak: backendStreak.current_streak || 0,
+                        longestStreak: backendStreak.longest_streak || 0,
+                        lastActivityDate: backendStreak.last_activity_date
+                    };
+                    document.getElementById('currentStreak').textContent = streakData.currentStreak;
+                    document.getElementById('longestStreak').textContent = streakData.longestStreak;
+                }
+            } catch (e) {
+                console.log('Could not load streak data from backend');
+            }
+            
+            // Load achievements from backend
+            try {
+                const achievementsResponse = await fetch(`${API_URL}/api/achievements/${currentUser.userId}`);
+                if (achievementsResponse.ok) {
+                    const backendAchievements = await achievementsResponse.json();
+                    const unlockedIds = backendAchievements.map(a => a.achievement_id);
+                    userAchievements.forEach(achievement => {
+                        achievement.unlocked = unlockedIds.includes(achievement.id);
+                    });
+                }
+            } catch (e) {
+                console.log('Could not load achievements from backend');
+            }
+            
             // Load activities
-            const activitiesResponse = await fetch(`${API_URL}/api/activities?userId=${currentUser.userId}`);
+            const activitiesResponse = await fetch(`${API_URL}/api/activities/${currentUser.userId}`);
             if (activitiesResponse.ok) {
-                const data = await activitiesResponse.json();
-                activities = data.activities || [];
+                const backendActivities = await activitiesResponse.json();
+                activities = backendActivities.map(a => ({
+                    type: a.activity_type,
+                    points: a.points,
+                    quantity: a.count,
+                    timestamp: a.created_at
+                }));
+                
                 renderRecentActivities();
                 updateStreakCalendar();
                 generateHeatmap();
+                renderAchievements();
+                
+                // Calculate activity counts for achievements
+                activities.forEach(activity => {
+                    activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
+                    totalPoints += activity.points;
+                });
                 
                 // Calculate today's points
                 const today = new Date().toDateString();
@@ -534,15 +566,10 @@ async function loadUserData() {
             }
             
             // Load leaderboard
-            const leaderboardResponse = await fetch(`${API_URL}/api/leaderboard/weekly`);
+            const leaderboardResponse = await fetch(`${API_URL}/api/leaderboard?period=weekly`);
             if (leaderboardResponse.ok) {
                 const leaderboard = await leaderboardResponse.json();
-                renderLeaderboard(leaderboard.map((user, index) => ({
-                    name: user.name,
-                    points: user.points,
-                    rank: index + 1,
-                    isCurrentUser: user.userId === currentUser.userId
-                })));
+                renderLiveLeaderboard(); // Use live version with mock data for now
             }
         }
     } catch (error) {
@@ -614,6 +641,11 @@ function updateStreak() {
         localStorage.setItem('streakData', JSON.stringify(streakData));
     } catch (e) {
         console.log('Could not save streak data');
+    }
+    
+    // Save to backend
+    if (currentUser?.userId) {
+        saveStreakToBackend();
     }
     
     // Show streak animation for milestones
@@ -975,6 +1007,13 @@ function checkAchievements(activity) {
         }
     }
     
+    // Save new achievements to backend
+    newUnlocks.forEach(achievement => {
+        if (currentUser?.userId) {
+            saveAchievementToBackend(achievement.id);
+        }
+    });
+    
     // Show achievement unlock animations
     newUnlocks.forEach((achievement, index) => {
         setTimeout(() => showAchievementUnlock(achievement), index * 1000);
@@ -1202,6 +1241,52 @@ function updateChallengeTimer() {
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
     document.getElementById('challengeTimeLeft').textContent = `${days}d ${hours}h`;
+}
+
+// Backend sync functions
+async function saveAchievementToBackend(achievementId) {
+    try {
+        const response = await fetch(`${API_URL}/api/achievements`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lineUserId: currentUser.userId,
+                achievementId: achievementId
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Achievement saved to backend:', achievementId);
+        }
+    } catch (error) {
+        console.error('Failed to save achievement to backend:', error);
+    }
+}
+
+async function saveStreakToBackend() {
+    try {
+        const response = await fetch(`${API_URL}/api/streak`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                lineUserId: currentUser.userId,
+                currentStreak: streakData.currentStreak,
+                longestStreak: streakData.longestStreak,
+                lastActivityDate: streakData.lastActivityDate
+            })
+        });
+        
+        if (response.ok) {
+            console.log('Streak saved to backend');
+        }
+    } catch (error) {
+        console.error('Failed to save streak to backend:', error);
+    }
 }
 
 // Initialize on load
