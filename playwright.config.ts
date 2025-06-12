@@ -45,7 +45,7 @@ export default defineConfig({
     timezoneId: 'Asia/Bangkok',
     
     /* Browser context permissions */
-    permissions: ['storage-access'],
+    permissions: [],
     
     /* Allow insecure contexts for localStorage */
     ignoreHTTPSErrors: true,
@@ -100,10 +100,14 @@ export default defineConfig({
       timeout: 120 * 1000,
     },
     {
-      command: 'cd backend && npm start',
+      command: 'cd backend && npm run start:secure',
       port: 10000,
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000,
+      env: {
+        JWT_SECRET: 'test-secret-for-playwright',
+        NODE_ENV: 'test'
+      },
     },
   ],
 });

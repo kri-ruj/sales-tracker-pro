@@ -1648,8 +1648,79 @@
             }
             
             enterDemoMode() {
-                this.showToast('❌ Demo mode is disabled. Please use LINE login.');
-                return;
+                console.log('🎮 Entering demo mode...');
+                
+                // Create a demo user profile
+                const demoProfile = {
+                    userId: 'DEMO_USER_' + Date.now(),
+                    displayName: 'Demo User',
+                    pictureUrl: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=DEMO',
+                    statusMessage: 'Testing the app'
+                };
+                
+                // Set up the user state as if logged in
+                this.userProfile = demoProfile;
+                this.lineUserId = demoProfile.userId;
+                
+                // Store in localStorage
+                localStorage.setItem('lineUserProfile', JSON.stringify(demoProfile));
+                localStorage.setItem('demoMode', 'true');
+                
+                // Show user info and hide login
+                this.displayUserInfo(demoProfile);
+                this.hideLoginScreen();
+                
+                // Skip backend sync for demo mode
+                this.backendConnected = false;
+                this.updateStatus('backend', 'demo');
+                
+                // Initialize with demo data
+                this.initializeDemoData();
+                
+                // Update all stats with demo data
+                this.updateAllStats();
+                this.renderActivityDock();
+                
+                this.showToast('🎮 Demo mode activated!');
+                console.log('✅ Demo mode setup complete');
+            }
+            
+            initializeDemoData() {
+                // Add some demo activities
+                const demoActivities = [
+                    {
+                        id: 'demo_1',
+                        type: 'call',
+                        points: 10,
+                        timestamp: new Date().toISOString(),
+                        title: 'Demo Cold Call',
+                        description: 'Called ABC Company'
+                    },
+                    {
+                        id: 'demo_2',
+                        type: 'appointment',
+                        points: 20,
+                        timestamp: new Date(Date.now() - 86400000).toISOString(),
+                        title: 'Demo Meeting',
+                        description: 'Met with XYZ Corp'
+                    }
+                ];
+                
+                // Store demo activities
+                localStorage.setItem('demoActivities', JSON.stringify(demoActivities));
+                this.activities = demoActivities;
+                
+                // Set demo achievements
+                const demoAchievements = ['first_activity', 'early_bird'];
+                localStorage.setItem('demoAchievements', JSON.stringify(demoAchievements));
+                
+                // Set demo streak
+                const demoStreak = {
+                    current: 3,
+                    longest: 7,
+                    lastActive: new Date().toISOString()
+                };
+                localStorage.setItem('demoStreak', JSON.stringify(demoStreak));
             }
             
             showLoginScreen() {
@@ -1836,6 +1907,21 @@
                 // Initialize empty arrays
                 this.activities = [];
                 this.pendingActivities = [];
+                
+                // Check if in demo mode
+                const isDemoMode = localStorage.getItem('demoMode') === 'true';
+                if (isDemoMode) {
+                    const demoActivities = localStorage.getItem('demoActivities');
+                    if (demoActivities) {
+                        try {
+                            this.activities = JSON.parse(demoActivities);
+                            console.log(`🎮 Loaded ${this.activities.length} demo activities`);
+                        } catch (error) {
+                            console.error('Failed to parse demo activities:', error);
+                        }
+                    }
+                    return; // Skip backend sync for demo mode
+                }
                 
                 // First, try to load from localStorage
                 const savedActivities = localStorage.getItem('savedActivities');
