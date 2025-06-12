@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finnergy Tracker Pro - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5),
+                        0 0 40px rgba(139, 92, 246, 0.3),
+                        0 0 60px rgba(139, 92, 246, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <!-- Background Effects -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute top-0 -left-40 w-80 h-80 bg-purple-600 rounded-full opacity-20 blur-3xl"></div>
+        <div class="absolute bottom-0 -right-40 w-80 h-80 bg-blue-600 rounded-full opacity-20 blur-3xl"></div>
+    </div>
+
+    <div class="relative z-10 p-4 max-w-md mx-auto">
+        <!-- Demo Banner -->
+        <div class="glass rounded-xl p-3 mb-4 text-center">
+            <p class="text-sm text-yellow-400">🎮 Interactive Demo - Click anywhere!</p>
+        </div>
+
+        <!-- Header -->
+        <header class="glass rounded-2xl p-4 mb-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                        <span class="text-xl">🚀</span>
+                    </div>
+                    <h1 class="text-xl font-bold">Finnergy Pro</h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img src="https://ui-avatars.com/api/?name=Demo+User&background=667eea&color=fff" class="w-8 h-8 rounded-full">
+                    <span class="text-sm">Demo User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Streak Section (NEW!) -->
+        <div class="glass rounded-2xl p-4 neon-glow mb-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl animate-pulse">🔥</span>
+                    <div>
+                        <p class="text-xl font-bold">7 Day Streak</p>
+                        <p class="text-xs text-gray-400">Longest: 14 days</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-400">Keep it going!</p>
+                    <div class="flex space-x-1 mt-1">
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500"></div>
+                        <div class="w-6 h-6 rounded bg-violet-500 ring-2 ring-violet-400"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="glass rounded-xl p-3">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xl">📊</span>
+                    <span class="text-xs text-gray-400">Today</span>
+                </div>
+                <p class="text-xl font-bold">280</p>
+                <p class="text-xs text-gray-400">Points</p>
+            </div>
+            <div class="glass rounded-xl p-3">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xl">🏆</span>
+                    <span class="text-xs text-gray-400">Rank</span>
+                </div>
+                <p class="text-xl font-bold">#2</p>
+                <p class="text-xs text-gray-400">Position</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="mb-4">
+            <h2 class="text-lg font-bold mb-2">Quick Actions</h2>
+            <div class="grid grid-cols-4 gap-2">
+                <button class="glass rounded-xl p-3 flex flex-col items-center hover:bg-white/10">
+                    <span class="text-xl">📱</span>
+                    <span class="text-xs">20pt</span>
+                </button>
+                <button class="glass rounded-xl p-3 flex flex-col items-center hover:bg-white/10">
+                    <span class="text-xl">🤝</span>
+                    <span class="text-xs">50pt</span>
+                </button>
+                <button class="glass rounded-xl p-3 flex flex-col items-center hover:bg-white/10">
+                    <span class="text-xl">📋</span>
+                    <span class="text-xs">10pt</span>
+                </button>
+                <button class="glass rounded-xl p-3 flex flex-col items-center hover:bg-white/10">
+                    <span class="text-xl">📊</span>
+                    <span class="text-xs">30pt</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="mb-4">
+            <h2 class="text-lg font-bold mb-2">Recent Activities</h2>
+            <div class="space-y-2">
+                <div class="glass rounded-xl p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl">🤝</span>
+                        <div>
+                            <p class="font-semibold text-sm">Meeting</p>
+                            <p class="text-xs text-gray-400">2:30 PM</p>
+                        </div>
+                    </div>
+                    <p class="text-lg font-bold text-violet-400">+50</p>
+                </div>
+                <div class="glass rounded-xl p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl">📱</span>
+                        <div>
+                            <p class="font-semibold text-sm">Phone Call</p>
+                            <p class="text-xs text-gray-400">1:15 PM</p>
+                        </div>
+                    </div>
+                    <p class="text-lg font-bold text-violet-400">+40</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="fixed bottom-6 right-6 w-14 h-14 rounded-full gradient-bg shadow-lg flex items-center justify-center neon-glow hover:scale-110 transition-transform">
+            <span class="text-2xl">➕</span>
+        </button>
+
+        <!-- Demo Instructions -->
+        <div class="fixed bottom-20 left-1/2 -translate-x-1/2 glass rounded-full px-6 py-2 text-sm">
+            <p>✨ Tap the + button to add activities!</p>
+        </div>
+    </div>
+
+    <script>
+        // Simple demo interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showToast();
+            });
+        });
+
+        function showToast() {
+            const messages = [
+                '✨ Activity Added!',
+                '🔥 Great job!',
+                '🎯 Goal progress updated!',
+                '🏆 Moving up the ranks!'
+            ];
+            
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 glass rounded-full px-6 py-3 neon-glow z-50';
+            toast.innerHTML = `<span class="text-lg">${messages[Math.floor(Math.random() * messages.length)]}</span>`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 2000);
+        }
+
+        // Animate streak fire emoji
+        setInterval(() => {
+            const fire = document.querySelector('.animate-pulse');
+            fire.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                fire.style.transform = 'scale(1)';
+            }, 500);
+        }, 3000);
+    </script>
+</body>
+</html>

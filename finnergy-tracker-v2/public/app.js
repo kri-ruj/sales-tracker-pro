@@ -79,12 +79,38 @@ function mockUserData() {
         userRank: 3
     });
     
-    // Mock activities
-    activities = [
+    // Mock activities with more historical data for heatmap
+    activities = [];
+    const activityTypes = ['meeting', 'phone', 'quote', 'present', 'training'];
+    
+    // Generate random activities for the past 60 days
+    for (let i = 0; i < 60; i++) {
+        const daysAgo = Math.floor(Math.random() * 90);
+        const date = new Date();
+        date.setDate(date.getDate() - daysAgo);
+        date.setHours(Math.floor(Math.random() * 12) + 8); // 8 AM to 8 PM
+        
+        const type = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+        const activityType = ACTIVITY_TYPES.find(t => t.id === type);
+        
+        activities.push({
+            type: type,
+            points: activityType.points * (Math.floor(Math.random() * 3) + 1),
+            timestamp: date.toISOString()
+        });
+    }
+    
+    // Add today's activities
+    activities.push(
         { type: 'meeting', points: 50, timestamp: new Date().toISOString() },
         { type: 'phone', points: 40, timestamp: new Date().toISOString() }
-    ];
+    );
+    
+    // Sort by timestamp
+    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
     renderRecentActivities();
+    generateHeatmap();
     
     // Mock leaderboard
     renderLeaderboard([
@@ -206,6 +232,7 @@ async function confirmAddActivity() {
     renderRecentActivities();
     updateStatsAfterActivity(activity);
     updateStreak();
+    generateHeatmap();
     
     // Close modal
     closeActivityModal();
@@ -234,6 +261,7 @@ async function quickAddActivity(activity) {
     renderRecentActivities();
     updateStatsAfterActivity(activityData);
     updateStreak();
+    generateHeatmap();
     showSuccessAnimation();
     
     try {
@@ -353,6 +381,11 @@ async function loadUserData() {
     
     // Update streak calendar after loading data
     updateStreakCalendar();
+    
+    // Generate heatmap if in main app
+    if (!document.getElementById('loginScreen').style.display || document.getElementById('loginScreen').style.display === 'none') {
+        generateHeatmap();
+    }
 }
 
 // Authentication
@@ -470,6 +503,191 @@ function showStreakMilestone() {
         toast.style.transform = 'translateX(-50%) translateY(-20px)';
         setTimeout(() => toast.remove(), 500);
     }, 3000);
+}
+
+// Heatmap Functions
+function generateHeatmap() {
+    const grid = document.getElementById('heatmapGrid');
+    const today = new Date();
+    const days = 90; // Show last 90 days
+    const weeks = Math.ceil(days / 7);
+    
+    // Create a map of date -> points
+    const activityMap = {};
+    activities.forEach(activity => {
+        const date = new Date(activity.timestamp).toDateString();
+        activityMap[date] = (activityMap[date] || 0) + activity.points;
+    });
+    
+    // Find max points for scaling
+    const maxPoints = Math.max(...Object.values(activityMap), 1);
+    
+    // Create grid HTML
+    let html = '<div class="grid grid-flow-col gap-1">';
+    
+    // Add day labels
+    html += '<div class="grid grid-rows-7 gap-1 mr-2 text-xs text-gray-500">';
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach((day, i) => {
+        html += `<div class="h-3 flex items-center ${i % 2 === 1 ? '' : 'opacity-0'}">${day}</div>`;
+    });
+    html += '</div>';
+    
+    // Generate cells for each week
+    for (let week = weeks - 1; week >= 0; week--) {
+        html += '<div class="grid grid-rows-7 gap-1">';
+        
+        for (let day = 0; day < 7; day++) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - (week * 7 + (6 - day)));
+            
+            // Skip future dates
+            if (date > today) {
+                html += '<div class="w-3 h-3"></div>';
+                continue;
+            }
+            
+            const dateStr = date.toDateString();
+            const points = activityMap[dateStr] || 0;
+            const intensity = getIntensityLevel(points, maxPoints);
+            const color = getHeatmapColor(intensity);
+            
+            html += `
+                <div class="w-3 h-3 rounded cursor-pointer transition-all hover:scale-125 ${color}"
+                     data-date="${dateStr}"
+                     data-points="${points}"
+                     title="${date.toLocaleDateString()}: ${points} points">
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    grid.innerHTML = html;
+    
+    // Add hover tooltips
+    grid.querySelectorAll('[data-date]').forEach(cell => {
+        cell.addEventListener('mouseenter', showHeatmapTooltip);
+        cell.addEventListener('mouseleave', hideHeatmapTooltip);
+        cell.addEventListener('click', showDayActivities);
+    });
+}
+
+function getIntensityLevel(points, maxPoints) {
+    if (points === 0) return 0;
+    const ratio = points / maxPoints;
+    if (ratio <= 0.25) return 1;
+    if (ratio <= 0.5) return 2;
+    if (ratio <= 0.75) return 3;
+    return 4;
+}
+
+function getHeatmapColor(intensity) {
+    const colors = [
+        'bg-gray-700',      // 0 - no activity
+        'bg-violet-900',    // 1 - low
+        'bg-violet-700',    // 2 - medium
+        'bg-violet-500',    // 3 - high
+        'bg-violet-300'     // 4 - very high
+    ];
+    return colors[intensity];
+}
+
+let tooltipTimeout;
+function showHeatmapTooltip(event) {
+    const cell = event.target;
+    const date = new Date(cell.dataset.date);
+    const points = parseInt(cell.dataset.points);
+    
+    // Clear any existing timeout
+    clearTimeout(tooltipTimeout);
+    
+    // Create tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'absolute z-50 glass rounded-lg px-3 py-2 text-sm pointer-events-none';
+    tooltip.innerHTML = `
+        <p class="font-semibold">${date.toLocaleDateString()}</p>
+        <p class="text-xs">${points} points</p>
+    `;
+    
+    // Position tooltip
+    const rect = cell.getBoundingClientRect();
+    tooltip.style.left = `${rect.left + window.scrollX}px`;
+    tooltip.style.top = `${rect.top + window.scrollY - 50}px`;
+    
+    document.body.appendChild(tooltip);
+    cell.heatmapTooltip = tooltip;
+}
+
+function hideHeatmapTooltip(event) {
+    const tooltip = event.target.heatmapTooltip;
+    if (tooltip) {
+        tooltipTimeout = setTimeout(() => {
+            tooltip.remove();
+        }, 100);
+    }
+}
+
+function showDayActivities(event) {
+    const date = event.target.dataset.date;
+    const dayActivities = activities.filter(act => 
+        new Date(act.timestamp).toDateString() === date
+    );
+    
+    if (dayActivities.length === 0) {
+        showToast('No activities on this day');
+        return;
+    }
+    
+    // Create modal to show activities
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50';
+    modal.innerHTML = `
+        <div class="glass rounded-3xl p-6 max-w-md w-full space-y-4">
+            <h3 class="text-xl font-bold">${new Date(date).toLocaleDateString()}</h3>
+            <div class="space-y-2 max-h-60 overflow-y-auto">
+                ${dayActivities.map(activity => {
+                    const type = ACTIVITY_TYPES.find(t => t.id === activity.type);
+                    const time = new Date(activity.timestamp).toLocaleTimeString();
+                    return `
+                        <div class="glass rounded-xl p-3 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xl">${type.emoji}</span>
+                                <div>
+                                    <p class="font-semibold text-sm">${type.name}</p>
+                                    <p class="text-xs text-gray-400">${time}</p>
+                                </div>
+                            </div>
+                            <p class="text-lg font-bold text-violet-400">+${activity.points}</p>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-gray-400">Total</p>
+                <p class="text-xl font-bold">${dayActivities.reduce((sum, act) => sum + act.points, 0)} points</p>
+            </div>
+            <button onclick="this.closest('.fixed').remove()" class="w-full py-3 rounded-xl glass hover:bg-white/10 transition-colors">
+                Close
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 glass rounded-full px-6 py-3 z-50';
+    toast.innerHTML = `<span class="text-sm">${message}</span>`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+    }, 2000);
 }
 
 // Initialize on load
