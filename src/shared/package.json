@@ -1,0 +1,14 @@
+{
+  "name": "@sales-tracker/shared",
+  "version": "2.0.0",
+  "description": "Shared types and utilities for Sales Tracker Pro",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.3"
+  }
+}

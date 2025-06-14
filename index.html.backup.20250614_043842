@@ -1,0 +1,3526 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sales Activity Tracker - Gamified sales performance tracking for teams">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>FINNERGY Sales Tracker - ฟินเนอจี้</title>
+    
+    <!-- Load config first for version info with cache busting -->
+    <script>
+        // Force fresh config.js every time with proper loading
+        window.configLoaded = new Promise((resolve) => {
+            var script = document.createElement('script');
+            script.src = 'config.js?v=' + new Date().getTime();
+            script.onload = () => {
+                console.log('✅ Config.js loaded successfully');
+                resolve();
+            };
+            script.onerror = () => {
+                console.warn('⚠️ Config.js failed to load, using defaults');
+                resolve(); // Still resolve to prevent hanging
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+    
+    <!-- Liquid Glass Styles -->
+    <script>
+        document.write('<link rel="stylesheet" href="liquid-glass-styles.css?v=' + (window.CONFIG ? window.CONFIG.VERSION : '3.7.14') + '&t=' + Date.now() + '">');
+    </script>
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Force reload with version parameter -->
+    <script>
+        // Aggressive cache bypass
+        const CURRENT_VERSION = window.CONFIG ? window.CONFIG.VERSION : '3.7.14';
+        const STORED_VERSION = localStorage.getItem('appVersion');
+        
+        if (STORED_VERSION !== CURRENT_VERSION) {
+            // Clear everything if version mismatch
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+            }
+            
+            // Clear caches
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+            }
+            
+            // Update stored version
+            localStorage.setItem('appVersion', CURRENT_VERSION);
+            
+            // Force reload
+            if (STORED_VERSION) {
+                window.location.reload(true);
+            }
+        }
+    </script>
+    
+    <!-- LINE LIFF SDK - Load with proper error handling -->
+    <script>
+        // Check if we should skip LIFF loading
+        const urlParams = new URLSearchParams(window.location.search);
+        const useAltLogin = urlParams.get('login') === 'alt';
+        
+        // Detect if we're running inside LINE app or LIFF URL
+        const isInLineApp = /Line/i.test(navigator.userAgent);
+        const isLiffUrl = window.location.href.includes('liff.line.me');
+        const isProduction = window.location.hostname.includes('appspot.com') || 
+                           window.location.hostname.includes('github.io');
+        
+        console.log('📱 Environment Detection:', {
+            isInLineApp,
+            isLiffUrl,
+            isProduction,
+            hostname: window.location.hostname
+        });
+        
+        // Always load LIFF SDK for debug display and potential LINE login
+        window.liffLoadPromise = new Promise((resolve, reject) => {
+            const liffScript = document.createElement('script');
+            liffScript.src = 'https://static.line-scdn.net/liff/edge/2/sdk.js';
+            liffScript.charset = 'utf-8';
+            liffScript.onload = () => {
+                console.log('✅ LIFF SDK loaded successfully');
+                resolve();
+            };
+            liffScript.onerror = () => {
+                console.warn('⚠️ LIFF SDK failed to load - might be blocked by CORS or network');
+                // Still resolve to not block the app
+                resolve();
+            };
+            document.head.appendChild(liffScript);
+        });
+        
+        if (useAltLogin) {
+            console.log('🔐 Alternative login mode - LIFF SDK loaded but won\'t auto-initialize');
+        }
+    </script>
+    
+    <!-- Google Sign-In SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Check if LIFF loaded
+        window.addEventListener('load', function() {
+            // Production mode - minimal logging
+        });
+    </script>
+    
+    <style>
+        /* Login Screen */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom right, var(--bg-dark), var(--bg-medium), var(--bg-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .login-container.hide {
+            display: none !important;
+        }
+        
+        .login-card {
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            animation: loginSlideUp 0.6s ease-out;
+        }
+        
+        @keyframes loginSlideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .login-logo {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .line-login-btn {
+            background: #00B900;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 185, 0, 0.3);
+        }
+        
+        .line-login-btn:hover {
+            background: #00A000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 185, 0, 0.4);
+        }
+        
+        .line-login-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .line-logo {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .google-login-btn {
+            background: white;
+            color: #333;
+            border: 2px solid #dadce0;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            justify-content: center;
+            margin: 0.5rem 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .google-login-btn:hover {
+            background: #f8f9fa;
+            border-color: #4285f4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(66, 133, 244, 0.2);
+        }
+        
+        .google-login-btn:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .google-logo {
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+        
+        .demo-mode-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .demo-mode-btn:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: rgba(31, 41, 55, 0.5);
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--primary);
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex: 1;
+        }
+        
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            display: none; /* Hidden to save space */
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s;
+        }
+        
+        .status-dot.connected {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-dot.disconnected {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        
+        .status-dot.checking {
+            background: #facc15;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .status-label {
+            color: var(--text-muted);
+        }
+        
+        .version-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .changelog-section {
+            background: rgba(79, 70, 229, 0.05);
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .changelog-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+        }
+
+        .changelog-date {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            min-width: 80px;
+        }
+
+        .update-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .whats-new-btn {
+            display: none; /* Hidden to save space */
+        }
+
+        .whats-new-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .new-badge {
+            background: #ef4444;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Modern Dark Theme with Glass Morphism */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #facc15; /* Yellow-400 */
+            --primary-dark: #eab308; /* Yellow-500 */
+            --primary-light: #fde047; /* Yellow-300 */
+            --bg-dark: #030712; /* Gray-950 */
+            --bg-medium: #111827; /* Gray-900 */
+            --bg-light: #1f2937; /* Gray-800 */
+            --glass-bg: rgba(31, 41, 55, 0.5);
+            --glass-border: rgba(250, 204, 21, 0.2);
+            --text: #ffffff;
+            --text-muted: #9ca3af;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a1f2e 50%, #0a0e1a 100%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: pan-y;
+        }
+        
+        /* Container */
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: relative;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            flex-shrink: 0;
+            background: rgba(31, 41, 55, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-left, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex: 1;
+        }
+        
+        .header-right {
+            justify-content: flex-end;
+        }
+        
+        .header h1 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            flex: 0;
+        }
+        
+        .target-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 0.4rem 0.25rem;
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-icon {
+            font-size: 0.875rem;
+            display: inline-block;
+            margin-right: 0.125rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.5rem;
+            display: block;
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: inline-block;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0.5rem;
+        }
+        
+        .section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .section h2 {
+            font-size: 0.75rem;
+            margin: 0 0 0.125rem 0;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        .section-subtitle {
+            display: none; /* Hide to save space */
+        }
+        
+        /* Activity List */
+        .activities-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            overflow-y: auto;
+        }
+        
+        .activity-row {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: rgba(31, 41, 55, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .activity-row:hover {
+            background: rgba(41, 51, 65, 0.9);
+            border-color: rgba(250, 204, 21, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .activity-icon {
+            font-size: 1.5rem;
+            width: 35px;
+            text-align: center;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+        
+        .activity-info {
+            flex: 1;
+        }
+        
+        .activity-title {
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--text);
+            letter-spacing: 0.5px;
+        }
+        
+        .activity-points {
+            font-size: 0.625rem;
+            color: var(--primary);
+            margin-right: 0.25rem;
+            font-weight: 600;
+            background: rgba(250, 204, 21, 0.1);
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+        }
+        
+        .activity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .activity-count {
+            min-width: 25px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--primary);
+            background: rgba(250, 204, 21, 0.1);
+            padding: 0.125rem;
+            border-radius: 0.375rem;
+        }
+        
+        .btn-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: rgba(250, 204, 21, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(250, 204, 21, 0.2);
+        }
+        
+        .btn-circle:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            transform: scale(1.1);
+        }
+        
+        .btn-circle:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-circle:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .btn-circle:disabled:hover {
+            background: transparent;
+            color: var(--primary);
+            transform: scale(1);
+        }
+        
+        /* Submit Section */
+        .submit-section {
+            position: absolute;
+            bottom: 45px;
+            left: 0.25rem;
+            right: 0.25rem;
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(250, 204, 21, 0.4);
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            display: none;
+            animation: slideUp 0.3s ease-out;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3);
+        }
+        
+        .submit-section.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .submit-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);
+        }
+        
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.3);
+        }
+        
+        /* Navigation Dock */
+        .nav-dock {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 0;
+            padding: 0.25rem;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .nav-item:hover {
+            transform: scale(1.1) translateY(-5px);
+            background: rgba(55, 65, 81, 0.5);
+        }
+        
+        .nav-item.active {
+            background: rgba(250, 204, 21, 0.2);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+        }
+        
+        .nav-item.active .nav-icon,
+        .nav-item.active .nav-label {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+        
+        .nav-label {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(31, 41, 55, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Success Animation */
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(31, 41, 55, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--primary);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            text-align: center;
+            z-index: 3000;
+            animation: successPop 0.6s ease forwards;
+        }
+        
+        @keyframes successPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(10deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive - keep compact on all devices */
+        
+        /* Hide scrollbars */
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        *::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <div class="login-logo">🎯</div>
+            <h1 class="login-title">FINNERGY Sales Tracker</h1>
+            <p class="login-subtitle">Track your sales performance with style</p>
+            
+            <button class="line-login-btn" id="lineLoginBtn" onclick="handleLineLoginClick()">
+                <svg class="line-logo" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.39-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.349 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                </svg>
+                <span id="loginBtnText">Login with LINE</span>
+            </button>
+            
+            <div style="margin: 1rem 0; color: var(--text-muted); font-size: 0.875rem; text-align: center;">
+                or
+            </div>
+            
+            <button class="google-login-btn" id="googleLoginBtn" onclick="handleGoogleLogin()">
+                <svg class="google-logo" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </button>
+            
+            <button class="demo-mode-btn" onclick="if(window.app) window.app.enterDemoMode(); else alert('App loading, please wait...');">
+                Try Demo Mode
+            </button>
+            
+            <!-- Debug Info -->
+            <div style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                <div>Environment: <code style="color: var(--primary);" id="debugEnv">Detecting...</code></div>
+                <div>LIFF ID: <code style="color: var(--primary);" id="debugLiffId">2007552096-wrG1aV9p</code></div>
+                <div>Current URL: <code id="debugUrl" style="color: var(--primary);"></code></div>
+                <div id="debugError" style="color: #ef4444; margin-top: 0.5rem;"></div>
+                <div id="debugInfo" style="margin-top: 0.5rem; font-size: 0.7rem;">
+                    Initializing...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Combined Header with User Info -->
+        <header class="header" id="mainHeader">
+            <div class="header-left">
+                <img class="user-avatar" id="userAvatar" src="" alt="User" style="display: none;">
+                <span class="user-name" id="userName"></span>
+            </div>
+            <h1>FINNERGY</h1>
+            <div class="header-right">
+                <button class="target-btn" onclick="window.app.showTargetSettings()" title="Set Target">🎯</button>
+                <button class="logout-btn" onclick="window.app.handleLogout()" style="display: none;">
+                    <span style="font-size: 0.75rem;">↩</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            <div style="display: flex; gap: 1rem;">
+                <div class="status-item">
+                    <span class="status-dot" id="backendStatusDot"></span>
+                    <span class="status-label">Backend</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="liffStatusDot"></span>
+                    <span class="status-label">LIFF</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="networkStatusDot"></span>
+                    <span class="status-label">Network</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="storageStatusDot"></span>
+                    <span class="status-label">Storage</span>
+                </div>
+            </div>
+            <div class="version-label">v<span id="versionNumber">3.7.14</span></div>
+        </div>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-icon">📊</span>
+                <span class="stat-value" id="todayPoints">0</span>
+                <span class="stat-label">Today</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">📈</span>
+                <span class="stat-value" id="weekPoints">0</span>
+                <span class="stat-label">Week</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🎯</span>
+                <span class="stat-value" id="goalProgress">0%</span>
+                <span class="stat-label">Goal</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🏆</span>
+                <span class="stat-value" id="totalPoints">0</span>
+                <span class="stat-label">Total</span>
+            </div>
+        </div>
+
+        <!-- Update Banner -->
+        <div id="updateBanner" style="
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        ">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span>🎉</span>
+                <span id="updateMessage">New update available!</span>
+                <span id="updateTime" style="font-size: 12px; opacity: 0.9;"></span>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <!-- Activities Tab -->
+            <div id="activitiesTab" class="tab-content active">
+                <div class="section">
+                    <h2>Sales Activities</h2>
+                    <div class="activities-container" id="activitiesContainer">
+                        <!-- Activities will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Dashboard</h2>
+                    
+                    <!-- Changelog Section -->
+                    <div class="changelog-section">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>📝</span> Recent Updates
+                            <span class="update-indicator" id="newUpdateIndicator" style="position: relative; top: 0; right: 0;"></span>
+                        </h3>
+                        <div id="changelogContent">
+                            <div class="changelog-item">
+                                <span class="changelog-date">Now</span>
+                                <span>🚀 v3.6.8 - Fixed Backend URL Configuration</span>
+                            </div>
+                            <div class="changelog-item">
+                                <span class="changelog-date">Earlier</span>
+                                <span>✅ GitHub Actions workflow configured</span>
+                            </div>
+                            <div class="changelog-item">
+                                <span class="changelog-date">Today</span>
+                                <span>🔧 Backend deployed to App Engine</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="dashboardContent">
+                        <p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>
+                    </div>
+                    
+                    <!-- Real-time Activity Feed -->
+                    <div style="margin-top: 1rem;">
+                        <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🔥</span> Live Team Activity
+                            <span class="live-indicator" style="
+                                background: #10b981;
+                                width: 8px;
+                                height: 8px;
+                                border-radius: 50%;
+                                animation: pulse 2s infinite;
+                                margin-left: auto;
+                            "></span>
+                        </h3>
+                        <div id="activityFeed" style="
+                            max-height: 300px;
+                            overflow-y: auto;
+                            background: rgba(31, 41, 55, 0.5);
+                            border-radius: 0.5rem;
+                            padding: 0.5rem;
+                        ">
+                            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                No recent activities
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analyticsTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto; height: calc(100vh - 140px);">
+                    <h2>Performance Analytics</h2>
+                    
+                    <!-- Performance Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Monthly Points</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="monthlyPoints">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;" id="monthlyGrowth">+0%</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Current Streak</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="currentStreak">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">days</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Daily Average</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="dailyAverage">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">points/day</div>
+                        </div>
+                        
+                        <div class="analytics-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 1rem; border-radius: 12px;">
+                            <div style="font-size: 0.75rem; opacity: 0.8;">Total Activities</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;" id="totalActivities">0</div>
+                            <div style="font-size: 0.625rem; opacity: 0.8;">this month</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Container -->
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Activity Trends (30 Days)</h3>
+                        <div style="position: relative; height: 200px;">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Activity Breakdown</h3>
+                        <div style="position: relative; height: 200px;">
+                            <canvas id="breakdownChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Type Stats -->
+                    <div style="background: rgba(31, 41, 55, 0.5); border-radius: 12px; padding: 1rem;">
+                        <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Top Activities</h3>
+                        <div id="topActivities" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Tab -->
+            <div id="leaderboardTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Leaderboard</h2>
+                    <div id="leaderboardContent">
+                        <p style="text-align: center; color: var(--text-muted);">Loading leaderboard...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content">
+                <div class="section" style="padding: 1rem; overflow-y: auto;">
+                    <h2>Settings</h2>
+                    <div id="settingsContent">
+                        <!-- Settings form will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Submit Section -->
+        <div class="submit-section" id="submitSection">
+            <div class="submit-info">
+                <div>
+                    <span id="pendingCount">0</span> activities
+                    <span style="margin-left: 1rem; color: var(--primary); font-weight: 600;">
+                        +<span id="pendingPoints">0</span> points
+                    </span>
+                </div>
+                <button class="submit-btn" onclick="window.app.submitActivities()">
+                    🚀 Submit
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Dock -->
+        <nav class="nav-dock">
+            <div class="nav-item active" data-tab="activities">
+                <div class="nav-icon">🎯</div>
+                <div class="nav-label">Activities</div>
+            </div>
+            <div class="nav-item" data-tab="dashboard">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Dashboard</div>
+            </div>
+            <div class="nav-item" data-tab="analytics">
+                <div class="nav-icon">📈</div>
+                <div class="nav-label">Analytics</div>
+            </div>
+            <div class="nav-item" data-tab="leaderboard">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">Leaders</div>
+            </div>
+            <div class="nav-item" data-tab="settings">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">Settings</div>
+            </div>
+        </nav>
+
+        <!-- Version Display -->
+        <div style="position: fixed; bottom: 60px; right: 10px; font-size: 10px; color: #666; opacity: 0.7;">
+            v<span id="appVersion">3.7.14</span>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+        
+        <!-- What's New Button -->
+        <button class="whats-new-btn" onclick="window.app.showWhatsNew()" title="What's New in v3.6.8">
+            <span class="new-badge">NEW</span>
+            <span>🎉</span>
+        </button>
+    </div>
+
+    <script>
+        // Sales Tracker App v3.6.8 - Fixed Backend URL
+        
+        // Configuration will be merged from config.js when available
+        function getAppConfig() {
+            const baseConfig = window.CONFIG || {
+                liffId: '2007552096-wrG1aV9p',
+                apiBaseUrl: 'http://localhost:10000/api',
+                VERSION: '3.7.14'
+            };
+            
+            return {
+                ...baseConfig,
+                BACKEND_URL: baseConfig.apiBaseUrl.replace('/api', ''),
+                // LINE LIFF IDs for different environments
+                LIFF_IDS: {
+                    developing: baseConfig.liffId,
+                    review: '2007539403-M1dnODn6',
+                    published: '2007539404-bxEyd2yZ'
+                },
+                // LIFF ID - Using actual production LIFF ID
+                LIFF_ID: baseConfig.liffId,
+                ENABLE_BACKEND_SYNC: true,
+                LAST_UPDATE: new Date().toISOString(),
+                UPDATE_CHECK_INTERVAL: 60000 // Check every minute
+            };
+        }
+        
+        // Get CONFIG (will update when config.js loads)
+        let CONFIG = getAppConfig();
+
+        // Main App Class
+        class SalesTrackerApp {
+            constructor() {
+                this.activities = [];
+                this.pendingActivities = [];
+                this.settings = this.loadSettings();
+                this.userProfile = null;
+                this.lineUserId = null;
+                this.backendConnected = false;
+                this.currentTab = 'activities';
+                this.lastKnownVersion = CONFIG.VERSION;
+                this.updateCheckInterval = null;
+                this.liffInitialized = false;
+                this.activityFeedInterval = null;
+                this.lastFeedUpdate = Date.now();
+                
+                this.activityTemplates = [
+                    { id: 'call', icon: '📞', title: 'โทร', points: 10 },
+                    { id: 'appointment', icon: '📅', title: 'นัด', points: 20 },
+                    { id: 'listen', icon: '👂', title: 'ฟัง', points: 30 },
+                    { id: 'present', icon: '🤗', title: 'นำเสนอ', points: 40 },
+                    { id: 'start_plan', icon: '💚', title: 'เริ่มแผน', points: 50 }
+                ];
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('App init() called');
+                try {
+                    // Restore JWT token from localStorage
+                    this.jwtToken = localStorage.getItem('jwtToken');
+                    if (this.jwtToken) {
+                        console.log('JWT token restored from localStorage');
+                    }
+                    
+                    // Set version display
+                    const versionElement = document.getElementById('appVersion');
+                    if (versionElement) {
+                        versionElement.textContent = CONFIG.VERSION;
+                    }
+                    
+                    // Initialize status monitoring
+                    this.initializeStatusMonitoring();
+                    
+                    // Check if user profile exists in localStorage
+                    const savedProfile = localStorage.getItem('lineUserProfile');
+                    if (savedProfile) {
+                        this.userProfile = JSON.parse(savedProfile);
+                        this.lineUserId = this.userProfile.userId;
+                    }
+                    
+                    await this.initLIFF();
+                    await this.checkBackendConnection();
+                    await this.loadActivities();
+                    this.renderActivityDock();
+                    this.updateAllStats();
+                    this.setupEventListeners();
+                    this.startUpdateChecker();
+                    this.startActivityFeedUpdater();
+                    console.log('App init() completed successfully');
+                } catch (error) {
+                    console.error('Init error:', error);
+                    this.showToast('❌ Failed to initialize app');
+                }
+            }
+
+            async initLIFF() {
+                this.showLoginScreen();
+                this.updateStatus('liff', 'checking');
+                
+                // Check if user wants to use alternative login first
+                const urlParams = new URLSearchParams(window.location.search);
+                const useAltLogin = urlParams.get('login') === 'alt';
+                
+                if (useAltLogin) {
+                    console.log('🔐 Alternative login mode - showing all login options');
+                    this.updateLoginButton('Choose Login Method', false);
+                    this.updateStatus('liff', 'alternative');
+                    return;
+                }
+                
+                if (typeof liff === 'undefined') {
+                    console.log('LIFF SDK not loaded');
+                    this.updateLoginButton('LIFF SDK not loaded', true);
+                    this.updateStatus('liff', 'disconnected');
+                    return;
+                }
+
+                try {
+                    // Ensure CONFIG is up to date
+                    CONFIG = getAppConfig();
+                    console.log('Initializing LIFF with ID:', CONFIG.LIFF_ID);
+                    console.log('Current URL:', window.location.href);
+                    
+                    // Skip LIFF initialization for localhost development
+                    if (window.location.hostname === 'localhost' && !window.DISABLE_AUTO_LOGIN) {
+                        console.log('🔧 Development mode: Skipping LIFF init, using mock login...');
+                        this.liffInitialized = true;
+                        this.updateStatus('liff', 'connected');
+                        await this.handleDevelopmentLogin();
+                        return;
+                    }
+                    
+                    // Initialize LIFF with the correct ID first
+                    await liff.init({ 
+                        liffId: CONFIG.LIFF_ID,
+                        withLoginOnExternalBrowser: true // Allow login on external browsers
+                    });
+                    
+                    // Update debug display with actual LIFF ID
+                    const debugLiffId = document.getElementById('debugLiffId');
+                    if (debugLiffId) {
+                        debugLiffId.textContent = CONFIG.LIFF_ID;
+                    }
+                    
+                    // Clean up OAuth callback parameters from URL AFTER init
+                    if (window.location.search.includes('code=') || window.location.search.includes('state=')) {
+                        console.log('Cleaning up OAuth callback parameters after successful init...');
+                        // Use setTimeout to ensure LIFF has processed the parameters
+                        setTimeout(() => {
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }, 100);
+                    }
+                    
+                    this.liffInitialized = true;
+                    this.updateStatus('liff', 'connected');
+                    // LIFF initialized successfully
+                    
+                    if (liff.isLoggedIn()) {
+                        await this.handleLoggedInUser();
+                    } else {
+                        // Auto-login for localhost development
+                        if (window.location.hostname === 'localhost' && !window.DISABLE_AUTO_LOGIN) {
+                            console.log('🔧 Development mode: Auto-logging in...');
+                            await this.handleDevelopmentLogin();
+                        } else {
+                            console.log('User not logged in, showing login button');
+                            this.updateLoginButton('Login with LINE', false);
+                        }
+                    }
+                } catch (error) {
+                    console.error('LIFF init failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        code: error.code,
+                        liffId: CONFIG.LIFF_ID
+                    });
+                    
+                    // Update debug display even on error
+                    const debugLiffId = document.getElementById('debugLiffId');
+                    if (debugLiffId) {
+                        debugLiffId.textContent = CONFIG.LIFF_ID;
+                    }
+                    
+                    this.updateStatus('liff', 'disconnected');
+                    
+                    // Show debug error
+                    const debugError = document.getElementById('debugError');
+                    if (debugError) {
+                        debugError.innerHTML = `Error: ${error.code || 'Unknown'} - ${error.message || 'No message'}`;
+                    }
+                    
+                    // Show more specific error messages
+                    if (error.code === 'INVALID_ARGUMENT') {
+                        this.showToast('❌ Invalid LIFF ID');
+                        this.updateLoginButton('Invalid LIFF ID', true);
+                    } else if (error.code === 'FORBIDDEN') {
+                        this.showToast('❌ URL not registered in LINE Developers');
+                        this.updateLoginButton('URL not registered', true);
+                    } else if (error.message && error.message.includes('400')) {
+                        this.showToast('❌ LIFF ID mismatch or URL not registered');
+                        this.updateLoginButton('Configuration Error', true);
+                    } else if (error.code === 'INIT_FAILED') {
+                        this.showToast('❌ Invalid LIFF ID - Check LINE Developers Console');
+                        this.updateLoginButton('Invalid LIFF ID', true);
+                    } else {
+                        this.showToast(`❌ LINE error: ${error.message || 'Connection failed'}`);
+                        this.updateLoginButton('LINE connection failed', true);
+                    }
+                }
+            }
+            
+            updateLoginButton(text, isError) {
+                const btn = document.getElementById('lineLoginBtn');
+                const btnText = document.getElementById('loginBtnText');
+                if (btn && btnText) {
+                    btnText.textContent = text;
+                    if (isError) {
+                        btn.style.background = '#dc2626';
+                        btn.style.cursor = 'not-allowed';
+                        btn.disabled = true;
+                    }
+                }
+            }
+            
+            async handleDevelopmentLogin() {
+                console.log('🔧 Setting up development user...');
+                
+                // Create a mock user profile for development
+                const mockProfile = {
+                    userId: 'DEV_USER_001',
+                    displayName: 'Development User',
+                    pictureUrl: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=DEV',
+                    statusMessage: 'Local Development'
+                };
+                
+                // Set up the user state as if logged in
+                this.userProfile = mockProfile;
+                this.lineUserId = mockProfile.userId;
+                
+                // Store in localStorage
+                localStorage.setItem('lineUserProfile', JSON.stringify(mockProfile));
+                
+                // Show user info and hide login
+                this.displayUserInfo(mockProfile);
+                this.hideLoginScreen();
+                
+                // Send login notification to backend (if connected)
+                if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                    this.sendLoginNotification(mockProfile);
+                    // Load user's activities from backend
+                    await this.loadActivities();
+                }
+                
+                // Update all stats with user data
+                this.updateAllStats();
+                this.renderActivityDock();
+                
+                console.log('✅ Development login complete');
+            }
+            
+            async handleGoogleUserLogin(googleProfile) {
+                console.log('🔍 Setting up Google user...', googleProfile);
+                
+                // Set up the user state as if logged in
+                this.userProfile = googleProfile;
+                this.lineUserId = googleProfile.userId;
+                
+                // Store in localStorage
+                localStorage.setItem('lineUserProfile', JSON.stringify(googleProfile));
+                
+                // Authenticate with backend first
+                const authSuccess = await this.authenticateWithBackend(googleProfile);
+                if (!authSuccess) {
+                    this.showToast('⚠️ Backend authentication failed, using offline mode');
+                }
+                
+                // Show user info and hide login
+                this.displayUserInfo(googleProfile);
+                this.hideLoginScreen();
+                
+                // Load user's activities from backend if authenticated
+                if (authSuccess && this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                    this.sendLoginNotification(googleProfile);
+                    await this.loadActivities();
+                }
+                
+                // Update all stats with user data
+                this.updateAllStats();
+                this.renderActivityDock();
+                
+                // Show welcome message
+                this.showToast(`👋 Welcome, ${googleProfile.displayName}!`);
+                
+                console.log('✅ Google login complete');
+            }
+            
+            async handleLoggedInUser() {
+                try {
+                    const profile = await liff.getProfile();
+                    this.userProfile = profile;
+                    this.lineUserId = profile.userId;
+                    
+                    // Store user info in localStorage for persistence
+                    localStorage.setItem('lineUserProfile', JSON.stringify({
+                        userId: profile.userId,
+                        displayName: profile.displayName,
+                        pictureUrl: profile.pictureUrl,
+                        statusMessage: profile.statusMessage
+                    }));
+                    
+                    // Authenticate with backend first
+                    const authSuccess = await this.authenticateWithBackend(profile);
+                    if (!authSuccess) {
+                        this.showToast('⚠️ Backend authentication failed, using offline mode');
+                    }
+                    
+                    // Show user info
+                    this.displayUserInfo(profile);
+                    
+                    // Hide login screen
+                    this.hideLoginScreen();
+                    
+                    // Load user's activities from backend if authenticated
+                    if (authSuccess && this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                        this.sendLoginNotification(profile);
+                        await this.loadActivities();
+                    }
+                    
+                    // Update all stats with user data
+                    this.updateAllStats();
+                    this.renderActivityDock();
+                    
+                    // Show welcome message
+                    this.showToast(`👋 Welcome back, ${profile.displayName}!`);
+                    
+                    console.log('User logged in:', profile.displayName);
+                } catch (error) {
+                    console.error('Failed to get profile:', error);
+                    this.showToast('❌ Failed to get user profile');
+                }
+            }
+            
+            async handleLineLogin() {
+                console.log('handleLineLogin called');
+                
+                // Check if app is properly initialized
+                if (!window.app) {
+                    console.error('App not initialized yet');
+                    alert('App is still loading, please try again in a moment');
+                    return;
+                }
+                
+                const btn = document.getElementById('lineLoginBtn');
+                const btnText = document.getElementById('loginBtnText');
+                
+                if (!btn || !btnText) {
+                    console.error('Button elements not found');
+                    return;
+                }
+                
+                console.log('LIFF available:', typeof liff !== 'undefined');
+                console.log('LIFF initialized:', this.liffInitialized);
+                
+                btn.disabled = true;
+                btnText.innerHTML = '<span class="loading-spinner"></span> Connecting...';
+                
+                if (typeof liff === 'undefined') {
+                    // If LIFF is not loaded (alt login mode), reload without the parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('login') === 'alt') {
+                        console.log('Reloading page for LINE login...');
+                        window.location.href = window.location.origin + window.location.pathname;
+                        return;
+                    }
+                    this.showToast('❌ LINE SDK not available');
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                    return;
+                }
+                
+                // Check if LIFF is initialized
+                if (!this.liffInitialized) {
+                    this.showToast('❌ LIFF not initialized yet');
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                    return;
+                }
+                
+                try {
+                    console.log('Checking login status...');
+                    console.log('Is logged in:', liff.isLoggedIn());
+                    
+                    if (!liff.isLoggedIn()) {
+                        console.log('Redirecting to LINE login...');
+                        liff.login();
+                    } else {
+                        console.log('Already logged in, getting profile...');
+                        await this.handleLoggedInUser();
+                    }
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        code: error.code,
+                        stack: error.stack
+                    });
+                    this.showToast(`❌ Login failed: ${error.message || 'Unknown error'}`);
+                    btn.disabled = false;
+                    btnText.textContent = 'Login with LINE';
+                }
+            }
+            
+            handleLogout() {
+                if (liff && liff.isLoggedIn()) {
+                    liff.logout();
+                    window.location.reload();
+                } else {
+                    // Clear demo user
+                    this.userProfile = null;
+                    this.lineUserId = null;
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            }
+            
+            enterDemoMode() {
+                console.log('🎮 Entering demo mode...');
+                
+                // Create a demo user profile
+                const demoProfile = {
+                    userId: 'DEMO_USER_' + Date.now(),
+                    displayName: 'Demo User',
+                    pictureUrl: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=DEMO',
+                    statusMessage: 'Testing the app'
+                };
+                
+                // Set up the user state as if logged in
+                this.userProfile = demoProfile;
+                this.lineUserId = demoProfile.userId;
+                
+                // Store in localStorage
+                localStorage.setItem('lineUserProfile', JSON.stringify(demoProfile));
+                localStorage.setItem('demoMode', 'true');
+                
+                // Show user info and hide login
+                this.displayUserInfo(demoProfile);
+                this.hideLoginScreen();
+                
+                // Skip backend sync for demo mode
+                this.backendConnected = false;
+                this.updateStatus('backend', 'demo');
+                
+                // Initialize with demo data
+                this.initializeDemoData();
+                
+                // Update all stats with demo data
+                this.updateAllStats();
+                this.renderActivityDock();
+                
+                this.showToast('🎮 Demo mode activated!');
+                console.log('✅ Demo mode setup complete');
+            }
+            
+            initializeDemoData() {
+                // Add some demo activities
+                const demoActivities = [
+                    {
+                        id: 'demo_1',
+                        type: 'call',
+                        points: 10,
+                        timestamp: new Date().toISOString(),
+                        title: 'Demo Cold Call',
+                        description: 'Called ABC Company'
+                    },
+                    {
+                        id: 'demo_2',
+                        type: 'appointment',
+                        points: 20,
+                        timestamp: new Date(Date.now() - 86400000).toISOString(),
+                        title: 'Demo Meeting',
+                        description: 'Met with XYZ Corp'
+                    }
+                ];
+                
+                // Store demo activities
+                localStorage.setItem('demoActivities', JSON.stringify(demoActivities));
+                this.activities = demoActivities;
+                
+                // Set demo achievements
+                const demoAchievements = ['first_activity', 'early_bird'];
+                localStorage.setItem('demoAchievements', JSON.stringify(demoAchievements));
+                
+                // Set demo streak
+                const demoStreak = {
+                    current: 3,
+                    longest: 7,
+                    lastActive: new Date().toISOString()
+                };
+                localStorage.setItem('demoStreak', JSON.stringify(demoStreak));
+            }
+            
+            showLoginScreen() {
+                const container = document.getElementById('loginContainer');
+                if (container) {
+                    container.classList.remove('hide');
+                }
+            }
+            
+            hideLoginScreen() {
+                const container = document.getElementById('loginContainer');
+                if (container) {
+                    container.classList.add('hide');
+                    console.log('🔓 Login screen hidden');
+                } else {
+                    console.log('❌ Login container not found');
+                }
+            }
+            
+            displayUserInfo(profile) {
+                const userAvatar = document.getElementById('userAvatar');
+                const userName = document.getElementById('userName');
+                const logoutBtn = document.querySelector('.logout-btn');
+                
+                if (profile) {
+                    userName.textContent = profile.displayName || 'Demo User';
+                    
+                    if (profile.pictureUrl) {
+                        userAvatar.src = profile.pictureUrl;
+                        userAvatar.style.display = 'block';
+                    } else {
+                        userAvatar.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2ZhY2MxNSIvPjx0ZXh0IHg9IjIwIiB5PSIyNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMCIgZmlsbD0iIzAzMDcxMiI+8J+YijwvdGV4dD48L3N2Zz4=';
+                        userAvatar.style.display = 'block';
+                    }
+                    
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                }
+            }
+
+            setupDemoUser() {
+                // No demo mode - require real LINE login
+                this.showToast('❌ Demo mode disabled. Please login with LINE.');
+                return;
+            }
+
+            // JWT Authentication Methods
+            async authenticateWithBackend(userProfile) {
+                try {
+                    console.log('Authenticating with backend...');
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/auth/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            lineUserId: userProfile.userId || userProfile.lineUserId,
+                            displayName: userProfile.displayName
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.jwtToken = data.token;
+                        
+                        // Store token in localStorage for persistence
+                        localStorage.setItem('jwtToken', data.token);
+                        
+                        console.log('✅ Backend authentication successful');
+                        return true;
+                    } else {
+                        console.error('❌ Backend authentication failed:', response.status);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Backend authentication error:', error);
+                    return false;
+                }
+            }
+            
+            getAuthHeaders() {
+                const token = this.jwtToken || localStorage.getItem('jwtToken');
+                if (token) {
+                    return {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    };
+                }
+                return {
+                    'Content-Type': 'application/json'
+                };
+            }
+
+            async checkBackendConnection() {
+                console.log('🔍 Checking backend connection...', {
+                    BACKEND_URL: CONFIG.BACKEND_URL,
+                    ENABLE_BACKEND_SYNC: CONFIG.ENABLE_BACKEND_SYNC
+                });
+                this.updateStatus('backend', 'checking');
+                
+                if (!CONFIG.ENABLE_BACKEND_SYNC) {
+                    console.log('⚠️ Backend sync disabled in config');
+                    this.updateStatus('backend', 'disconnected');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
+                    console.log('🏥 Health check response:', response.status, response.ok);
+                    if (response.ok) {
+                        const healthData = await response.json();
+                        console.log('✅ Backend connected successfully:', healthData);
+                        this.backendConnected = true;
+                        this.updateStatus('backend', 'connected');
+                        this.showToast('🔗 Connected to backend');
+                        if (this.lineUserId) {
+                            this.updateDashboardTab();
+                        }
+                    } else {
+                        console.log('❌ Backend health check failed:', response.status);
+                        this.updateStatus('backend', 'disconnected');
+                    }
+                } catch (error) {
+                    console.error('❌ Backend connection error:', error);
+                    this.backendConnected = false;
+                    this.updateStatus('backend', 'disconnected');
+                }
+            }
+            
+            initializeStatusMonitoring() {
+                // Update version number
+                const versionEl = document.getElementById('versionNumber');
+                if (versionEl) versionEl.textContent = CONFIG.VERSION;
+                
+                // Check network status
+                this.checkNetworkStatus();
+                window.addEventListener('online', () => this.checkNetworkStatus());
+                window.addEventListener('offline', () => this.checkNetworkStatus());
+                
+                // Check storage status
+                this.checkStorageStatus();
+                
+                // Periodically check backend
+                setInterval(() => this.checkBackendConnection(), 30000); // Every 30 seconds
+            }
+            
+            checkNetworkStatus() {
+                const isOnline = navigator.onLine;
+                this.updateStatus('network', isOnline ? 'connected' : 'disconnected');
+            }
+            
+            checkStorageStatus() {
+                try {
+                    // Test localStorage
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    
+                    // Check storage usage if available
+                    if (navigator.storage && navigator.storage.estimate) {
+                        navigator.storage.estimate().then(estimate => {
+                            const percentUsed = (estimate.usage / estimate.quota) * 100;
+                            if (percentUsed > 90) {
+                                this.updateStatus('storage', 'disconnected'); // Warning
+                            } else {
+                                this.updateStatus('storage', 'connected'); // OK
+                            }
+                        });
+                    } else {
+                        this.updateStatus('storage', 'connected');
+                    }
+                } catch (error) {
+                    this.updateStatus('storage', 'disconnected');
+                }
+            }
+            
+            updateStatus(service, status) {
+                const dotId = service + 'StatusDot';
+                const dot = document.getElementById(dotId);
+                if (dot) {
+                    dot.className = 'status-dot ' + status;
+                }
+            }
+
+            async loadActivities() {
+                // Initialize empty arrays
+                this.activities = [];
+                this.pendingActivities = [];
+                
+                // Check if in demo mode
+                const isDemoMode = localStorage.getItem('demoMode') === 'true';
+                if (isDemoMode) {
+                    const demoActivities = localStorage.getItem('demoActivities');
+                    if (demoActivities) {
+                        try {
+                            this.activities = JSON.parse(demoActivities);
+                            console.log(`🎮 Loaded ${this.activities.length} demo activities`);
+                        } catch (error) {
+                            console.error('Failed to parse demo activities:', error);
+                        }
+                    }
+                    return; // Skip backend sync for demo mode
+                }
+                
+                // First, try to load from localStorage
+                const savedActivities = localStorage.getItem('savedActivities');
+                const savedPending = localStorage.getItem('pendingActivities');
+                
+                if (savedActivities) {
+                    try {
+                        this.activities = JSON.parse(savedActivities);
+                        console.log(`Loaded ${this.activities.length} activities from localStorage`);
+                    } catch (error) {
+                        console.error('Failed to parse saved activities:', error);
+                    }
+                }
+                
+                if (savedPending) {
+                    try {
+                        this.pendingActivities = JSON.parse(savedPending);
+                        console.log(`Loaded ${this.pendingActivities.length} pending activities from localStorage`);
+                    } catch (error) {
+                        console.error('Failed to parse pending activities:', error);
+                    }
+                }
+                
+                // Then, try to sync with backend if connected and user is logged in
+                if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
+                    try {
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities/user/${this.lineUserId}?limit=100`, {
+                            headers: this.getAuthHeaders()
+                        });
+                        if (response.ok) {
+                            const activities = await response.json();
+                            const backendActivities = activities.map(a => ({
+                                id: `${a.activity_type}_${a.id}`,
+                                type: a.activity_type,
+                                title: a.title,
+                                points: a.points,
+                                timestamp: a.created_at,
+                                date: a.date
+                            }));
+                            
+                            // Merge backend activities with local ones (avoid duplicates)
+                            const existingIds = new Set(this.activities.map(a => a.id));
+                            const newActivities = backendActivities.filter(a => !existingIds.has(a.id));
+                            this.activities = [...this.activities, ...newActivities];
+                            
+                            console.log(`Loaded ${backendActivities.length} activities from backend, merged to ${this.activities.length} total`);
+                            
+                            // Save the merged activities to localStorage
+                            this.saveActivities();
+                        }
+                    } catch (error) {
+                        console.error('Failed to load activities from backend:', error);
+                    }
+                }
+            }
+
+            saveActivities() {
+                // Save activities to localStorage for persistence across refreshes
+                try {
+                    localStorage.setItem('savedActivities', JSON.stringify(this.activities));
+                    localStorage.setItem('pendingActivities', JSON.stringify(this.pendingActivities));
+                    console.log('Activities saved to localStorage');
+                } catch (error) {
+                    console.error('Failed to save activities to localStorage:', error);
+                }
+            }
+
+            loadSettings() {
+                const saved = localStorage.getItem('userSettings');
+                return saved ? JSON.parse(saved) : {
+                    userName: 'Sales Pro',
+                    dailyGoal: 100,
+                    weeklyGoal: 500,
+                    notifications: true,
+                    soundEffects: true
+                };
+            }
+
+            renderActivityDock() {
+                const container = document.getElementById('activitiesContainer');
+                if (!container) return;
+                
+                container.innerHTML = this.activityTemplates.map(template => {
+                    const pendingCount = this.pendingActivities.filter(a => 
+                        a.id.startsWith(template.id)
+                    ).length;
+                    
+                    return `
+                        <div class="activity-row">
+                            <div class="activity-icon">${template.icon}</div>
+                            <div class="activity-info">
+                                <div class="activity-title">${template.title}</div>
+                            </div>
+                            <div class="activity-points">+${template.points} pts</div>
+                            <div class="activity-controls">
+                                <button class="btn-circle" onclick="window.app.removeActivity('${template.id}')" ${pendingCount === 0 ? 'disabled' : ''}>−</button>
+                                <div class="activity-count">${pendingCount}</div>
+                                <button class="btn-circle" onclick="window.app.addActivity('${template.id}')">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addActivity(templateId) {
+                const template = this.activityTemplates.find(t => t.id === templateId);
+                if (!template) return;
+
+                const activity = {
+                    ...template,
+                    id: `${templateId}_${Date.now()}`,
+                    timestamp: new Date().toISOString(),
+                    date: new Date().toDateString()
+                };
+
+                this.pendingActivities.push(activity);
+                this.saveActivities();
+                this.renderActivityDock();
+                this.updatePendingDisplay();
+            }
+            
+            removeActivity(templateId) {
+                const index = this.pendingActivities.findIndex(a => a.id.startsWith(templateId));
+                if (index !== -1) {
+                    this.pendingActivities.splice(index, 1);
+                    this.saveActivities();
+                    this.renderActivityDock();
+                    this.updatePendingDisplay();
+                }
+            }
+
+            updatePendingDisplay() {
+                const section = document.getElementById('submitSection');
+                const countEl = document.getElementById('pendingCount');
+                const pointsEl = document.getElementById('pendingPoints');
+                
+                const count = this.pendingActivities.length;
+                const points = this.pendingActivities.reduce((sum, a) => sum + a.points, 0);
+
+                countEl.textContent = count;
+                pointsEl.textContent = points;
+                
+                section.classList.toggle('show', count > 0);
+            }
+
+            async submitActivities() {
+                if (this.pendingActivities.length === 0) return;
+
+                const totalPoints = this.pendingActivities.reduce((sum, a) => sum + a.points, 0);
+                
+                // Move to completed
+                this.activities.push(...this.pendingActivities);
+                
+                // Sync to backend if connected
+                if (this.backendConnected && this.lineUserId) {
+                    try {
+                        await this.syncActivitiesToBackend(this.pendingActivities);
+                    } catch (error) {
+                        console.error('Sync failed:', error);
+                    }
+                }
+                
+                // Clear pending
+                this.pendingActivities = [];
+                this.saveActivities();
+                
+                // Update UI
+                this.updateAllStats();
+                this.renderActivityDock();
+                this.updatePendingDisplay();
+                
+                // Show success
+                this.showToast(`✅ ${totalPoints} points earned!`);
+                this.showSuccessAnimation(totalPoints);
+                
+                // Add to activity feed
+                const activityCount = this.pendingActivities.length;
+                this.addToActivityFeed({
+                    user: this.userProfile?.displayName || 'You',
+                    action: 'submitted',
+                    activity: `${activityCount} activities`,
+                    points: totalPoints,
+                    timestamp: new Date()
+                });
+            }
+
+            async syncActivitiesToBackend(activities) {
+                // Post each activity individually to the backend
+                for (const activity of activities) {
+                    try {
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/activities`, {
+                            method: 'POST',
+                            headers: this.getAuthHeaders(),
+                            body: JSON.stringify({
+                                lineUserId: this.lineUserId,
+                                activityType: activity.id.split('_')[0],
+                                title: activity.title,
+                                subtitle: activity.subtitle || '',
+                                points: activity.points,
+                                count: activity.count || 1,
+                                date: new Date().toISOString().split('T')[0]
+                            })
+                        });
+
+                        if (!response.ok) {
+                            console.error('Failed to sync activity:', activity.title);
+                        }
+                    } catch (error) {
+                        console.error('Error syncing activity:', error);
+                    }
+                }
+            }
+
+            async sendLoginNotification(profile) {
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/users`, {
+                        method: 'POST',
+                        headers: this.getAuthHeaders(),
+                        body: JSON.stringify({
+                            lineUserId: this.lineUserId,
+                            displayName: profile.displayName,
+                            pictureUrl: profile.pictureUrl,
+                            statusMessage: profile.statusMessage
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('Login notification sent');
+                    }
+                } catch (error) {
+                    console.error('Failed to send login notification:', error);
+                }
+            }
+
+            updateAllStats() {
+                const today = new Date().toDateString();
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                
+                const todayActivities = this.activities.filter(a => a.date === today);
+                const weekActivities = this.activities.filter(a => 
+                    new Date(a.timestamp) >= weekStart
+                );
+
+                const todayPoints = todayActivities.reduce((sum, a) => sum + a.points, 0);
+                const weekPoints = weekActivities.reduce((sum, a) => sum + a.points, 0);
+                const totalPoints = this.activities.reduce((sum, a) => sum + a.points, 0);
+                const goalProgress = Math.min(100, Math.round((todayPoints / this.settings.dailyGoal) * 100));
+
+                document.getElementById('todayPoints').textContent = todayPoints;
+                document.getElementById('weekPoints').textContent = weekPoints;
+                document.getElementById('totalPoints').textContent = totalPoints;
+                document.getElementById('goalProgress').textContent = `${goalProgress}%`;
+            }
+
+            // Removed showActivityFeedback to keep the UI clean and fast
+
+            showSuccessAnimation(points) {
+                const animation = document.createElement('div');
+                animation.className = 'success-animation';
+                animation.innerHTML = `
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">
+                        +${points} Points!
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--text-muted);">Great job! Keep it up! 💪</div>
+                `;
+                
+                document.body.appendChild(animation);
+                setTimeout(() => animation.remove(), 2000);
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Update Checker Methods
+            startUpdateChecker() {
+                // Check for updates every minute
+                this.updateCheckInterval = setInterval(() => {
+                    this.checkForUpdates();
+                }, CONFIG.UPDATE_CHECK_INTERVAL);
+                
+                // Initial check after 5 seconds
+                setTimeout(() => this.checkForUpdates(), 5000);
+            }
+
+            async checkForUpdates() {
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/health`);
+                    const data = await response.json();
+                    
+                    if (data.version && data.version !== this.lastKnownVersion) {
+                        this.showUpdateNotification(data.version);
+                        this.lastKnownVersion = data.version;
+                    }
+                } catch (error) {
+                    console.log('Update check failed:', error);
+                }
+            }
+
+            showUpdateNotification(newVersion) {
+                const banner = document.getElementById('updateBanner');
+                const message = document.getElementById('updateMessage');
+                const timeEl = document.getElementById('updateTime');
+                const indicator = document.getElementById('newUpdateIndicator');
+                
+                message.textContent = `Version ${newVersion} is now available! Refresh to update.`;
+                timeEl.textContent = new Date().toLocaleTimeString();
+                
+                banner.style.display = 'block';
+                if (indicator) indicator.style.display = 'block';
+                
+                // Add to changelog
+                this.addToChangelog(newVersion);
+                
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                }, 10000);
+            }
+
+            addToChangelog(version) {
+                const changelogContent = document.getElementById('changelogContent');
+                if (!changelogContent) return;
+                
+                const newItem = document.createElement('div');
+                newItem.className = 'changelog-item';
+                newItem.style.animation = 'slideDown 0.3s ease-out';
+                newItem.innerHTML = `
+                    <span class="changelog-date">Just now</span>
+                    <span>🆕 Version ${version} deployed!</span>
+                `;
+                
+                changelogContent.insertBefore(newItem, changelogContent.firstChild);
+            }
+
+            showWhatsNew() {
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 2000;
+                    animation: fadeIn 0.3s ease-out;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: var(--bg-secondary);
+                        border-radius: 1rem;
+                        padding: 2rem;
+                        max-width: 500px;
+                        width: 90%;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                        animation: slideUp 0.3s ease-out;
+                    ">
+                        <h2 style="margin-bottom: 1rem; color: var(--primary);">🎉 What's New in v${CONFIG.VERSION}</h2>
+                        <div style="display: grid; gap: 1rem;">
+                            <div class="changelog-section">
+                                <h3 style="color: #10b981; margin-bottom: 0.5rem;">🚨 Breaking Changes</h3>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin: 0.5rem 0;">❌ Removed ALL local/mock data</li>
+                                    <li style="margin: 0.5rem 0;">🔒 Backend connection required</li>
+                                    <li style="margin: 0.5rem 0;">🚫 Demo mode disabled</li>
+                                </ul>
+                            </div>
+                            <div class="changelog-section">
+                                <h3 style="color: #3b82f6; margin-bottom: 0.5rem;">🔧 Improvements</h3>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin: 0.5rem 0;">🧹 Cleaner codebase</li>
+                                    <li style="margin: 0.5rem 0;">🔄 Force cache clearing</li>
+                                    <li style="margin: 0.5rem 0;">📡 Real data only</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" style="
+                            background: var(--primary);
+                            color: var(--bg-dark);
+                            border: none;
+                            padding: 0.75rem 2rem;
+                            border-radius: 0.5rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            margin-top: 1.5rem;
+                            width: 100%;
+                        ">Got it!</button>
+                    </div>
+                `;
+                
+                // Add fadeIn animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { transform: translateY(20px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                document.body.appendChild(modal);
+                
+                // Close on click outside
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+            }
+
+            switchTab(tabName) {
+                // Update navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.tab === tabName);
+                });
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                const activeTab = document.getElementById(`${tabName}Tab`);
+                if (activeTab) {
+                    activeTab.classList.add('active');
+                }
+
+                this.currentTab = tabName;
+
+                // Load tab-specific content
+                switch (tabName) {
+                    case 'dashboard':
+                        this.updateDashboardTab();
+                        break;
+                    case 'analytics':
+                        this.loadAnalytics();
+                        break;
+                    case 'leaderboard':
+                        this.updateLeaderboardTab();
+                        break;
+                    case 'settings':
+                        this.renderSettings();
+                        break;
+                }
+            }
+
+            async updateDashboardTab() {
+                const content = document.getElementById('dashboardContent');
+                
+                try {
+                    // If backend is connected and user is logged in, fetch from API
+                    if (this.backendConnected && this.lineUserId && CONFIG.ENABLE_BACKEND_SYNC) {
+                        content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading dashboard...</p>';
+                        
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/user/${this.lineUserId}/dashboard`, {
+                            headers: this.getAuthHeaders()
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            
+                            content.innerHTML = `
+                                <div style="display: grid; gap: 0.5rem;">
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                        <span>Total Points:</span>
+                                        <strong style="color: var(--primary);">${data.totalPoints || 0}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                        <span>Current Level:</span>
+                                        <strong style="color: var(--primary);">Level ${data.currentLevel || 1}</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                        <span>Today:</span>
+                                        <strong style="color: var(--primary);">${data.todayPoints || 0} pts</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                        <span>This Week:</span>
+                                        <strong style="color: var(--primary);">${data.weekPoints || 0} pts</strong>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; font-size: 0.875rem;">
+                                        <span>Best Day:</span>
+                                        <strong style="color: var(--primary);">${data.bestDay || '0 pts'}</strong>
+                                    </div>
+                                </div>
+                                ${data.achievements ? `
+                                    <h3 style="margin-top: 1rem; font-size: 1rem;">Achievements</h3>
+                                    <div style="display: grid; gap: 0.5rem;">
+                                        ${data.achievements.map(a => `
+                                            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: rgba(55, 65, 81, 0.3); border-radius: 0.5rem; ${a.achieved ? 'opacity: 1;' : 'opacity: 0.5;'}">
+                                                <span style="font-size: 1.5rem;">${a.icon}</span>
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; font-size: 0.875rem;">${a.title}</div>
+                                                    <div style="font-size: 0.75rem; color: var(--text-muted);">${a.description}</div>
+                                                </div>
+                                                ${a.achieved ? '<span style="color: var(--primary);">✓</span>' : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            `;
+                            return;
+                        }
+                    }
+                    
+                    // No local data - require backend
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: var(--text-muted);">❌ Backend connection required</p>
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Dashboard data requires server connection</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Dashboard error:', error);
+                    content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Error loading dashboard</p>';
+                }
+            }
+
+            async updateLeaderboardTab() {
+                const content = document.getElementById('leaderboardContent');
+                
+                try {
+                    // If backend is connected, fetch from API
+                    if (this.backendConnected && CONFIG.ENABLE_BACKEND_SYNC) {
+                        content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading leaderboard...</p>';
+                        
+                        const response = await fetch(`${CONFIG.BACKEND_URL}/api/leaderboard`, {
+                            headers: this.getAuthHeaders()
+                        });
+                        if (response.ok) {
+                            const leaderboardData = await response.json();
+                            
+                            // Get current user data
+                            const userName = this.userProfile ? this.userProfile.displayName : 'You';
+                            const userPicture = this.userProfile ? this.userProfile.pictureUrl : null;
+                            const userPoints = this.activities.reduce((sum, a) => sum + a.points, 0);
+                            
+                            // Check if current user is in leaderboard
+                            let userInLeaderboard = false;
+                            let userRank = 0;
+                            
+                            // Combine backend data with current user
+                            const combinedData = leaderboardData.map(user => ({
+                                name: user.displayName,
+                                points: user.totalPoints,
+                                activityCount: user.activityCount,
+                                pictureUrl: null,
+                                isCurrentUser: false
+                            }));
+                            
+                            // Add current user if logged in
+                            if (this.lineUserId) {
+                                // Check if user is already in leaderboard
+                                userInLeaderboard = combinedData.some(u => u.name === userName);
+                                
+                                if (!userInLeaderboard) {
+                                    combinedData.push({
+                                        name: userName,
+                                        points: userPoints,
+                                        pictureUrl: userPicture,
+                                        isCurrentUser: true
+                                    });
+                                }
+                            }
+                            
+                            // Sort by points and get top 5
+                            const sortedData = combinedData.sort((a, b) => b.points - a.points).slice(0, 5);
+                            
+                            content.innerHTML = `
+                                <div style="display: grid; gap: 0.5rem;">
+                                    ${sortedData.map((user, index) => `
+                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: ${user.isCurrentUser ? 'rgba(250, 204, 21, 0.1)' : 'rgba(55, 65, 81, 0.3)'}; border-radius: 0.5rem; font-size: 0.875rem; ${user.isCurrentUser ? 'border: 1px solid rgba(250, 204, 21, 0.3);' : ''}">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <span style="font-size: 1rem; font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                                                ${user.pictureUrl ? 
+                                                    `<img src="${user.pictureUrl}" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--primary);" alt="${user.name}">` : 
+                                                    `<div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: bold; color: var(--bg-dark);">${user.name.charAt(0)}</div>`
+                                                }
+                                                <span style="${user.isCurrentUser ? 'font-weight: bold;' : ''}">${user.name}</span>
+                                            </div>
+                                            <span style="font-weight: bold; color: var(--primary);">${user.points}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                            return;
+                        }
+                    }
+                    
+                    // No local data - require backend connection
+                    content.innerHTML = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <p style="color: var(--text-muted);">❌ Backend connection required</p>
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 0.5rem;">Please check your internet connection</p>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Leaderboard error:', error);
+                    content.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Error loading leaderboard</p>';
+                }
+            }
+
+            // Analytics functionality
+            async loadAnalytics() {
+                if (!this.lineUserId) {
+                    document.getElementById('monthlyPoints').textContent = '0';
+                    document.getElementById('currentStreak').textContent = '0';
+                    document.getElementById('dailyAverage').textContent = '0';
+                    document.getElementById('totalActivities').textContent = '0';
+                    return;
+                }
+
+                try {
+                    // Load performance metrics
+                    const performanceResponse = await fetch(`${this.API_URL}/analytics/performance?lineUserId=${this.lineUserId}`);
+                    const performance = await performanceResponse.json();
+                    
+                    // Update summary cards
+                    document.getElementById('monthlyPoints').textContent = performance.currentMonth.points.toLocaleString();
+                    document.getElementById('currentStreak').textContent = performance.streak.days;
+                    document.getElementById('dailyAverage').textContent = performance.currentMonth.dailyAverage;
+                    document.getElementById('totalActivities').textContent = performance.currentMonth.activities;
+                    
+                    const growthElement = document.getElementById('monthlyGrowth');
+                    growthElement.textContent = `${performance.growth.percentage >= 0 ? '+' : ''}${performance.growth.percentage}%`;
+                    growthElement.style.color = performance.growth.percentage >= 0 ? '#10b981' : '#ef4444';
+                    
+                    // Load and render trends chart
+                    await this.loadTrendsChart();
+                    
+                    // Load and render breakdown chart
+                    await this.loadBreakdownChart();
+                    
+                } catch (error) {
+                    console.error('Analytics error:', error);
+                    this.showToast('❌ Failed to load analytics');
+                }
+            }
+            
+            async loadTrendsChart() {
+                try {
+                    const response = await fetch(`${this.API_URL}/analytics/trends?lineUserId=${this.lineUserId}&days=30`);
+                    const trendsData = await response.json();
+                    
+                    const ctx = document.getElementById('trendsChart').getContext('2d');
+                    
+                    // Destroy existing chart if any
+                    if (this.trendsChartInstance) {
+                        this.trendsChartInstance.destroy();
+                    }
+                    
+                    this.trendsChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: trendsData.data.map(d => {
+                                const date = new Date(d.date);
+                                return `${date.getMonth() + 1}/${date.getDate()}`;
+                            }),
+                            datasets: [{
+                                label: 'Daily Points',
+                                data: trendsData.data.map(d => d.total),
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#9ca3af'
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#9ca3af',
+                                        maxRotation: 45,
+                                        minRotation: 45
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error('Trends chart error:', error);
+                }
+            }
+            
+            async loadBreakdownChart() {
+                try {
+                    const response = await fetch(`${this.API_URL}/analytics/breakdown?lineUserId=${this.lineUserId}&period=monthly`);
+                    const breakdownData = await response.json();
+                    
+                    const ctx = document.getElementById('breakdownChart').getContext('2d');
+                    
+                    // Destroy existing chart if any
+                    if (this.breakdownChartInstance) {
+                        this.breakdownChartInstance.destroy();
+                    }
+                    
+                    const colors = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+                    
+                    this.breakdownChartInstance = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: breakdownData.breakdown.map(b => b.title),
+                            datasets: [{
+                                data: breakdownData.breakdown.map(b => b.points),
+                                backgroundColor: colors.slice(0, breakdownData.breakdown.length),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: '#9ca3af',
+                                        padding: 10,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Update top activities
+                    const topActivitiesHtml = breakdownData.breakdown.slice(0, 3).map((activity, index) => `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: rgba(55, 65, 81, 0.3); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: ${colors[index]}"></div>
+                                <span style="font-size: 0.875rem;">${activity.title}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.875rem; font-weight: bold;">${activity.points} pts</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${activity.percentage}%</div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('topActivities').innerHTML = topActivitiesHtml;
+                    
+                } catch (error) {
+                    console.error('Breakdown chart error:', error);
+                }
+            }
+
+            renderSettings() {
+                const content = document.getElementById('settingsContent');
+                
+                content.innerHTML = `
+                    <form id="settingsForm" style="display: grid; gap: 0.75rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Your Name</label>
+                            <input type="text" id="settingsName" value="${this.userProfile && this.userProfile.displayName ? this.userProfile.displayName : this.settings.userName}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Daily Goal</label>
+                            <input type="number" id="settingsDailyGoal" value="${this.settings.dailyGoal}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">Weekly Goal</label>
+                            <input type="number" id="settingsWeeklyGoal" value="${this.settings.weeklyGoal}" 
+                                   style="width: 100%; padding: 0.5rem; background: rgba(55, 65, 81, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.375rem; color: white; font-size: 0.875rem;">
+                        </div>
+                        
+                        <button type="submit" style="background: var(--primary); color: var(--bg-dark); border: none; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;">
+                            💾 Save Settings
+                        </button>
+                    </form>
+                    
+                    <div style="margin-top: 1rem; text-align: center; font-size: 0.75rem;">
+                        <p style="color: var(--text-muted);">Version ${CONFIG.VERSION}</p>
+                        ${this.userProfile ? `
+                            <p style="color: var(--text-muted);">User: ${this.userProfile.displayName}</p>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Setup form handler
+                const form = document.getElementById('settingsForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveSettingsFromForm();
+                });
+            }
+
+            saveSettingsFromForm() {
+                this.settings = {
+                    userName: document.getElementById('settingsName').value,
+                    dailyGoal: parseInt(document.getElementById('settingsDailyGoal').value) || 100,
+                    weeklyGoal: parseInt(document.getElementById('settingsWeeklyGoal').value) || 500,
+                    notifications: true,
+                    soundEffects: true
+                };
+
+                localStorage.setItem('userSettings', JSON.stringify(this.settings));
+                this.showToast('✅ Settings saved!');
+                this.updateAllStats();
+            }
+
+            setupEventListeners() {
+                // Navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        this.switchTab(item.dataset.tab);
+                    });
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key >= '1' && e.key <= '8') {
+                        const index = parseInt(e.key) - 1;
+                        if (index < this.activityTemplates.length) {
+                            this.addActivity(this.activityTemplates[index].id);
+                        }
+                    } else if (e.key === 'Enter' && this.pendingActivities.length > 0) {
+                        this.submitActivities();
+                    }
+                });
+            }
+
+            // Activity Feed Methods
+            startActivityFeedUpdater() {
+                // Update feed every 30 seconds
+                this.activityFeedInterval = setInterval(() => {
+                    this.fetchLatestActivities();
+                }, 30000);
+                
+                // Initial fetch
+                this.fetchLatestActivities();
+            }
+
+            async fetchLatestActivities() {
+                if (!this.backendConnected || !CONFIG.ENABLE_BACKEND_SYNC) {
+                    // Use mock data in demo mode
+                    this.updateActivityFeedWithMockData();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${CONFIG.BACKEND_URL}/api/team/recent-activities`, {
+                        headers: this.getAuthHeaders()
+                    });
+                    if (response.ok) {
+                        const activities = await response.json();
+                        this.updateActivityFeed(activities);
+                    }
+                } catch (error) {
+                    console.log('Failed to fetch team activities');
+                }
+            }
+
+            updateActivityFeedWithMockData() {
+                // No mock data - show empty state
+                const feedContainer = document.getElementById('activityFeed');
+                if (feedContainer) {
+                    feedContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">Waiting for team activities...</div>';
+                }
+            }
+
+            updateActivityFeed(activities) {
+                const feedContainer = document.getElementById('activityFeed');
+                if (!feedContainer) return;
+
+                if (!activities || activities.length === 0) {
+                    feedContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent activities</div>';
+                    return;
+                }
+
+                feedContainer.innerHTML = activities.map(activity => {
+                    const timeAgo = this.getTimeAgo(new Date(activity.timestamp));
+                    return `
+                        <div class="activity-feed-item" style="
+                            padding: 0.75rem;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            animation: slideIn 0.3s ease-out;
+                        ">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-weight: 600; color: var(--primary);">${activity.user}</span>
+                                <span style="color: var(--text-muted); font-size: 0.875rem;">${activity.action}</span>
+                                ${activity.activity ? `<span>${activity.activity}</span>` : ''}
+                                ${activity.milestone ? `<span style="color: #10b981;">🏆 ${activity.milestone}</span>` : ''}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+                                <span style="color: var(--text-muted); font-size: 0.75rem;">${timeAgo}</span>
+                                <span style="color: var(--primary); font-size: 0.75rem; font-weight: 600;">+${activity.points} pts</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addToActivityFeed(activity) {
+                const feed = JSON.parse(localStorage.getItem('localActivityFeed') || '[]');
+                feed.unshift(activity);
+                
+                // Keep only last 20 activities
+                if (feed.length > 20) feed.pop();
+                
+                localStorage.setItem('localActivityFeed', JSON.stringify(feed));
+                
+                // Update display if on dashboard
+                if (this.currentTab === 'dashboard') {
+                    this.updateActivityFeed(feed);
+                }
+            }
+
+            getTimeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            }
+
+            showTargetSettings() {
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 2000;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: var(--bg-secondary, #1f2937);
+                        border-radius: 1rem;
+                        padding: 1.5rem;
+                        max-width: 350px;
+                        width: 90%;
+                    ">
+                        <h2 style="margin-bottom: 1rem; color: var(--primary); font-size: 1.25rem;">🎯 Set Your Target</h2>
+                        <div style="display: grid; gap: 1rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-muted);">Daily Target (points)</label>
+                                <input type="number" id="dailyTarget" value="${this.settings.dailyGoal}" style="
+                                    width: 100%;
+                                    padding: 0.5rem;
+                                    background: rgba(55, 65, 81, 0.5);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    border-radius: 0.375rem;
+                                    color: white;
+                                    font-size: 0.875rem;
+                                ">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-muted);">Weekly Target (points)</label>
+                                <input type="number" id="weeklyTarget" value="${this.settings.weeklyGoal}" style="
+                                    width: 100%;
+                                    padding: 0.5rem;
+                                    background: rgba(55, 65, 81, 0.5);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
+                                    border-radius: 0.375rem;
+                                    color: white;
+                                    font-size: 0.875rem;
+                                ">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                            <button onclick="
+                                window.app.settings.dailyGoal = parseInt(document.getElementById('dailyTarget').value) || 100;
+                                window.app.settings.weeklyGoal = parseInt(document.getElementById('weeklyTarget').value) || 500;
+                                localStorage.setItem('userSettings', JSON.stringify(window.app.settings));
+                                window.app.updateAllStats();
+                                window.app.showToast('✅ Target updated!');
+                                this.parentElement.parentElement.parentElement.remove();
+                            " style="
+                                flex: 1;
+                                background: var(--primary);
+                                color: var(--bg-dark);
+                                border: none;
+                                padding: 0.5rem;
+                                border-radius: 0.375rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Save</button>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                                flex: 1;
+                                background: rgba(239, 68, 68, 0.2);
+                                color: #ef4444;
+                                border: 1px solid rgba(239, 68, 68, 0.3);
+                                padding: 0.5rem;
+                                border-radius: 0.375rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                            ">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.remove();
+                });
+            }
+        }
+
+        // Initialize app
+        let app;
+        
+        // Make app globally accessible for onclick handlers
+        window.app = null;
+        
+        // Global function to handle LINE login button click
+        function handleLineLoginClick() {
+            console.log('handleLineLoginClick called, window.app:', window.app);
+            if (window.app && window.app.handleLineLogin) {
+                window.app.handleLineLogin();
+            } else {
+                console.error('App not initialized yet');
+                alert('Please wait for the app to load and try again');
+            }
+        }
+        
+        // Make it globally accessible
+        window.handleLineLoginClick = handleLineLoginClick;
+        
+        // Google Sign-In configuration
+        const GOOGLE_CLIENT_ID = window.location.hostname === 'localhost' 
+            ? "demo-client-id.apps.googleusercontent.com" // Demo mode for localhost
+            : "YOUR_GOOGLE_CLIENT_ID.googleusercontent.com"; // You'll need to replace this for production
+        
+        // Global function to handle Google login
+        function handleGoogleLogin() {
+            console.log('🔍 Google login initiated');
+            
+            // Always use demo login for now (both localhost and production)
+            console.log('🔍 Using demo Google login');
+            const demoGoogleProfile = {
+                userId: 'GOOGLE_DEMO_' + Math.random().toString(36).substr(2, 9),
+                displayName: 'Google Demo User',
+                pictureUrl: 'https://via.placeholder.com/150/4285F4/FFFFFF?text=G',
+                statusMessage: 'Google Demo User',
+                email: 'demo@gmail.com',
+                provider: 'google'
+            };
+            
+            if (window.app) {
+                window.app.handleGoogleUserLogin(demoGoogleProfile);
+            } else {
+                alert('App is still loading, please try again');
+            }
+        }
+        
+        // Handle Google Sign-In response
+        function handleGoogleSignInResponse(response) {
+            console.log('🔍 Google Sign-In response received');
+            
+            try {
+                // Decode the JWT token
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                console.log('Google user payload:', payload);
+                
+                // Create a user profile similar to LINE format
+                const googleProfile = {
+                    userId: 'GOOGLE_' + payload.sub,
+                    displayName: payload.name,
+                    pictureUrl: payload.picture,
+                    statusMessage: 'Google User',
+                    email: payload.email,
+                    provider: 'google'
+                };
+                
+                // Use the same login flow as development login
+                if (window.app) {
+                    window.app.handleGoogleUserLogin(googleProfile);
+                } else {
+                    console.error('App not initialized yet');
+                    alert('Please wait for the app to load and try again');
+                }
+                
+            } catch (error) {
+                console.error('Failed to process Google login:', error);
+                alert('Google login failed. Please try again.');
+            }
+        }
+        
+        // Make Google login globally accessible
+        window.handleGoogleLogin = handleGoogleLogin;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 DOMContentLoaded event fired');
+            
+            // Wait for config to load first
+            console.log('⏳ Waiting for config.js to load...');
+            await window.configLoaded;
+            
+            // Wait for LIFF SDK to load (or fail)
+            console.log('⏳ Waiting for LIFF SDK...');
+            await window.liffLoadPromise;
+            
+            console.log('LIFF SDK available:', typeof liff !== 'undefined');
+            
+            // Show debug info immediately
+            const debugUrl = document.getElementById('debugUrl');
+            if (debugUrl) {
+                debugUrl.textContent = window.location.href;
+            }
+            
+            // Detect environment
+            const debugEnv = document.getElementById('debugEnv');
+            const debugInfo = document.getElementById('debugInfo');
+            let environment = 'Unknown';
+            let envInfo = '';
+            
+            if (window.location.hostname === 'localhost') {
+                environment = 'Development';
+                envInfo = 'Local development environment';
+            } else if (window.location.href.includes('liff.line.me')) {
+                environment = 'LINE LIFF';
+                envInfo = 'Running inside LINE app';
+            } else if (window.location.hostname.includes('appspot.com')) {
+                environment = 'Production (App Engine)';
+                envInfo = 'Google App Engine deployment';
+            } else if (window.location.hostname.includes('github.io')) {
+                environment = 'Production (GitHub Pages)';
+                envInfo = 'GitHub Pages deployment';
+            }
+            
+            if (debugEnv) debugEnv.textContent = environment;
+            if (debugInfo) debugInfo.textContent = envInfo;
+            
+            // Update debug LIFF ID from config
+            const debugLiffId = document.getElementById('debugLiffId');
+            if (debugLiffId) {
+                const config = getAppConfig();
+                debugLiffId.textContent = config.LIFF_ID;
+            }
+            
+            // Check if LIFF SDK loaded
+            if (typeof liff === 'undefined') {
+                console.error('LIFF SDK not loaded! Check network tab for failed requests.');
+                const debugError = document.getElementById('debugError');
+                if (debugError) {
+                    debugError.textContent = 'LIFF SDK failed to load - Use Google login instead';
+                }
+                
+                // Update login button to show Google login is available
+                const loginBtn = document.getElementById('lineLoginBtn');
+                if (loginBtn) {
+                    loginBtn.textContent = 'LINE login unavailable - Use Google';
+                    loginBtn.disabled = true;
+                }
+            }
+            
+            // Update CONFIG with loaded config.js values
+            CONFIG = getAppConfig();
+            console.log('🔧 Creating SalesTrackerApp instance with CONFIG:', {
+                BACKEND_URL: CONFIG.BACKEND_URL,
+                ENABLE_BACKEND_SYNC: CONFIG.ENABLE_BACKEND_SYNC,
+                VERSION: CONFIG.VERSION
+            });
+            app = new SalesTrackerApp();
+            window.app = app; // Make it globally accessible
+            console.log('✅ App initialized, window.app is now available');
+            
+            // Initialize the app
+            console.log('🚀 Starting app initialization...');
+            await app.init();
+            console.log('✅ App initialization complete!');
+        });
+
+        // Service Worker Registration with version
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js?v=' + CONFIG.VERSION)
+                    .then(reg => {
+                        console.log('Service Worker registered v' + CONFIG.VERSION);
+                        // Force update check
+                        reg.update();
+                    })
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+
+    <!-- Ultra-Compact Quick Add Component -->
+    <style>
+    /* Floating Quick Add Button */
+    .quick-add-fab {
+        position: fixed;
+        bottom: 60px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .quick-add-fab:hover {
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 6px 30px rgba(59, 130, 246, 0.7);
+    }
+
+    .quick-add-fab.active {
+        transform: scale(0.9) rotate(45deg);
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+    }
+
+    .fab-icon {
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    /* Ultra-Compact Quick Form */
+    .quick-form-container {
+        position: fixed;
+        bottom: 105px;
+        right: 10px;
+        width: 180px;
+        background: rgba(17, 24, 39, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 6px;
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .quick-form-container.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+    }
+
+    /* Activity Type Grid - Ultra Compact */
+    .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3px;
+        margin-bottom: 4px;
+    }
+
+    .activity-type-btn {
+        aspect-ratio: 1;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .activity-type-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: scale(1.05);
+    }
+
+    .activity-type-btn.selected {
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border-color: #3B82F6;
+        color: white;
+    }
+
+    .activity-type-btn .icon {
+        font-size: 14px;
+    }
+
+    .activity-type-btn .points {
+        position: absolute;
+        bottom: 0px;
+        right: 1px;
+        font-size: 7px;
+        font-weight: bold;
+        color: #10B981;
+    }
+
+    /* Count Selector - Horizontal Pills */
+    .count-selector {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 4px;
+    }
+
+    .count-pill {
+        flex: 1;
+        padding: 3px 0;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        text-align: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .count-pill:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .count-pill.selected {
+        background: linear-gradient(135deg, #10B981, #059669);
+        border-color: #10B981;
+        color: white;
+        font-weight: bold;
+    }
+
+    /* Submit Button */
+    .quick-submit {
+        width: 100%;
+        padding: 5px;
+        background: linear-gradient(135deg, #3B82F6, #1E40AF);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+    }
+
+    .quick-submit:hover:not(:disabled) {
+        background: linear-gradient(135deg, #2563EB, #1E3A8A);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .quick-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Success Animation */
+    @keyframes successPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    .success-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+        color: #10B981;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .success-indicator.show {
+        animation: successPulse 0.5s ease-out;
+        opacity: 1;
+    }
+    </style>
+
+    <div id="quickAddComponent">
+        <!-- Floating Action Button -->
+        <div class="quick-add-fab" id="quickAddFab">
+            <span class="fab-icon">+</span>
+        </div>
+        
+        <!-- Quick Form Container -->
+        <div class="quick-form-container" id="quickFormContainer">
+            <!-- Activity Type Grid -->
+            <div class="activity-grid" id="activityGrid">
+                <div class="activity-type-btn" data-type="call" data-points="20">
+                    <span class="icon">📱</span>
+                    <span class="points">20</span>
+                </div>
+                <div class="activity-type-btn" data-type="meeting" data-points="50">
+                    <span class="icon">🤝</span>
+                    <span class="points">50</span>
+                </div>
+                <div class="activity-type-btn" data-type="follow-up" data-points="10">
+                    <span class="icon">📋</span>
+                    <span class="points">10</span>
+                </div>
+                <div class="activity-type-btn" data-type="social" data-points="15">
+                    <span class="icon">👥</span>
+                    <span class="points">15</span>
+                </div>
+                <div class="activity-type-btn" data-type="presentation" data-points="30">
+                    <span class="icon">📊</span>
+                    <span class="points">30</span>
+                </div>
+                <div class="activity-type-btn" data-type="training" data-points="40">
+                    <span class="icon">🎓</span>
+                    <span class="points">40</span>
+                </div>
+                <div class="activity-type-btn" data-type="paperwork" data-points="25">
+                    <span class="icon">📄</span>
+                    <span class="points">25</span>
+                </div>
+                <div class="activity-type-btn" data-type="other" data-points="15">
+                    <span class="icon">✨</span>
+                    <span class="points">15</span>
+                </div>
+            </div>
+            
+            <!-- Count Selector -->
+            <div class="count-selector" id="countSelector">
+                <div class="count-pill selected" data-count="1">1</div>
+                <div class="count-pill" data-count="2">2</div>
+                <div class="count-pill" data-count="3">3</div>
+                <div class="count-pill" data-count="5">5</div>
+                <div class="count-pill" data-count="10">10</div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button class="quick-submit" id="quickSubmit" disabled>
+                <span>เพิ่ม</span>
+                <span id="submitPoints">0</span>
+            </button>
+            
+            <!-- Success Indicator -->
+            <div class="success-indicator" id="successIndicator">✓</div>
+        </div>
+    </div>
+
+    <script>
+    // Ultra-Compact Quick Add Component - Wait for app to initialize
+    window.addEventListener('load', () => {
+        // Wait a bit for the app to fully initialize
+        setTimeout(() => {
+            const fab = document.getElementById('quickAddFab');
+            const formContainer = document.getElementById('quickFormContainer');
+            const activityBtns = document.querySelectorAll('.activity-type-btn');
+            const countPills = document.querySelectorAll('.count-pill');
+            const submitBtn = document.getElementById('quickSubmit');
+            const submitPoints = document.getElementById('submitPoints');
+            const successIndicator = document.getElementById('successIndicator');
+            
+            let selectedActivity = null;
+            let selectedCount = 1;
+            let isOpen = false;
+            
+            // Toggle Form
+            fab.addEventListener('click', () => {
+                isOpen = !isOpen;
+                fab.classList.toggle('active', isOpen);
+                formContainer.classList.toggle('show', isOpen);
+                
+                if (!isOpen) {
+                    resetForm();
+                }
+            });
+            
+            // Activity Selection
+            activityBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activityBtns.forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedActivity = {
+                        type: btn.dataset.type,
+                        points: parseInt(btn.dataset.points)
+                    };
+                    updateSubmitButton();
+                });
+            });
+            
+            // Count Selection
+            countPills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    countPills.forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    selectedCount = parseInt(pill.dataset.count);
+                    updateSubmitButton();
+                });
+            });
+            
+            // Update Submit Button
+            function updateSubmitButton() {
+                if (selectedActivity) {
+                    const totalPoints = selectedActivity.points * selectedCount;
+                    submitPoints.textContent = `+${totalPoints}`;
+                    submitBtn.disabled = false;
+                } else {
+                    submitPoints.textContent = '0';
+                    submitBtn.disabled = true;
+                }
+            }
+            
+            // Submit Activity
+            submitBtn.addEventListener('click', async () => {
+                if (!selectedActivity || !window.app) return;
+                
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>บันทึก...</span>';
+                
+                try {
+                    // Use the app's addActivity method multiple times
+                    for (let i = 0; i < selectedCount; i++) {
+                        window.app.addActivity(selectedActivity.type);
+                    }
+                    
+                    // Submit all pending activities
+                    await window.app.submitActivities();
+                    
+                    // Show success
+                    successIndicator.classList.add('show');
+                    setTimeout(() => {
+                        successIndicator.classList.remove('show');
+                        // Close form
+                        isOpen = false;
+                        fab.classList.remove('active');
+                        formContainer.classList.remove('show');
+                        resetForm();
+                    }, 500);
+                } catch (error) {
+                    console.error('Error adding activity:', error);
+                    submitBtn.innerHTML = '<span>ผิดพลาด</span>';
+                    setTimeout(() => {
+                        updateSubmitButton();
+                    }, 1500);
+                }
+            });
+            
+            // Reset Form
+            function resetForm() {
+                activityBtns.forEach(b => b.classList.remove('selected'));
+                countPills.forEach(p => p.classList.remove('selected'));
+                countPills[0].classList.add('selected');
+                selectedActivity = null;
+                selectedCount = 1;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>เพิ่ม</span><span id="submitPoints">0</span>';
+                const newSubmitPoints = document.getElementById('submitPoints');
+                if (newSubmitPoints) newSubmitPoints.textContent = '0';
+            }
+            
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (isOpen && !formContainer.contains(e.target) && !fab.contains(e.target)) {
+                    isOpen = false;
+                    fab.classList.remove('active');
+                    formContainer.classList.remove('show');
+                    resetForm();
+                }
+            });
+        }, 1000);
+    });
+    </script>
+</body>
+</html>

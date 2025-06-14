@@ -12,9 +12,6 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     
-    <!-- Load config first -->
-    <script src="config.js"></script>
-    
     <!-- Glassmorphism Styles -->
     <link rel="stylesheet" href="glassmorphism-styles.css">
     
@@ -239,67 +236,6 @@
             to {
                 transform: rotate(360deg);
             }
-        }
-        
-        /* Modal Styles */
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .modal-backdrop.show {
-            opacity: 1;
-        }
-        
-        .modal-content {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            max-width: 90%;
-            width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .modal-backdrop.show .modal-content {
-            transform: scale(1);
-        }
-        
-        .glass-input {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--glass-white-5);
-            border: 1px solid var(--glass-border);
-            border-radius: 0.5rem;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-        
-        .glass-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        select.glass-input {
-            cursor: pointer;
-        }
-        
-        select.glass-input option {
-            background: var(--bg-primary);
-            color: var(--text-primary);
         }
     </style>
 </head>
@@ -683,7 +619,9 @@
         }
         
         function showAddActivity() {
-            showAddActivityModal();
+            console.log('Show add activity modal');
+            // In a real app, this would open a modal
+            alert('Add Activity feature coming soon!');
         }
         
         function showLeaderboard() {
@@ -737,8 +675,5 @@
             });
         }
     </script>
-    
-    <!-- Backend Integration Fixed -->
-    <script src="app-integration-fixed.js"></script>
 </body>
 </html>

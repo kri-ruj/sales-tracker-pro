@@ -69,6 +69,10 @@ app.use(versionCheckMiddleware);
 const versionMonitorRoutes = require('./routes/version-monitor');
 app.use('/api', versionMonitorRoutes);
 
+// LINE webhook routes (for mobile-first LINE integration)
+const lineWebhookRoutes = require('./routes/line-webhook');
+app.use('/', lineWebhookRoutes);
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
     // Use APP_VERSION from environment if available, fallback to package.json
@@ -603,47 +607,111 @@ app.post('/api/streak', async (req, res) => {
     }
 });
 
-// LINE webhook
-app.post('/webhook', async (req, res) => {
+// Export LINE client for use in routes
+app.set('lineClient', lineClient);
+app.set('lineConfig', lineConfig);
+app.set('firestoreService', firestoreService);
+
+// Authentication routes for mobile-first LINE app
+app.post('/api/auth/line', async (req, res) => {
+    const { lineUserId, displayName, pictureUrl, statusMessage } = req.body;
+    
+    if (!lineUserId || !displayName) {
+        return res.status(400).json({ error: 'lineUserId and displayName are required' });
+    }
+    
     try {
-        const events = req.body.events;
+        // Create or update user in Firestore
+        const user = await firestoreService.createOrUpdateUser(lineUserId, {
+            displayName,
+            pictureUrl,
+            statusMessage,
+            lastLogin: new Date().toISOString()
+        });
         
-        for (const event of events) {
-            if (event.type === 'message' && event.message.type === 'text') {
-                const { replyToken, source, message } = event;
-                
-                // Handle group registration
-                if (message.text === '/register' && source.type === 'group') {
-                    const groupId = source.groupId;
-                    const userId = source.userId;
-                    
-                    // Register the group
-                    await firestoreService.registerGroup(groupId, null, userId);
-                    
-                    await lineClient.replyMessage(replyToken, {
-                        type: 'text',
-                        text: '✅ กลุ่มนี้ได้รับการลงทะเบียนเรียบร้อยแล้ว!\nระบบจะส่งการแจ้งเตือนกิจกรรมมาที่กลุ่มนี้'
-                    });
-                } 
-                // Handle notification toggle
-                else if (message.text === '/toggle' && source.type === 'group') {
-                    const groupId = source.groupId;
-                    const newStatus = await firestoreService.toggleGroupNotifications(groupId);
-                    
-                    await lineClient.replyMessage(replyToken, {
-                        type: 'text',
-                        text: newStatus 
-                            ? '🔔 เปิดการแจ้งเตือนแล้ว' 
-                            : '🔕 ปิดการแจ้งเตือนแล้ว'
-                    });
-                }
-            }
+        // Generate simple token (in production, use proper JWT)
+        const token = Buffer.from(`${lineUserId}:${Date.now()}`).toString('base64');
+        
+        res.json({ 
+            success: true, 
+            user,
+            token
+        });
+    } catch (error) {
+        console.error('Error in LINE auth:', error);
+        res.status(500).json({ 
+            error: 'Failed to authenticate',
+            details: error.message
+        });
+    }
+});
+
+// Demo login endpoint for development
+app.post('/api/demo/login', async (req, res) => {
+    try {
+        const demoUserId = `demo_${Date.now()}`;
+        const user = await firestoreService.createOrUpdateUser(demoUserId, {
+            displayName: 'Demo User',
+            pictureUrl: null,
+            isDemo: true
+        });
+        
+        const token = Buffer.from(`${demoUserId}:${Date.now()}`).toString('base64');
+        
+        res.json({ 
+            success: true, 
+            user,
+            token
+        });
+    } catch (error) {
+        console.error('Error in demo login:', error);
+        res.status(500).json({ 
+            error: 'Failed to create demo user'
+        });
+    }
+});
+
+// Get current user
+app.get('/api/user', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    try {
+        const token = authHeader.substring(7);
+        const decoded = Buffer.from(token, 'base64').toString();
+        const [lineUserId] = decoded.split(':');
+        
+        const user = await firestoreService.getUser(lineUserId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
         }
         
-        res.status(200).send('OK');
+        res.json(user);
     } catch (error) {
-        console.error('Webhook error:', error);
-        res.status(500).send('Error');
+        console.error('Error getting user:', error);
+        res.status(500).json({ error: 'Failed to get user' });
+    }
+});
+
+// Get all activities (for logged in user)
+app.get('/api/activities', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    try {
+        const token = authHeader.substring(7);
+        const decoded = Buffer.from(token, 'base64').toString();
+        const [lineUserId] = decoded.split(':');
+        
+        const activities = await firestoreService.getUserActivities(lineUserId);
+        res.json({ activities });
+    } catch (error) {
+        console.error('Error getting activities:', error);
+        res.status(500).json({ error: 'Failed to get activities' });
     }
 });
 

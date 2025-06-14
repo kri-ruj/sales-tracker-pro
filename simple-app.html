@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Tracker Pro - Working Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #ff6b35;
+        }
+        
+        .points {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b35;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .actions {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .actions h2 {
+            margin-bottom: 15px;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 15px;
+            background: #f8f8f8;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            background: white;
+            border-color: #ff6b35;
+            transform: translateY(-2px);
+        }
+        
+        .emoji {
+            font-size: 28px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .activities {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .activity-details {
+            flex: 1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .btn-primary {
+            background: #ff6b35;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Sales Tracker Pro</h1>
+            <div>
+                <div>Demo User</div>
+                <div class="points" id="totalPoints">0 pts</div>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="statPoints">0</div>
+                <div class="stat-label">Total Points</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statActivities">0</div>
+                <div class="stat-label">Activities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statToday">0</div>
+                <div class="stat-label">Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statStreak">0 🔥</div>
+                <div class="stat-label">Streak</div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="actions">
+            <h2>Quick Actions</h2>
+            <div class="action-grid">
+                <button class="action-btn" onclick="openModal('phone_call', '📞 Phone Call', 10)">
+                    <span class="emoji">📞</span>
+                    <div>Phone Call</div>
+                    <small>+10 pts</small>
+                </button>
+                <button class="action-btn" onclick="openModal('meeting', '👥 Meeting', 20)">
+                    <span class="emoji">👥</span>
+                    <div>Meeting</div>
+                    <small>+20 pts</small>
+                </button>
+                <button class="action-btn" onclick="openModal('follow_up', '📋 Follow Up', 15)">
+                    <span class="emoji">📋</span>
+                    <div>Follow Up</div>
+                    <small>+15 pts</small>
+                </button>
+                <button class="action-btn" onclick="openModal('contract_sent', '📄 Contract Sent', 30)">
+                    <span class="emoji">📄</span>
+                    <div>Contract Sent</div>
+                    <small>+30 pts</small>
+                </button>
+                <button class="action-btn" onclick="openModal('meeting_scheduled', '📅 Meeting Scheduled', 25)">
+                    <span class="emoji">📅</span>
+                    <div>Meeting Scheduled</div>
+                    <small>+25 pts</small>
+                </button>
+                <button class="action-btn" onclick="openModal('project_booked', '🎯 Project Booked', 50)">
+                    <span class="emoji">🎯</span>
+                    <div>Project Booked</div>
+                    <small>+50 pts</small>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Activities -->
+        <div class="activities">
+            <h2>Recent Activities</h2>
+            <div id="activityList">
+                <p style="text-align: center; color: #666; padding: 40px;">
+                    No activities yet. Start tracking!
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modalTitle">Add Activity</h3>
+            <textarea id="description" placeholder="What did you accomplish?"></textarea>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="saveActivity()">Save</button>
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Local storage data
+        let activities = JSON.parse(localStorage.getItem('activities') || '[]');
+        let totalPoints = parseInt(localStorage.getItem('totalPoints') || '0');
+        let currentActivity = { type: '', points: 0 };
+        
+        // Activity emojis
+        const emojis = {
+            phone_call: '📞',
+            meeting: '👥',
+            follow_up: '📋',
+            contract_sent: '📄',
+            meeting_scheduled: '📅',
+            project_booked: '🎯'
+        };
+        
+        // Initialize
+        updateStats();
+        renderActivities();
+        
+        function openModal(type, title, points) {
+            currentActivity = { type, points };
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('description').value = '';
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('description').focus();
+        }
+        
+        function closeModal(event) {
+            if (!event || event.target.id === 'modal') {
+                document.getElementById('modal').classList.remove('active');
+            }
+        }
+        
+        function saveActivity() {
+            const description = document.getElementById('description').value.trim();
+            if (!description) return;
+            
+            const activity = {
+                id: Date.now(),
+                type: currentActivity.type,
+                description: description,
+                points: currentActivity.points,
+                date: new Date().toISOString(),
+                emoji: emojis[currentActivity.type]
+            };
+            
+            activities.unshift(activity);
+            totalPoints += activity.points;
+            
+            // Save to localStorage
+            localStorage.setItem('activities', JSON.stringify(activities));
+            localStorage.setItem('totalPoints', totalPoints);
+            
+            // Update UI
+            updateStats();
+            renderActivities();
+            closeModal();
+        }
+        
+        function updateStats() {
+            document.getElementById('totalPoints').textContent = totalPoints + ' pts';
+            document.getElementById('statPoints').textContent = totalPoints;
+            document.getElementById('statActivities').textContent = activities.length;
+            
+            const today = new Date().toDateString();
+            const todayCount = activities.filter(a => 
+                new Date(a.date).toDateString() === today
+            ).length;
+            document.getElementById('statToday').textContent = todayCount;
+            
+            // Simple streak (1 if any activity today)
+            document.getElementById('statStreak').textContent = todayCount > 0 ? '1 🔥' : '0 🔥';
+        }
+        
+        function renderActivities() {
+            const list = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                list.innerHTML = `
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        No activities yet. Start tracking!
+                    </p>
+                `;
+                return;
+            }
+            
+            list.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <span class="emoji">${activity.emoji}</span>
+                    <div class="activity-details">
+                        <div><strong>${activity.description}</strong></div>
+                        <small>${new Date(activity.date).toLocaleString()} • +${activity.points} pts</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
