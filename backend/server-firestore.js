@@ -8,6 +8,16 @@ require('dotenv').config();
 const firestoreService = require('./services/firestore.service');
 const { createActivitySubmissionFlex, sendFlexMessage } = require('./activity-flex-message-compact');
 const lineQuotaService = require('./services/line-quota.service');
+const { OAuth2Client } = require('google-auth-library');
+
+// Rate limiting
+let rateLimit;
+try {
+    const rateLimitModule = require('express-rate-limit');
+    rateLimit = rateLimitModule.default || rateLimitModule;
+} catch (err) {
+    console.warn('express-rate-limit not available, rate limiting disabled');
+}
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -54,10 +64,27 @@ async function initializeLineClient() {
 }
 
 
+// Rate limiting configuration
+let apiLimiter;
+if (rateLimit) {
+    apiLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // Limit each IP to 100 requests per windowMs
+        message: 'Too many requests from this IP, please try again later.',
+        standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+        legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    });
+}
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Apply rate limiting to API routes
+if (apiLimiter) {
+    app.use('/api/', apiLimiter);
+}
 
 // Version management middleware
 const { versionCheckMiddleware } = require('./middleware/version-check');
@@ -143,6 +170,59 @@ app.get('/', (req, res) => {
     });
 });
 
+// Google authentication endpoint
+const googleClient = new OAuth2Client();
+
+app.post('/api/auth/google', async (req, res) => {
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+        return res.status(400).json({ error: 'ID token is required' });
+    }
+    
+    try {
+        // Verify Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: idToken,
+            audience: process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
+        });
+        
+        const payload = ticket.getPayload();
+        const googleId = payload['sub'];
+        const email = payload['email'];
+        const name = payload['name'];
+        const picture = payload['picture'];
+        
+        // Get or create user in Firestore
+        let user = await firestoreService.getUser(googleId);
+        
+        if (!user) {
+            // Create new user
+            await firestoreService.createOrUpdateUser(googleId, {
+                displayName: name,
+                email: email,
+                pictureUrl: picture,
+                googleId: googleId
+            });
+            user = { googleId, displayName: name, email, pictureUrl: picture };
+        }
+        
+        // For non-JWT version, just return success with user info
+        res.json({ 
+            success: true,
+            user: {
+                ...user,
+                googleId,
+                email,
+                name
+            }
+        });
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ error: 'Invalid Google token' });
+    }
+});
+
 // User registration/update
 app.post('/api/users', async (req, res) => {
     const { lineUserId, displayName, pictureUrl, userId, name } = req.body;
@@ -207,6 +287,20 @@ app.put('/api/users/:lineUserId/settings', async (req, res) => {
     }
 });
 
+// Valid activity types
+const VALID_ACTIVITY_TYPES = ['call', 'email', 'meeting', 'proposal', 'demo', 'deal', 'โทร', 'เยี่ยม', 'ส่ง', 'อื่นๆ'];
+
+// HTML escape function
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Create activity  
 app.post('/api/activities', async (req, res) => {
     const { lineUserId, activityType, title, subtitle, points, count, date, userId, type, quantity, timestamp } = req.body;
@@ -224,13 +318,43 @@ app.post('/api/activities', async (req, res) => {
         });
     }
     
+    // Validate activity type
+    if (!VALID_ACTIVITY_TYPES.includes(typeParam)) {
+        return res.status(400).json({
+            errors: [{
+                path: 'activityType',
+                message: `Invalid activity type. Must be one of: ${VALID_ACTIVITY_TYPES.join(', ')}`
+            }]
+        });
+    }
+    
+    // Validate points
+    const pointsNum = parseInt(points);
+    if (isNaN(pointsNum) || pointsNum < 0) {
+        return res.status(400).json({
+            errors: [{
+                path: 'points',
+                message: 'Points must be a non-negative number'
+            }]
+        });
+    }
+    
+    if (pointsNum > 1000) {
+        return res.status(400).json({
+            errors: [{
+                path: 'points',
+                message: 'Points cannot exceed 1000'
+            }]
+        });
+    }
+    
     try {
         const activity = await firestoreService.createActivity({
             lineUserId: userIdParam,
             activityType: typeParam,
-            title: titleParam,
-            subtitle,
-            points: parseInt(points),
+            title: escapeHtml(titleParam),
+            subtitle: escapeHtml(subtitle),
+            points: pointsNum,
             count: parseInt(countParam),
             date: dateParam
         });
@@ -304,7 +428,33 @@ app.post('/api/activities', async (req, res) => {
     }
 });
 
-// Get user activities
+// Get user activities with pagination
+app.get('/api/activities/:lineUserId', async (req, res) => {
+    const { limit = 50 } = req.query;
+    
+    // Validate limit parameter
+    const limitNum = parseInt(limit);
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        return res.status(400).json({
+            errors: [{
+                path: 'limit',
+                message: 'Limit must be a number between 1 and 100'
+            }]
+        });
+    }
+    
+    try {
+        const activities = await firestoreService.getUserActivities(req.params.lineUserId);
+        // Apply limit
+        const limitedActivities = activities.slice(0, limitNum);
+        res.json(limitedActivities);
+    } catch (error) {
+        console.error('Error getting activities:', error);
+        res.status(500).json({ error: 'Failed to get activities' });
+    }
+});
+
+// Get user activities (original endpoint for backward compatibility)
 app.get('/api/activities/user/:lineUserId', async (req, res) => {
     const { date } = req.query;
     
@@ -697,6 +847,22 @@ app.get('/api/user', async (req, res) => {
 
 // Get all activities (for logged in user)
 app.get('/api/activities', async (req, res) => {
+    // Check if lineUserId is provided as query parameter (for development/testing)
+    const { lineUserId } = req.query;
+    
+    if (lineUserId) {
+        // Direct access with lineUserId parameter
+        try {
+            const activities = await firestoreService.getUserActivities(lineUserId);
+            res.json(activities); // Return array directly, not wrapped in object
+        } catch (error) {
+            console.error('Error getting activities:', error);
+            res.status(500).json({ error: 'Failed to get activities' });
+        }
+        return;
+    }
+    
+    // Otherwise require authorization
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -705,9 +871,9 @@ app.get('/api/activities', async (req, res) => {
     try {
         const token = authHeader.substring(7);
         const decoded = Buffer.from(token, 'base64').toString();
-        const [lineUserId] = decoded.split(':');
+        const [userId] = decoded.split(':');
         
-        const activities = await firestoreService.getUserActivities(lineUserId);
+        const activities = await firestoreService.getUserActivities(userId);
         res.json({ activities });
     } catch (error) {
         console.error('Error getting activities:', error);
@@ -720,6 +886,28 @@ setInterval(() => {
     firestoreService.cleanupExpiredCache().catch(console.error);
     lineQuotaService.cleanupOldRecords().catch(console.error);
 }, 15 * 60 * 1000); // Every 15 minutes
+
+// 404 handler for non-existent endpoints
+app.use((req, res) => {
+    res.status(404).json({ error: 'Endpoint not found' });
+});
+
+// Error handler middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    
+    // Don't leak error details in production
+    if (process.env.NODE_ENV === 'production') {
+        res.status(err.status || 500).json({ 
+            error: 'Internal server error' 
+        });
+    } else {
+        res.status(err.status || 500).json({ 
+            error: err.message,
+            stack: err.stack
+        });
+    }
+});
 
 // Start server after LINE client is initialized
 async function startServer() {
@@ -738,4 +926,10 @@ async function startServer() {
     }
 }
 
-startServer();
+// Export app for testing
+module.exports = app;
+
+// Only start server if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+    startServer();
+}

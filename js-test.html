@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JavaScript Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .box {
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .error { background: #ff4444; color: white; }
+        .success { background: #44ff44; color: black; }
+        .warning { background: #ffaa44; color: black; }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Status Check</h1>
+    
+    <noscript>
+        <div class="box error">
+            ❌ JavaScript is DISABLED in your browser!
+            <br><br>
+            To enable JavaScript in Chrome:
+            <ol>
+                <li>Type chrome://settings/content/javascript in the address bar</li>
+                <li>Make sure "Sites can use JavaScript" is turned ON</li>
+                <li>Refresh this page</li>
+            </ol>
+        </div>
+    </noscript>
+    
+    <div id="js-status" class="box error">
+        ⏳ Checking JavaScript...
+    </div>
+    
+    <h2>Click Tests:</h2>
+    
+    <!-- Test 1: Basic Alert -->
+    <button onclick="alert('✅ Inline onclick works!')">
+        Test 1: Basic Alert
+    </button>
+    
+    <!-- Test 2: Console Log -->
+    <button onclick="console.log('✅ Console log works! Time: ' + new Date().toISOString()); document.getElementById('console-result').innerHTML = '✅ Check console for message';">
+        Test 2: Console Log
+    </button>
+    <div id="console-result"></div>
+    
+    <!-- Test 3: DOM Manipulation -->
+    <button onclick="document.getElementById('dom-result').innerHTML = '✅ DOM manipulation works!';">
+        Test 3: Change Text
+    </button>
+    <div id="dom-result" class="box warning">Text will change when you click button 3</div>
+    
+    <!-- Test 4: External Link (no JS needed) -->
+    <h2>Non-JavaScript Test:</h2>
+    <a href="https://www.google.com" target="_blank">
+        <button type="button">Test 4: Open Google (no JS required)</button>
+    </a>
+    
+    <script>
+        // This will only run if JavaScript is enabled
+        document.getElementById('js-status').className = 'box success';
+        document.getElementById('js-status').innerHTML = '✅ JavaScript is ENABLED and working!';
+        
+        // Log to console
+        console.log('✅ JavaScript loaded successfully at:', new Date().toISOString());
+        console.log('User Agent:', navigator.userAgent);
+        console.log('Current URL:', window.location.href);
+    </script>
+    
+    <h2>Browser Info:</h2>
+    <div id="browser-info" class="box warning">
+        <script>
+            document.getElementById('browser-info').innerHTML = 
+                'Browser: ' + navigator.userAgent.substring(0, 50) + '...<br>' +
+                'JavaScript: Enabled<br>' +
+                'Cookies: ' + (navigator.cookieEnabled ? 'Enabled' : 'Disabled');
+        </script>
+        <noscript>
+            JavaScript is disabled - cannot show browser info
+        </noscript>
+    </div>
+</body>
+</html>

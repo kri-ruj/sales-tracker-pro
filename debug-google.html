@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Google Sign-In</title>
+    <script src="config.js"></script>
+</head>
+<body>
+    <h1>Debug Google Sign-In</h1>
+    
+    <h2>Step 1: Check Config</h2>
+    <div id="config-check"></div>
+    
+    <h2>Step 2: Load Google Library</h2>
+    <div id="library-status">Not loaded yet...</div>
+    
+    <h2>Step 3: Initialize</h2>
+    <button onclick="tryInit()">Try Initialize</button>
+    <div id="init-result"></div>
+    
+    <h2>Step 4: Sign In</h2>
+    <div id="g_id_onload"
+         data-client_id="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard"></div>
+    
+    <h2>Results:</h2>
+    <pre id="results"></pre>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        // Check config
+        document.getElementById('config-check').innerHTML = 
+            'Client ID from config: ' + (window.CONFIG?.googleClientId || 'NOT FOUND');
+        
+        // Check when Google library loads
+        let checkCount = 0;
+        const checkInterval = setInterval(() => {
+            checkCount++;
+            const status = document.getElementById('library-status');
+            
+            if (typeof google !== 'undefined' && google.accounts) {
+                status.innerHTML = '✅ Google library loaded after ' + (checkCount * 500) + 'ms';
+                status.style.color = 'green';
+                clearInterval(checkInterval);
+            } else {
+                status.innerHTML = '⏳ Checking... (' + checkCount + ')';
+            }
+            
+            if (checkCount > 20) {
+                status.innerHTML = '❌ Failed to load after 10 seconds';
+                status.style.color = 'red';
+                clearInterval(checkInterval);
+            }
+        }, 500);
+        
+        function tryInit() {
+            const resultDiv = document.getElementById('init-result');
+            
+            try {
+                if (typeof google === 'undefined') {
+                    resultDiv.innerHTML = '❌ Google not defined';
+                    return;
+                }
+                
+                if (!google.accounts) {
+                    resultDiv.innerHTML = '❌ google.accounts not available';
+                    return;
+                }
+                
+                google.accounts.id.initialize({
+                    client_id: window.CONFIG.googleClientId,
+                    callback: handleCredentialResponse
+                });
+                
+                resultDiv.innerHTML = '✅ Initialized successfully!';
+                resultDiv.style.color = 'green';
+                
+                // Also try to prompt
+                setTimeout(() => {
+                    google.accounts.id.prompt((notification) => {
+                        console.log('Prompt notification:', notification);
+                        document.getElementById('results').innerHTML += 
+                            '\nPrompt notification: ' + JSON.stringify(notification, null, 2);
+                    });
+                }, 1000);
+                
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Error: ' + error.message;
+                resultDiv.style.color = 'red';
+                console.error(error);
+            }
+        }
+        
+        function handleCredentialResponse(response) {
+            console.log('Got response:', response);
+            document.getElementById('results').innerHTML = 
+                'Success! Got credential:\n' + JSON.stringify(response, null, 2);
+        }
+        
+        // Auto-initialize when ready
+        window.onload = function() {
+            setTimeout(() => {
+                if (typeof google !== 'undefined' && google.accounts) {
+                    tryInit();
+                }
+            }, 2000);
+        };
+    </script>
+</body>
+</html>

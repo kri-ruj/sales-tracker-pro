@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sign-In Callback</title>
+    <script>
+        // This page handles the Google Sign-In callback
+        window.onload = function() {
+            // Get the ID token from the URL if using redirect mode
+            const params = new URLSearchParams(window.location.search);
+            const credential = params.get('credential');
+            
+            if (credential) {
+                // Send to parent window or handle directly
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'google-signin',
+                        credential: credential
+                    }, '*');
+                    window.close();
+                } else {
+                    // Handle directly
+                    localStorage.setItem('google_credential', credential);
+                    window.location.href = '/';
+                }
+            } else {
+                document.body.innerHTML = '<h1>No credential received</h1>';
+            }
+        };
+    </script>
+</head>
+<body>
+    <h1>Processing Google Sign-In...</h1>
+</body>
+</html>

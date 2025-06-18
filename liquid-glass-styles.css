@@ -1,10 +1,10 @@
 /* Liquid Glass UI Enhancement for Sales Tracker */
 
 :root {
-    /* Enhanced Color Palette */
-    --primary: #facc15;
-    --primary-glow: #facc1530;
-    --primary-soft: #facc1510;
+    /* Enhanced Color Palette - Freshket Brand */
+    --primary: #00CE7C;
+    --primary-glow: #00CE7C30;
+    --primary-soft: #00CE7C10;
     
     /* Glass Effects */
     --glass-bg: rgba(255, 255, 255, 0.02);
@@ -28,7 +28,7 @@ body {
     background: 
         radial-gradient(circle at 20% 80%, var(--primary-soft) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, var(--primary-soft) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 211, 64, 0.1) 0%, transparent 50%),
         linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
     background-attachment: fixed;
 }
@@ -81,7 +81,7 @@ body {
 
 /* Liquid Button Effect */
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #00CE7C 0%, #008065 100%);
     position: relative;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -195,7 +195,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(180deg, #00CE7C 0%, #008065 100%);
     border-radius: 10px;
 }
 
@@ -215,7 +215,7 @@ body {
 }
 
 .tab-btn.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: linear-gradient(135deg, #00CE7C 0%, #008065 100%);
     box-shadow: 0 4px 15px var(--primary-glow);
 }
 
@@ -233,9 +233,9 @@ body {
 /* Progress Bar Liquid Effect */
 .progress-bar {
     background: linear-gradient(90deg, 
-        var(--primary) 0%, 
-        var(--primary-light) 50%, 
-        var(--primary) 100%);
+        #00CE7C 0%, 
+        #FFD340 50%, 
+        #00CE7C 100%);
     background-size: 200% 100%;
     animation: liquidFlow 2s linear infinite;
 }

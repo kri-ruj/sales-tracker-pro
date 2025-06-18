@@ -127,18 +127,25 @@ class FirestoreService {
   async getUserActivities(lineUserId, date = null) {
     try {
       let query = collections.activities
-        .where('lineUserId', '==', lineUserId)
-        .orderBy('createdAt', 'desc');
+        .where('lineUserId', '==', lineUserId);
       
       if (date) {
         query = query.where('date', '==', date);
       }
       
+      // Get activities without orderBy to avoid index requirement
       const snapshot = await query.limit(100).get();
       const activities = [];
       
       snapshot.forEach(doc => {
         activities.push({ id: doc.id, ...doc.data() });
+      });
+      
+      // Sort in memory instead
+      activities.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.timestamp || a.date);
+        const dateB = new Date(b.createdAt || b.timestamp || b.date);
+        return dateB - dateA; // Descending order
       });
       
       return activities;

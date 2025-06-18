@@ -161,6 +161,91 @@ app.post('/api/auth/login', [
     res.json({ token, user });
 }));
 
+// Google authentication endpoint
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client();
+
+app.post('/api/auth/google', [
+    body('idToken').isString().notEmpty(),
+    validate
+], asyncHandler(async (req, res) => {
+    const { idToken } = req.body;
+    
+    try {
+        // Verify Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: idToken,
+            audience: process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
+        });
+        
+        const payload = ticket.getPayload();
+        const googleId = payload['sub'];
+        const email = payload['email'];
+        const name = payload['name'];
+        const picture = payload['picture'];
+        
+        // Get or create user in Firestore
+        let user = await firestoreService.getUser(googleId);
+        
+        if (!user) {
+            // Create new user
+            await firestoreService.createOrUpdateUser(googleId, {
+                displayName: name,
+                email: email,
+                pictureUrl: picture,
+                googleId: googleId
+            });
+            user = { googleId, displayName: name, email, pictureUrl: picture };
+        }
+        
+        // Generate JWT
+        const token = jwt.sign(
+            { 
+                lineUserId: googleId, 
+                displayName: user.displayName || name,
+                email: email,
+                authMethod: 'google'
+            },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.json({ 
+            token, 
+            user: {
+                ...user,
+                googleId,
+                email,
+                name
+            }
+        });
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ error: 'Invalid Google token' });
+    }
+}));
+
+// Get user data with JWT authentication
+app.get('/api/users/:userId', authenticateToken, [
+    param('userId').isLength({ min: 1 }).escape(),
+    validate
+], asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    // Authorization: Users can only access their own data
+    if (req.user.lineUserId !== userId) {
+        return res.status(403).json({ error: 'Cannot access other users data' });
+    }
+    
+    const user = await firestoreService.getUser(userId);
+    
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+}));
+
 // User registration/update
 app.post('/api/users', [
     body('lineUserId').optional().isString().notEmpty().trim().escape(),

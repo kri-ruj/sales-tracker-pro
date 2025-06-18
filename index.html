@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Sales Activity Tracker - Modern glassmorphism UI">
-    <title>Sales Tracker Pro - Glassmorphism Edition</title>
+    <title>Freshket Sales Tracker</title>
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,14 +15,46 @@
     <!-- Load config first -->
     <script src="config.js"></script>
     
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
     <!-- Glassmorphism Styles -->
     <link rel="stylesheet" href="glassmorphism-styles.css">
     
     <style>
+        @font-face {
+            font-family: 'DB Heavent';
+            src: url('CIBranding/DB Heavent v3.2.1.ttf') format('truetype');
+            font-weight: normal;
+        }
+        
+        @font-face {
+            font-family: 'DB Heavent';
+            src: url('CIBranding/DB Heavent Bd v3.2.1.ttf') format('truetype');
+            font-weight: bold;
+        }
+        
+        :root {
+            --primary: #008065;
+            --primary-light: #00CE7C;
+            --accent: #FFD340;
+            --warning: #FF6600;
+            --background: #FAF0DC;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a4a4a;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'DB Heavent', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
         }
         
         .app-container {
@@ -33,13 +65,14 @@
         
         /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 128, 101, 0.1);
             padding: 1rem;
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: 200;
+            box-shadow: 0 2px 10px rgba(0, 128, 101, 0.1);
         }
         
         .header-content {
@@ -48,12 +81,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            z-index: 201;
+        }
+        
+        .desktop-nav {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            position: relative;
+            z-index: 202;
         }
         
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #008065 0%, #00CE7C 100%);
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -131,7 +174,7 @@
             transform: translateY(-4px);
             background: var(--glass-white-10);
             border-color: var(--primary);
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 128, 101, 0.2);
         }
         
         .quick-action-icon {
@@ -162,9 +205,9 @@
         
         /* Achievement Banner */
         .achievement-banner {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            background: linear-gradient(135deg, rgba(0, 206, 124, 0.2) 0%, rgba(255, 211, 64, 0.2) 100%);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(0, 206, 124, 0.2);
             border-radius: 1rem;
             padding: 2rem;
             margin-bottom: 2rem;
@@ -176,7 +219,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(0, 206, 124, 0.1) 0%, rgba(255, 211, 64, 0.1) 100%);
             animation: pulse 2s infinite;
         }
         
@@ -213,9 +256,9 @@
         }
         
         .tab-btn.active {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, #008065 0%, #00CE7C 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 128, 101, 0.3);
         }
         
         /* Loading State */
@@ -290,7 +333,7 @@
         .glass-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 128, 101, 0.1);
         }
         
         select.glass-input {
@@ -301,14 +344,37 @@
             background: var(--bg-primary);
             color: var(--text-primary);
         }
+        
+        /* Ensure buttons are always clickable */
+        button {
+            position: relative;
+            z-index: 10;
+            pointer-events: auto; /* Ensure clicks are not blocked */
+        }
+        
+        /* Ensure header buttons are above other elements */
+        .header button {
+            position: relative;
+            z-index: 210; /* Above header z-index */
+        }
+        
+        /* Google Sign-In button states */
+        #google-signin-btn {
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        
+        #google-signin-btn:hover {
+            opacity: 1 !important;
+        }
     </style>
 </head>
 <body>
     <!-- Animated Background -->
-    <div class="animated-bg">
-        <div class="blob blob-purple"></div>
+    <div class="animated-bg" style="pointer-events: none; z-index: -1;">
+        <div class="blob blob-green"></div>
         <div class="blob blob-yellow"></div>
-        <div class="blob blob-pink"></div>
+        <div class="blob blob-orange"></div>
     </div>
     
     <!-- App Container -->
@@ -316,18 +382,36 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1 class="logo">Sales Tracker Pro</h1>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="CIBranding/freshket CI/LOGO/PNG/FRESHKET LOGO-01.png" alt="Freshket" style="height: 40px;">
+                    <div>
+                        <h1 class="logo" style="font-size: 1.2rem; margin: 0; color: var(--primary);">Sales Tracker</h1>
+                        <div id="user-display" style="font-size: 0.7rem; color: var(--text-secondary); opacity: 0.8;"></div>
+                    </div>
+                </div>
                 <button class="mobile-menu-btn" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
                 <nav class="desktop-nav">
-                    <button class="btn btn-glass">
+                    <button class="btn btn-glass" onclick="switchUser()">
+                        <i class="fas fa-user-switch"></i>
+                        <span>Switch User</span>
+                    </button>
+                    <button class="btn btn-glass" onclick="signInWithGoogle()" id="google-signin-btn">
+                        <i class="fab fa-google"></i>
+                        <span>Sign in with Google</span>
+                    </button>
+                    <button class="btn btn-glass" onclick="showNotifications()">
                         <i class="fas fa-bell"></i>
                         <span>Notifications</span>
                     </button>
-                    <button class="btn btn-glass">
+                    <button class="btn btn-glass" onclick="showProfile()">
                         <i class="fas fa-user"></i>
                         <span>Profile</span>
+                    </button>
+                    <button class="btn btn-glass" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
                     </button>
                 </nav>
             </div>
@@ -363,54 +447,27 @@
         
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stats-card">
-                    <div class="gradient-overlay" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);"></div>
-                    <div style="position: relative;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                            <i class="fas fa-trophy" style="font-size: 2rem;"></i>
-                            <span class="stat-change">+12.5%</span>
-                        </div>
-                        <div class="stat-value">3,250</div>
-                        <div class="stat-label">Total Points</div>
+            <!-- Compact Stats Summary -->
+            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-trophy" style="color: var(--accent);"></i>
+                            <span class="stat-value" style="margin-left: 0.5rem;">0</span> Points
+                        </h2>
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">
+                            <span id="activity-count">0</span> activities completed
+                        </p>
                     </div>
+                    <button class="btn btn-primary" onclick="showAddActivity()">
+                        <i class="fas fa-plus"></i>
+                        Add Activity
+                    </button>
                 </div>
                 
-                <div class="stats-card">
-                    <div class="gradient-overlay" style="background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);"></div>
-                    <div style="position: relative;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                            <i class="fas fa-bolt" style="font-size: 2rem;"></i>
-                            <span class="stat-change">+3 days</span>
-                        </div>
-                        <div class="stat-value">15 days</div>
-                        <div class="stat-label">Current Streak</div>
-                    </div>
-                </div>
-                
-                <div class="stats-card">
-                    <div class="gradient-overlay" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);"></div>
-                    <div style="position: relative;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                            <i class="fas fa-award" style="font-size: 2rem;"></i>
-                            <span class="stat-change">↑1</span>
-                        </div>
-                        <div class="stat-value">#2</div>
-                        <div class="stat-label">Team Rank</div>
-                    </div>
-                </div>
-                
-                <div class="stats-card">
-                    <div class="gradient-overlay" style="background: linear-gradient(135deg, #10b981 0%, #34d399 100%);"></div>
-                    <div style="position: relative;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                            <i class="fas fa-bullseye" style="font-size: 2rem;"></i>
-                            <span class="stat-change">+5%</span>
-                        </div>
-                        <div class="stat-value">92%</div>
-                        <div class="stat-label">Completion Rate</div>
-                    </div>
+                <!-- Activity Breakdown -->
+                <div id="activity-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <!-- Will be populated dynamically -->
                 </div>
             </div>
             
@@ -422,36 +479,6 @@
                 <button class="tab-btn" onclick="setTab('monthly')">Monthly</button>
             </div>
             
-            <!-- Quick Actions -->
-            <div class="section-title">
-                <h2>Quick Actions</h2>
-            </div>
-            <div class="quick-actions">
-                <div class="quick-action-btn shimmer" onclick="showAddActivity()">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-plus-circle" style="color: var(--primary);"></i>
-                    </div>
-                    <div>Add Activity</div>
-                </div>
-                <div class="quick-action-btn shimmer" onclick="showLeaderboard()">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-chart-bar" style="color: var(--accent);"></i>
-                    </div>
-                    <div>View Stats</div>
-                </div>
-                <div class="quick-action-btn shimmer" onclick="showAchievements()">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-medal" style="color: var(--secondary);"></i>
-                    </div>
-                    <div>Achievements</div>
-                </div>
-                <div class="quick-action-btn shimmer" onclick="showTeam()">
-                    <div class="quick-action-icon">
-                        <i class="fas fa-users" style="color: var(--success);"></i>
-                    </div>
-                    <div>Team</div>
-                </div>
-            </div>
             
             <!-- Activities & Leaderboard Grid -->
             <div class="activities-container">
@@ -524,7 +551,7 @@
                     <div id="leaderboard-list">
                         <div class="leaderboard-item">
                             <div class="rank-badge rank-1">1</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
+                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
                                 SC
                             </div>
                             <div style="flex: 1;">
@@ -536,7 +563,7 @@
                         
                         <div class="leaderboard-item">
                             <div class="rank-badge rank-2">2</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
+                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
                                 MJ
                             </div>
                             <div style="flex: 1;">
@@ -548,7 +575,7 @@
                         
                         <div class="leaderboard-item">
                             <div class="rank-badge rank-3">3</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
+                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
                                 ED
                             </div>
                             <div style="flex: 1;">
@@ -584,37 +611,469 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Sales Tracker Pro - Glassmorphism Edition');
+            
+            // Check authentication
+            const token = localStorage.getItem('authToken');
+            const userId = localStorage.getItem('userId');
+            
+            if (!userId) {
+                // Create a new demo user
+                const newUserId = 'demo_user_' + Date.now();
+                localStorage.setItem('userId', newUserId);
+                console.log('Created new demo user:', newUserId);
+            }
+            
+            // Test button clickability
+            document.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    console.log('Button clicked:', e.target);
+                }
+            });
+            
             initializeApp();
         });
         
-        function initializeApp() {
-            // Load demo data
-            loadDemoData();
+        async function initializeApp() {
+            console.log('Initializing app...');
+            
+            // Load user data first (this will also handle authentication)
+            await loadUserData();
+            
+            // Then load activities
+            await loadActivities();
             
             // Set up event listeners
             setupEventListeners();
             
             // Start animations
             startAnimations();
+            
+            // Initialize Google Sign-In after a delay to ensure library is loaded
+            setTimeout(checkAndInitializeGoogle, 1000);
+            
+            // Add error handling for uncaught errors
+            window.addEventListener('error', function(e) {
+                console.error('Global error:', e.error);
+            });
+            
+            console.log('App initialization complete');
         }
         
-        function loadDemoData() {
-            // Demo user
-            user = {
-                id: '1',
-                displayName: 'Demo User',
-                points: 3250,
-                currentStreak: 15,
-                level: 12
-            };
+        function checkAndInitializeGoogle() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                initializeGoogleSignIn();
+            } else {
+                console.log('Waiting for Google library...');
+                setTimeout(checkAndInitializeGoogle, 500);
+            }
+        }
+        
+        function initializeGoogleSignIn() {
+            console.log('Initializing Google Sign-In...');
+            console.log('Google Client ID:', window.CONFIG?.googleClientId);
             
-            // Demo activities
-            activities = [
-                { id: 1, title: 'Client Meeting', type: 'meeting', points: 50, completed: true, time: '2h ago' },
-                { id: 2, title: 'Proposal Sent', type: 'proposal', points: 30, completed: true, time: '4h ago' },
-                { id: 3, title: 'Follow-up Call', type: 'call', points: 20, completed: false, time: 'Due today' },
-                { id: 4, title: 'Contract Signed', type: 'deal', points: 100, completed: true, time: 'Yesterday' }
-            ];
+            const googleBtn = document.getElementById('google-signin-btn');
+            
+            if (window.CONFIG?.googleClientId && window.CONFIG.googleClientId !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: window.CONFIG.googleClientId,
+                        callback: handleGoogleSignIn
+                    });
+                    console.log('Google Sign-In initialized successfully');
+                    
+                    // Update button to show it's ready
+                    if (googleBtn) {
+                        googleBtn.style.opacity = '1';
+                        googleBtn.title = 'Click to sign in with Google';
+                    }
+                } catch (error) {
+                    console.error('Error initializing Google Sign-In:', error);
+                    if (googleBtn) {
+                        googleBtn.style.opacity = '0.5';
+                        googleBtn.title = 'Google Sign-In initialization failed';
+                    }
+                }
+            } else {
+                // Google Client ID not configured
+                if (googleBtn) {
+                    googleBtn.style.opacity = '0.5';
+                    googleBtn.title = 'Google Sign-In not configured';
+                }
+            }
+        }
+        
+        function signInWithGoogle() {
+            console.log('Sign in with Google clicked');
+            console.log('Config:', window.CONFIG);
+            
+            if (!window.CONFIG?.googleClientId || window.CONFIG.googleClientId === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
+                alert('Google Sign-In is not configured. Please add your Google Client ID to config.js');
+                return;
+            }
+            
+            if (typeof google === 'undefined' || !google.accounts) {
+                alert('Google Sign-In library is not loaded. Please refresh the page.');
+                return;
+            }
+            
+            try {
+                google.accounts.id.prompt();
+                console.log('Google Sign-In prompt shown');
+            } catch (error) {
+                console.error('Error showing Google Sign-In:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function handleGoogleSignIn(response) {
+            console.log('Google Sign-In response received');
+            
+            try {
+                // Send the Google ID token to backend for verification
+                const res = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idToken: response.credential
+                    })
+                });
+                
+                const data = await res.json();
+                console.log('Backend response:', data);
+                
+                if (res.ok) {
+                    // Store auth token and user info
+                    if (data.token) {
+                        localStorage.setItem('authToken', data.token);
+                    }
+                    localStorage.setItem('userId', data.user.googleId || data.user.email);
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('userName', data.user.name || data.user.displayName);
+                    localStorage.setItem('userPicture', data.user.pictureUrl || '');
+                    
+                    // Show success message
+                    alert(`Welcome ${data.user.name || data.user.displayName}! You're now signed in.`);
+                    
+                    // Reload the page to apply the new auth
+                    location.reload();
+                } else {
+                    console.error('Backend error:', data);
+                    alert('Google Sign-In failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                alert('Failed to sign in with Google. Please try again.');
+            }
+        }
+        
+        async function loadUserData() {
+            let userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = 'demo_user_' + Date.now();
+                localStorage.setItem('userId', userId);
+            }
+            
+            console.log('Current user ID:', userId);
+            
+            // Display username in header
+            const userDisplay = document.getElementById('user-display');
+            const userName = localStorage.getItem('userName');
+            const userEmail = localStorage.getItem('userEmail');
+            const authMethod = localStorage.getItem('authMethod');
+            
+            if (userDisplay) {
+                if (userName) {
+                    userDisplay.innerHTML = `${userName}`;
+                } else if (userEmail) {
+                    userDisplay.innerHTML = `${userEmail}`;
+                } else {
+                    userDisplay.innerHTML = `${userId}`;
+                }
+            }
+            
+            // If no auth token, try to login first
+            let token = localStorage.getItem('authToken');
+            if (!token) {
+                console.log('No auth token, attempting to login...');
+                await loginUser(userId, userName || 'Demo User');
+                token = localStorage.getItem('authToken');
+            }
+            
+            try {
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/users/${userId}`, { headers });
+                if (response.ok) {
+                    user = await response.json();
+                } else if (response.status === 404) {
+                    // Create user if doesn't exist
+                    await createUser(userId);
+                } else {
+                    console.error('Failed to load user:', response.status);
+                    // Use demo data as fallback
+                    user = {
+                        id: userId,
+                        displayName: userName || 'Demo User',
+                        points: 0,
+                        currentStreak: 0,
+                        level: 1
+                    };
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+                // Use demo data as fallback
+                user = {
+                    id: userId,
+                    displayName: userName || 'Demo User',
+                    points: 0,
+                    currentStreak: 0,
+                    level: 1
+                };
+            }
+            updateUserDisplay();
+        }
+        
+        async function createUser(userId) {
+            try {
+                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lineUserId: userId,
+                        displayName: 'Demo User',
+                        teamId: 'default_team'
+                    })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    user = data.user;
+                    
+                    // Login to get JWT token
+                    await loginUser(userId, 'Demo User');
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+            }
+        }
+        
+        async function loginUser(userId, displayName) {
+            try {
+                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lineUserId: userId,
+                        displayName: displayName
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('authToken', data.token);
+                    console.log('Login successful, token stored');
+                }
+            } catch (error) {
+                console.error('Error logging in:', error);
+            }
+        }
+        
+        async function loadActivities() {
+            const userId = localStorage.getItem('userId') || 'demo_user';
+            console.log('Loading activities for user:', userId);
+            try {
+                // Fix: Use URL parameter instead of query parameter
+                const url = `${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/activities/${userId}`;
+                console.log('Fetching from:', url);
+                
+                // Get auth token
+                const token = localStorage.getItem('authToken');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                } else {
+                    console.warn('No auth token found - API call may fail');
+                }
+                
+                const response = await fetch(url, { headers });
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    activities = await response.json();
+                    console.log('Loaded activities:', activities);
+                    displayActivities();
+                } else if (response.status === 401) {
+                    console.error('Authentication required - please login');
+                    // Try to login with current user
+                    await loginUser(userId, 'Demo User');
+                    // Retry loading activities
+                    return loadActivities();
+                } else {
+                    console.error('Failed to load activities:', response.status, response.statusText);
+                    activities = [];
+                    displayActivities();
+                }
+            } catch (error) {
+                console.error('Error loading activities:', error);
+                activities = [];
+                displayActivities();
+            }
+        }
+        
+        function displayActivities() {
+            const activitiesList = document.getElementById('activities-list');
+            console.log('Display activities - list element:', activitiesList);
+            console.log('Display activities - activities array:', activities);
+            
+            if (!activitiesList) {
+                console.error('activities-list element not found!');
+                return;
+            }
+            
+            if (!activities.length) {
+                console.log('No activities to display');
+                return;
+            }
+            
+            // Clear existing activities
+            const existingItems = activitiesList.querySelectorAll('.activity-item');
+            existingItems.forEach(item => item.remove());
+            
+            // Add new activities
+            activities.slice(0, 5).forEach(activity => {
+                const activityElement = document.createElement('div');
+                activityElement.className = 'activity-item activity-completed';
+                activityElement.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">${activity.title}</div>
+                            <div style="font-size: 0.875rem; color: var(--text-muted);">${getTimeAgo(activity.timestamp || activity.createdAt)}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; color: var(--primary);">+${activity.points}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">points</div>
+                        </div>
+                    </div>
+                `;
+                activitiesList.appendChild(activityElement);
+            });
+            
+            // Update user display with new totals
+            updateUserDisplay();
+        }
+        
+        function updateUserDisplay() {
+            // Calculate total points and breakdown by activity type
+            let totalPoints = 0;
+            const breakdown = {};
+            
+            if (activities && activities.length > 0) {
+                activities.forEach(activity => {
+                    totalPoints += activity.points || 0;
+                    const type = activity.type || activity.activityType || 'other';
+                    if (!breakdown[type]) {
+                        breakdown[type] = { count: 0, points: 0 };
+                    }
+                    breakdown[type].count++;
+                    breakdown[type].points += activity.points || 0;
+                });
+            }
+            
+            // Update total points display
+            const statValue = document.querySelector('.stat-value');
+            if (statValue) {
+                statValue.textContent = totalPoints.toLocaleString();
+            }
+            
+            // Update activity count
+            const activityCount = document.getElementById('activity-count');
+            if (activityCount) {
+                activityCount.textContent = activities ? activities.length : 0;
+            }
+            
+            // Update activity breakdown
+            const breakdownDiv = document.getElementById('activity-breakdown');
+            if (breakdownDiv) {
+                breakdownDiv.innerHTML = '';
+                
+                // Activity type icons and colors (matching backend mapping)
+                const typeConfig = {
+                    phone: { icon: '📞', name: 'Calls', color: '#3b82f6' },
+                    call: { icon: '📞', name: 'Calls', color: '#3b82f6' },
+                    email: { icon: '📧', name: 'Emails', color: '#8b5cf6' },
+                    meeting: { icon: '🤝', name: 'Meetings', color: '#10b981' },
+                    quote: { icon: '📄', name: 'Quotes', color: '#f59e0b' },
+                    proposal: { icon: '📄', name: 'Proposals', color: '#f59e0b' },
+                    collab: { icon: '📢', name: 'Collaboration', color: '#06b6d4' },
+                    present: { icon: '🎯', name: 'Presentations', color: '#ef4444' },
+                    demo: { icon: '🎯', name: 'Demos', color: '#ef4444' },
+                    deal: { icon: '💰', name: 'Deals', color: '#06b6d4' },
+                    other: { icon: '📌', name: 'Other', color: '#6b7280' }
+                };
+                
+                // Create breakdown cards
+                Object.entries(breakdown).forEach(([type, data]) => {
+                    const config = typeConfig[type] || typeConfig.other;
+                    const card = document.createElement('div');
+                    card.className = 'glass-card';
+                    card.style.cssText = 'padding: 1rem; text-align: center; background: rgba(255, 255, 255, 0.05);';
+                    card.innerHTML = `
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">${config.icon}</div>
+                        <div style="font-weight: 600; color: ${config.color};">${data.points} pts</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">${data.count} ${config.name}</div>
+                    `;
+                    breakdownDiv.appendChild(card);
+                });
+                
+                // If no activities yet
+                if (Object.keys(breakdown).length === 0) {
+                    breakdownDiv.innerHTML = `
+                        <div style="text-align: center; color: var(--text-muted); grid-column: 1 / -1; padding: 2rem;">
+                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
+                            No activities yet. Click "Add Activity" to get started!
+                        </div>
+                    `;
+                }
+            }
+            
+            // Update user object
+            if (user) {
+                user.points = totalPoints;
+            }
+        }
+        
+        function getTimeAgo(dateString) {
+            if (!dateString) return 'Recently';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'Recently';
+                
+                const now = new Date();
+                const diff = now - date;
+                const minutes = Math.floor(diff / 60000);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                
+                if (days > 0) return `${days}d ago`;
+                if (hours > 0) return `${hours}h ago`;
+                if (minutes > 0) return `${minutes}m ago`;
+                return 'Just now';
+            } catch (error) {
+                console.error('Error parsing date:', dateString, error);
+                return 'Recently';
+            }
         }
         
         function setupEventListeners() {
@@ -683,7 +1142,81 @@
         }
         
         function showAddActivity() {
-            showAddActivityModal();
+            // For now, create a simple activity with prompt
+            const activityType = prompt('Select activity type:\n1. phone (20 pts)\n2. meeting (50 pts)\n3. quote (30 pts)\n4. collab (10 pts)\n5. present (40 pts)\n6. other (10 pts)\n\nEnter type:');
+            if (!activityType) return;
+            
+            const title = prompt('Enter activity description:');
+            if (!title) return;
+            
+            const subtitle = prompt('Enter client name (optional):') || '';
+            
+            // Map activity types to points (matching backend)
+            const pointsMap = {
+                phone: 20,
+                meeting: 50,
+                quote: 30,
+                collab: 10,
+                present: 40,
+                other: 10
+            };
+            
+            const points = pointsMap[activityType] || 10;
+            
+            // Submit to backend
+            submitActivity(activityType, title, subtitle, points);
+        }
+        
+        async function submitActivity(activityType, title, subtitle, points) {
+            console.log('Submitting activity:', { activityType, title, subtitle, points });
+            try {
+                // Get auth token
+                const token = localStorage.getItem('authToken');
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                // Add auth header if token exists
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                    console.log('Using auth token');
+                } else {
+                    console.log('No auth token found');
+                }
+                
+                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/activities`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        lineUserId: localStorage.getItem('userId') || 'demo_user',
+                        activityType: activityType,
+                        title: title,
+                        subtitle: subtitle,
+                        points: points,
+                        count: 1,
+                        date: new Date().toISOString().split('T')[0]
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Activity created:', data);
+                    alert('Activity added successfully! +' + points + ' points');
+                    // Reload activities without page refresh
+                    await loadActivities();
+                    await loadUserData();
+                } else {
+                    const error = await response.json();
+                    console.error('Failed to add activity:', error);
+                    alert('Failed to add activity: ' + (error.error || error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to add activity. Please try again.');
+            }
         }
         
         function showLeaderboard() {
@@ -697,6 +1230,56 @@
         function showTeam() {
             console.log('Show team view');
             alert('Team view coming soon!');
+        }
+        
+        function switchUser() {
+            const currentUser = localStorage.getItem('userId');
+            const newUser = prompt(`Current user: ${currentUser}\n\nEnter new user ID (or leave empty for new user):`);
+            
+            if (newUser !== null) {
+                if (newUser.trim() === '') {
+                    // Generate new user
+                    const newUserId = 'demo_user_' + Date.now();
+                    localStorage.setItem('userId', newUserId);
+                    alert('Switched to new user: ' + newUserId);
+                } else {
+                    // Use specified user
+                    localStorage.setItem('userId', newUser.trim());
+                    alert('Switched to user: ' + newUser.trim());
+                }
+                location.reload();
+            }
+        }
+        
+        function showNotifications() {
+            console.log('Notifications clicked');
+            alert('Notifications feature coming soon!');
+        }
+        
+        function showProfile() {
+            console.log('Profile clicked');
+            const userId = localStorage.getItem('userId');
+            const userName = localStorage.getItem('userName') || 'Demo User';
+            const userEmail = localStorage.getItem('userEmail') || 'Not logged in';
+            const userPicture = localStorage.getItem('userPicture') || '';
+            const authMethod = localStorage.getItem('authMethod') || 'unknown';
+            
+            alert(`Profile:\n\nName: ${userName}\nEmail: ${userEmail}\nUser ID: ${userId}\nAuth Method: ${authMethod}`);
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear all auth data
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userPicture');
+                localStorage.removeItem('authMethod');
+                
+                // Redirect to login
+                window.location.href = '/login.html';
+            }
         }
         
         function startAnimations() {
@@ -739,6 +1322,6 @@
     </script>
     
     <!-- Backend Integration Fixed -->
-    <script src="app-integration-fixed.js"></script>
+    <!-- <script src="app-integration-fixed.js"></script> -->
 </body>
 </html>

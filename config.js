@@ -6,7 +6,8 @@ if (typeof window !== 'undefined' && typeof window.CONFIG === 'undefined') {
             ? 'http://localhost:10000/api' // Local development
             : 'https://sales-tracker-api-dot-salesappfkt.as.r.appspot.com/api', // GCP Production API URL - Firestore backend
         teamId: null, // Will be set automatically from group chat
-        VERSION: '3.7.14' // Current version - Backend version sync fix
+        VERSION: '3.7.14', // Current version - Backend version sync fix
+        googleClientId: '728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com' // Replace with your Google Client ID
     };
 }
 

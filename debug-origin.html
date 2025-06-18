@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Google Sign-In Origin</title>
+    <meta name="google-signin-client_id" content="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com">
+</head>
+<body>
+    <h1>Debug Origin Issues</h1>
+    
+    <h2>Current Origin Information:</h2>
+    <div id="origin-info" style="background: #f0f0f0; padding: 20px; font-family: monospace;">
+        Loading...
+    </div>
+    
+    <h2>Test Different Methods:</h2>
+    
+    <h3>Method 1: Google's Auto-rendered Button</h3>
+    <div id="g_id_onload"
+         data-client_id="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+    
+    <h3>Method 2: Manual Initialization</h3>
+    <button onclick="manualInit()">Initialize Manually</button>
+    <button onclick="manualPrompt()">Show Prompt</button>
+    
+    <h3>Method 3: One Tap</h3>
+    <div id="oneTapContainer"></div>
+    
+    <h2>Console Output:</h2>
+    <pre id="console-output" style="background: black; color: green; padding: 20px; height: 300px; overflow: auto;">
+    </pre>
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        function log(msg) {
+            const output = document.getElementById('console-output');
+            const time = new Date().toLocaleTimeString();
+            output.innerHTML += `[${time}] ${msg}\n`;
+            console.log(msg);
+        }
+        
+        // Show origin info
+        window.onload = function() {
+            const info = document.getElementById('origin-info');
+            info.innerHTML = `
+                <strong>window.location.origin:</strong> ${window.location.origin}<br>
+                <strong>window.location.href:</strong> ${window.location.href}<br>
+                <strong>window.location.protocol:</strong> ${window.location.protocol}<br>
+                <strong>window.location.host:</strong> ${window.location.host}<br>
+                <strong>window.location.hostname:</strong> ${window.location.hostname}<br>
+                <strong>window.location.port:</strong> ${window.location.port}<br>
+                <strong>document.domain:</strong> ${document.domain}<br>
+                <strong>User Agent:</strong> ${navigator.userAgent}
+            `;
+            
+            log('Page loaded');
+            log('Origin: ' + window.location.origin);
+            
+            // Check if Google loaded
+            setTimeout(() => {
+                if (typeof google !== 'undefined' && google.accounts) {
+                    log('✅ Google Sign-In library loaded');
+                } else {
+                    log('❌ Google Sign-In library NOT loaded');
+                }
+            }, 2000);
+        };
+        
+        function handleCredentialResponse(response) {
+            log('✅ SUCCESS! Credential received');
+            log('Token length: ' + response.credential.length);
+        }
+        
+        function manualInit() {
+            try {
+                log('Attempting manual initialization...');
+                
+                if (typeof google === 'undefined' || !google.accounts) {
+                    log('❌ Google library not available');
+                    return;
+                }
+                
+                const config = {
+                    client_id: '728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com',
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: false,
+                    context: 'signin',
+                    ux_mode: 'popup',
+                    itp_support: true
+                };
+                
+                log('Config: ' + JSON.stringify(config, null, 2));
+                
+                google.accounts.id.initialize(config);
+                log('✅ Initialized successfully');
+                
+                // Also render a button
+                const container = document.getElementById('oneTapContainer');
+                google.accounts.id.renderButton(container, {
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with',
+                    shape: 'rectangular',
+                    logo_alignment: 'left',
+                    width: 250
+                });
+                log('✅ Button rendered');
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        function manualPrompt() {
+            try {
+                log('Showing manual prompt...');
+                google.accounts.id.prompt((notification) => {
+                    log('Prompt notification: ' + JSON.stringify(notification));
+                    if (notification.isNotDisplayed()) {
+                        log('❌ Prompt not displayed');
+                        if (notification.getNotDisplayedReason) {
+                            log('Reason: ' + notification.getNotDisplayedReason());
+                        }
+                    }
+                    if (notification.isSkippedMoment()) {
+                        log('⚠️ User skipped sign-in');
+                    }
+                    if (notification.isDismissedMoment()) {
+                        log('⚠️ User dismissed prompt');
+                    }
+                });
+            } catch (error) {
+                log('❌ Prompt error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

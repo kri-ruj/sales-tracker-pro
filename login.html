@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Freshket Sales Tracker - Login</title>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Load config -->
+    <script src="config.js"></script>
+    
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        @font-face {
+            font-family: 'DB Heavent';
+            src: url('CIBranding/DB Heavent v3.2.1.ttf') format('truetype');
+            font-weight: normal;
+        }
+        
+        @font-face {
+            font-family: 'DB Heavent';
+            src: url('CIBranding/DB Heavent Bd v3.2.1.ttf') format('truetype');
+            font-weight: bold;
+        }
+        
+        @font-face {
+            font-family: 'DB Heavent';
+            src: url('CIBranding/DB Heavent Li v3.2.1.ttf') format('truetype');
+            font-weight: 300;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DB Heavent', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #008065 0%, #00CE7C 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            font-size: 2.5rem;
+            color: #008065;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: lowercase;
+            letter-spacing: -1px;
+        }
+        
+        .logo h1 .dot {
+            color: #00CE7C;
+            font-size: 3rem;
+            margin-left: -5px;
+        }
+        
+        .logo p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .login-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-btn.google {
+            background: white;
+            color: #333;
+        }
+        
+        .login-btn.google:hover {
+            background: #f8f9fa;
+        }
+        
+        .login-btn.line {
+            background: #00B900;
+            border: none;
+        }
+        
+        .login-btn.line:hover {
+            background: #00a000;
+        }
+        
+        .login-btn.demo {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+        
+        .divider {
+            text-align: center;
+            color: #64748b;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .divider::before {
+            left: 0;
+        }
+        
+        .divider::after {
+            right: 0;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .google-signin-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <img src="CIBranding/freshket CI/LOGO/PNG/FRESHKET LOGO-01.png" alt="Freshket" style="height: 60px; margin-bottom: 20px;">
+            <h1 style="display: none;">freshket<span class="dot">.</span></h1>
+            <p>Sales Tracker</p>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="login-methods">
+            <!-- Google Sign-In Button (rendered by Google) -->
+            <div id="g_id_onload"
+                 data-client_id="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com"
+                 data-callback="handleGoogleSignIn"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin google-signin-container"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-width="320"
+                 data-logo_alignment="left">
+            </div>
+            
+            <div class="divider">OR</div>
+            
+            <!-- LINE Login -->
+            <button class="login-btn line" onclick="loginWithLINE()">
+                <i class="fab fa-line" style="font-size: 1.2rem;"></i>
+                Sign in with LINE
+            </button>
+            
+            <!-- Demo Mode -->
+            <button class="login-btn demo" onclick="loginAsDemo()">
+                <i class="fas fa-user-circle"></i>
+                Continue as Demo User
+            </button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            Signing in...
+        </div>
+    </div>
+    
+    <script>
+        // Check if already logged in
+        window.onload = function() {
+            const token = localStorage.getItem('authToken');
+            const userId = localStorage.getItem('userId');
+            
+            if (token || userId) {
+                // Already logged in, redirect to main app
+                window.location.href = '/index.html';
+            }
+            
+            // Log page load
+            console.log('Login page loaded');
+            console.log('Google Client ID configured:', window.CONFIG?.googleClientId);
+        };
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.querySelector('.login-methods').style.display = show ? 'none' : 'flex';
+        }
+        
+        // Google Sign-In Handler
+        async function handleGoogleSignIn(response) {
+            console.log('Google Sign-In response received:', response);
+            console.log('Credential:', response.credential ? 'Present' : 'Missing');
+            showLoading(true);
+            
+            try {
+                const res = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idToken: response.credential
+                    })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    // Store auth data
+                    if (data.token) {
+                        localStorage.setItem('authToken', data.token);
+                    }
+                    localStorage.setItem('userId', data.user.googleId || data.user.email);
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('userName', data.user.name);
+                    localStorage.setItem('authMethod', 'google');
+                    
+                    // Redirect to main app
+                    window.location.href = '/index.html';
+                } else {
+                    const error = await res.json();
+                    throw new Error(error.error || 'Authentication failed');
+                }
+            } catch (error) {
+                console.error('Google Sign-In error:', error);
+                showError('Failed to sign in with Google. Please try again.');
+                showLoading(false);
+            }
+        }
+        
+        // LINE Login
+        function loginWithLINE() {
+            showError('LINE login coming soon! Use Google or Demo mode for now.');
+            // TODO: Implement LINE LIFF login
+        }
+        
+        // Demo Login
+        async function loginAsDemo() {
+            showLoading(true);
+            
+            const demoUserId = 'demo_user_' + Date.now();
+            
+            try {
+                // Create demo user
+                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        lineUserId: demoUserId,
+                        displayName: 'Demo User',
+                        teamId: 'demo_team'
+                    })
+                });
+                
+                if (response.ok) {
+                    // For demo, just store user ID
+                    localStorage.setItem('userId', demoUserId);
+                    localStorage.setItem('authMethod', 'demo');
+                    
+                    // Try to get JWT token for demo user
+                    try {
+                        const authRes = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/login`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                lineUserId: demoUserId,
+                                displayName: 'Demo User'
+                            })
+                        });
+                        
+                        if (authRes.ok) {
+                            const authData = await authRes.json();
+                            if (authData.token) {
+                                localStorage.setItem('authToken', authData.token);
+                            }
+                        }
+                    } catch (e) {
+                        console.log('JWT not available, continuing without token');
+                    }
+                    
+                    // Redirect to main app
+                    window.location.href = '/index.html';
+                } else {
+                    throw new Error('Failed to create demo user');
+                }
+            } catch (error) {
+                console.error('Demo login error:', error);
+                // Fallback: just use local storage
+                localStorage.setItem('userId', demoUserId);
+                localStorage.setItem('authMethod', 'demo');
+                window.location.href = '/index.html';
+            }
+        }
+        
+        // Manual Google Sign-In trigger (if needed)
+        function triggerGoogleSignIn() {
+            if (google && google.accounts && google.accounts.id) {
+                google.accounts.id.prompt();
+            } else {
+                showError('Google Sign-In is not ready. Please refresh the page.');
+            }
+        }
+    </script>
+</body>
+</html>

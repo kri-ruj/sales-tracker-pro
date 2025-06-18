@@ -478,9 +478,9 @@
             flex-shrink: 0;
         }
 
-        .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); }
-        .rank-2 { background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%); }
-        .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%); }
+        .rank-1 { background: linear-gradient(135deg, #FFD340 0%, #FF6600 100%); }
+        .rank-2 { background: linear-gradient(135deg, #FAF0DC 0%, #008065 100%); }
+        .rank-3 { background: linear-gradient(135deg, #FF6600 0%, #008065 100%); }
 
         /* Achievement Toast */
         .achievement-toast {
@@ -1287,18 +1287,30 @@
             const description = document.getElementById('activityDescription').value;
             const client = document.getElementById('activityClient').value;
             
+            // Map activity types to points
+            const pointsMap = {
+                call: 20,
+                email: 10,
+                meeting: 50,
+                proposal: 30,
+                demo: 40,
+                deal: 100
+            };
+            
             try {
                 const response = await fetch(`${API_BASE_URL}/activities`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        type,
-                        description,
-                        client,
-                        date: new Date().toISOString()
+                        lineUserId: app.lineProfile?.userId || 'demo_user',
+                        activityType: type,
+                        title: description,
+                        subtitle: client,
+                        points: pointsMap[type] || 10,
+                        count: 1,
+                        date: new Date().toISOString().split('T')[0]
                     })
                 });
                 
@@ -1325,6 +1337,10 @@
                     
                     // Clear form
                     document.getElementById('activityForm').reset();
+                } else {
+                    const error = await response.json();
+                    console.error('Server error:', error);
+                    alert(error.error || 'Failed to add activity. Please try again.');
                 }
             } catch (error) {
                 console.error('Error adding activity:', error);

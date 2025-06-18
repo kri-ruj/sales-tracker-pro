@@ -12,7 +12,9 @@
     "dev:secure": "nodemon server-secure.js",
     "setup:firestore": "node setup-firestore.js",
     "build": "echo 'Build completed'",
-    "test": "jest",
+    "test": "jest tests/server-firestore.test.js",
+    "test:secure": "jest tests/server-secure.test.js",
+    "test:all": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "migrate:secure": "node migrate-to-secure.js",
@@ -31,6 +33,7 @@
     "express": "^4.18.2",
     "express-validator": "^7.2.1",
     "firebase-admin": "^12.0.0",
+    "google-auth-library": "^10.1.0",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"
   },

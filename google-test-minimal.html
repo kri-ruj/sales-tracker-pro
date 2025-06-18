@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sign-In Minimal Test</title>
+    <script src="config.js"></script>
+    <meta name="google-signin-client_id" content="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com">
+</head>
+<body>
+    <h1>Google Sign-In Minimal Test</h1>
+    
+    <h2>Test 1: Basic Button Click</h2>
+    <button onclick="alert('Button clicks work!')">Test Basic Click</button>
+    
+    <h2>Test 2: Console Log</h2>
+    <button onclick="console.log('Console logging works at: ' + new Date())">Test Console (F12 to see)</button>
+    
+    <h2>Test 3: Google Library Status</h2>
+    <button onclick="checkGoogle()">Check Google Library</button>
+    <div id="google-status">Not checked yet</div>
+    
+    <h2>Test 4: Manual Google Sign-In</h2>
+    <div id="g_id_onload"
+         data-client_id="728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com"
+         data-callback="onSignIn"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin" 
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+    
+    <h2>Test 5: Force Initialize</h2>
+    <button onclick="forceInit()">Force Initialize Google</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 20px; background: #f0f0f0;">
+        <h3>Results will appear here...</h3>
+    </div>
+    
+    <!-- Google Sign-In Script - AT THE END -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        function log(message) {
+            console.log(message);
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+        }
+        
+        function checkGoogle() {
+            const status = document.getElementById('google-status');
+            if (typeof google === 'undefined') {
+                status.innerHTML = '❌ Google library NOT loaded';
+                log('Google library not loaded yet');
+            } else if (!google.accounts) {
+                status.innerHTML = '⚠️ Google loaded but accounts not available';
+                log('Google object exists but no accounts property');
+            } else {
+                status.innerHTML = '✅ Google library loaded successfully!';
+                log('Google library is ready: ' + JSON.stringify(Object.keys(google)));
+            }
+        }
+        
+        function onSignIn(response) {
+            log('Google Sign-In Success!');
+            log('Credential received: ' + response.credential.substring(0, 50) + '...');
+        }
+        
+        function forceInit() {
+            try {
+                if (typeof google === 'undefined' || !google.accounts) {
+                    alert('Google library not loaded yet. Wait a few seconds and try again.');
+                    return;
+                }
+                
+                google.accounts.id.initialize({
+                    client_id: '728428181754-2funchcf7d02p0fq8emorlfb3ttjpo3b.apps.googleusercontent.com',
+                    callback: onSignIn
+                });
+                
+                google.accounts.id.prompt((notification) => {
+                    log('Prompt notification: ' + JSON.stringify(notification));
+                });
+                
+                log('Force initialization completed');
+            } catch (e) {
+                log('Error: ' + e.message);
+                alert('Error: ' + e.message);
+            }
+        }
+        
+        // Check every second if Google loaded
+        let checkCount = 0;
+        const checker = setInterval(() => {
+            checkCount++;
+            if (typeof google !== 'undefined' && google.accounts) {
+                log('✅ Google library auto-loaded after ' + checkCount + ' seconds');
+                clearInterval(checker);
+            } else if (checkCount > 10) {
+                log('❌ Google library failed to load after 10 seconds');
+                clearInterval(checker);
+            }
+        }, 1000);
+        
+        // Log when page loads
+        window.onload = function() {
+            log('Page loaded at: ' + new Date());
+            setTimeout(checkGoogle, 2000);
+        };
+    </script>
+</body>
+</html>
