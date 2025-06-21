@@ -3,34 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Sales Activity Tracker - Modern glassmorphism UI">
+    <meta name="description" content="Freshket Sales Activity Tracker">
     <title>Freshket Sales Tracker</title>
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    
-    <!-- Load config first -->
+    <!-- Load config -->
     <script src="config.js"></script>
     
     <!-- Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
-    <!-- Glassmorphism Styles -->
-    <link rel="stylesheet" href="glassmorphism-styles.css">
-    
     <style>
         @font-face {
             font-family: 'DB Heavent';
-            src: url('CIBranding/DB Heavent v3.2.1.ttf') format('truetype');
+            src: url('CIBranding/freshket CI/FONT/DB Heavent v3.2.1.ttf') format('truetype');
             font-weight: normal;
         }
         
         @font-face {
             font-family: 'DB Heavent';
-            src: url('CIBranding/DB Heavent Bd v3.2.1.ttf') format('truetype');
+            src: url('CIBranding/freshket CI/FONT/DB Heavent Bd v3.2.1.ttf') format('truetype');
             font-weight: bold;
         }
         
@@ -42,6 +36,9 @@
             --background: #FAF0DC;
             --text-primary: #1a1a1a;
             --text-secondary: #4a4a4a;
+            --text-muted: #6b7280;
+            --glass-white: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(0, 128, 101, 0.1);
         }
         
         * {
@@ -52,216 +49,494 @@
         }
         
         body {
-            background: var(--bg-gradient);
+            background: var(--background);
             color: var(--text-primary);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        .app-container {
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            position: relative;
-            z-index: 1;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--background) 0%, #f5e6d3 100%);
+        }
+        
+        .login-card {
+            background: var(--glass-white);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 128, 101, 0.1);
+        }
+        
+        .login-logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 2rem;
+        }
+        
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        #googleSignInButton {
+            margin: 0 auto;
+        }
+        
+        /* Main App */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+            background: var(--background);
         }
         
         /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--glass-white);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0, 128, 101, 0.1);
-            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 1rem;
             position: sticky;
             top: 0;
-            z-index: 200;
+            z-index: 100;
             box-shadow: 0 2px 10px rgba(0, 128, 101, 0.1);
         }
         
         .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
-            z-index: 201;
         }
         
-        .desktop-nav {
+        .header-left {
             display: flex;
-            gap: 0.5rem;
             align-items: center;
-            position: relative;
-            z-index: 202;
+            gap: 1rem;
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #008065 0%, #00CE7C 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .user-details {
+            display: none;
+        }
+        
+        @media (min-width: 640px) {
+            .user-details {
+                display: block;
+            }
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .user-points {
+            font-size: 0.75rem;
+            color: var(--primary);
+        }
+        
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: var(--primary);
+            color: white;
         }
         
         /* Main Content */
         .main-content {
+            padding: 1rem;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 1rem;
         }
         
-        /* Stats Grid */
+        /* Stats Cards */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-        
-        .stat-change {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            font-size: 0.75rem;
-            color: var(--success);
-        }
-        
-        /* Activities Section */
-        .section-title {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .activities-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        /* Quick Actions */
-        .quick-actions {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         
-        .quick-action-btn {
-            background: var(--glass-white-5);
+        .stat-card {
+            background: var(--glass-white);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 128, 101, 0.1);
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Activity Section */
+        .section {
+            background: var(--glass-white);
             border: 1px solid var(--glass-border);
             border-radius: 1rem;
             padding: 1.5rem;
-            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .add-activity-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.875rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .quick-action-btn:hover {
-            transform: translateY(-4px);
-            background: var(--glass-white-10);
+        .add-activity-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 128, 101, 0.3);
+        }
+        
+        /* Activity List */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .activity-item {
+            background: rgba(0, 128, 101, 0.05);
+            border: 1px solid rgba(0, 128, 101, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .activity-item:hover {
+            background: rgba(0, 128, 101, 0.1);
+        }
+        
+        .activity-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .activity-icon {
+            font-size: 1.5rem;
+        }
+        
+        .activity-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .activity-type {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .activity-note {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .activity-points {
+            font-weight: bold;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+        
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-backdrop.show {
+            opacity: 1;
+        }
+        
+        .modal {
+            background: var(--glass-white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        
+        .modal-backdrop.show .modal {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(0, 128, 101, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
             border-color: var(--primary);
-            box-shadow: 0 8px 24px rgba(0, 128, 101, 0.2);
+            background: rgba(0, 128, 101, 0.1);
         }
         
-        .quick-action-icon {
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        /* Activity Type Grid */
+        .activity-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .activity-type-btn {
+            padding: 1rem;
+            background: rgba(0, 128, 101, 0.05);
+            border: 2px solid transparent;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .activity-type-btn:hover {
+            background: rgba(0, 128, 101, 0.1);
+        }
+        
+        .activity-type-btn.selected {
+            border-color: var(--primary);
+            background: rgba(0, 128, 101, 0.15);
+        }
+        
+        .activity-type-icon {
             font-size: 2rem;
             margin-bottom: 0.5rem;
         }
         
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: var(--glass-white-10);
-            border: 1px solid var(--glass-border);
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            color: var(--text-primary);
-            cursor: pointer;
+        .activity-type-name {
+            font-weight: 600;
+            font-size: 0.875rem;
         }
         
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .desktop-nav {
-                display: none;
-            }
+        .activity-type-points {
+            font-size: 0.75rem;
+            color: var(--primary);
         }
         
-        /* Achievement Banner */
-        .achievement-banner {
-            background: linear-gradient(135deg, rgba(0, 206, 124, 0.2) 0%, rgba(255, 211, 64, 0.2) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 206, 124, 0.2);
-            border-radius: 1rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .achievement-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(0, 206, 124, 0.1) 0%, rgba(255, 211, 64, 0.1) 100%);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 0.5;
-            }
-            50% {
-                opacity: 0.8;
-            }
-        }
-        
-        /* Tab Navigation */
-        .tab-nav {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-            background: var(--glass-white-5);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1rem;
-            padding: 0.25rem;
-        }
-        
-        .tab-btn {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            background: transparent;
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
             border: none;
-            border-radius: 0.75rem;
-            color: var(--text-secondary);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
         
-        .tab-btn.active {
-            background: linear-gradient(135deg, #008065 0%, #00CE7C 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 128, 101, 0.3);
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 128, 101, 0.3);
         }
         
-        /* Loading State */
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Loading Spinner */
         .loading {
             display: flex;
             align-items: center;
@@ -284,1044 +559,520 @@
             }
         }
         
-        /* Modal Styles */
-        .modal-backdrop {
+        /* Version Badge */
+        .version-badge {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(0, 128, 101, 0.1);
+            color: var(--primary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
         }
         
-        .modal-backdrop.show {
-            opacity: 1;
-        }
-        
-        .modal-content {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            max-width: 90%;
-            width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .modal-backdrop.show .modal-content {
-            transform: scale(1);
-        }
-        
-        .glass-input {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--glass-white-5);
-            border: 1px solid var(--glass-border);
-            border-radius: 0.5rem;
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-        
-        .glass-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 128, 101, 0.1);
-        }
-        
-        select.glass-input {
-            cursor: pointer;
-        }
-        
-        select.glass-input option {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-        }
-        
-        /* Ensure buttons are always clickable */
-        button {
-            position: relative;
-            z-index: 10;
-            pointer-events: auto; /* Ensure clicks are not blocked */
-        }
-        
-        /* Ensure header buttons are above other elements */
-        .header button {
-            position: relative;
-            z-index: 210; /* Above header z-index */
-        }
-        
-        /* Google Sign-In button states */
-        #google-signin-btn {
-            opacity: 0.6;
-            transition: opacity 0.3s;
-        }
-        
-        #google-signin-btn:hover {
-            opacity: 1 !important;
+        /* Responsive */
+        @media (max-width: 640px) {
+            .header {
+                padding: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 0.75rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .activity-type-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="animated-bg" style="pointer-events: none; z-index: -1;">
-        <div class="blob blob-green"></div>
-        <div class="blob blob-yellow"></div>
-        <div class="blob blob-orange"></div>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="CIBranding/freshket CI/LOGO/PNG/FRESHKET LOGO-01.png" alt="Freshket Logo" onerror="this.style.display='none'">
+            </div>
+            <h1 class="login-title">Freshket Sales Tracker</h1>
+            <p class="login-subtitle">Track your sales activities and boost productivity</p>
+            <div id="googleSignInButton"></div>
+        </div>
     </div>
     
-    <!-- App Container -->
-    <div class="app-container">
+    <!-- Main App -->
+    <div id="appContainer" class="app-container">
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <img src="CIBranding/freshket CI/LOGO/PNG/FRESHKET LOGO-01.png" alt="Freshket" style="height: 40px;">
-                    <div>
-                        <h1 class="logo" style="font-size: 1.2rem; margin: 0; color: var(--primary);">Sales Tracker</h1>
-                        <div id="user-display" style="font-size: 0.7rem; color: var(--text-secondary); opacity: 0.8;"></div>
+                <div class="header-left">
+                    <div class="logo">Freshket Sales</div>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <span id="userInitial">?</span>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name" id="userName">Loading...</div>
+                            <div class="user-points" id="userPoints">0 points</div>
+                        </div>
                     </div>
                 </div>
-                <button class="mobile-menu-btn" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="hidden sm:inline">Logout</span>
                 </button>
-                <nav class="desktop-nav">
-                    <button class="btn btn-glass" onclick="switchUser()">
-                        <i class="fas fa-user-switch"></i>
-                        <span>Switch User</span>
-                    </button>
-                    <button class="btn btn-glass" onclick="signInWithGoogle()" id="google-signin-btn">
-                        <i class="fab fa-google"></i>
-                        <span>Sign in with Google</span>
-                    </button>
-                    <button class="btn btn-glass" onclick="showNotifications()">
-                        <i class="fas fa-bell"></i>
-                        <span>Notifications</span>
-                    </button>
-                    <button class="btn btn-glass" onclick="showProfile()">
-                        <i class="fas fa-user"></i>
-                        <span>Profile</span>
-                    </button>
-                    <button class="btn btn-glass" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
-                </nav>
             </div>
         </header>
         
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div style="padding: 1.5rem;">
-                <button class="btn btn-glass" style="width: 100%; margin-bottom: 1rem;" onclick="toggleSidebar()">
-                    <i class="fas fa-times"></i>
-                    Close
-                </button>
-                <nav>
-                    <div class="nav-item active" onclick="setView('dashboard')">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
-                    </div>
-                    <div class="nav-item" onclick="setView('activities')">
-                        <i class="fas fa-tasks"></i>
-                        <span>Activities</span>
-                    </div>
-                    <div class="nav-item" onclick="setView('leaderboard')">
-                        <i class="fas fa-trophy"></i>
-                        <span>Leaderboard</span>
-                    </div>
-                    <div class="nav-item" onclick="setView('achievements')">
-                        <i class="fas fa-award"></i>
-                        <span>Achievements</span>
-                    </div>
-                </nav>
-            </div>
-        </aside>
-        
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Compact Stats Summary -->
-            <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div>
-                        <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
-                            <i class="fas fa-trophy" style="color: var(--accent);"></i>
-                            <span class="stat-value" style="margin-left: 0.5rem;">0</span> Points
-                        </h2>
-                        <p style="color: var(--text-muted); font-size: 0.875rem;">
-                            <span id="activity-count">0</span> activities completed
-                        </p>
-                    </div>
-                    <button class="btn btn-primary" onclick="showAddActivity()">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="todayPoints">0</div>
+                    <div class="stat-label">Today's Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value" id="weekPoints">0</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="monthPoints">0</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value" id="totalActivities">0</div>
+                    <div class="stat-label">Total Activities</div>
+                </div>
+            </div>
+            
+            <!-- Activities Section -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Activities</h2>
+                    <button class="add-activity-btn" onclick="showAddActivityModal()">
                         <i class="fas fa-plus"></i>
                         Add Activity
                     </button>
                 </div>
-                
-                <!-- Activity Breakdown -->
-                <div id="activity-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </div>
-            
-            <!-- Tab Navigation -->
-            <div class="tab-nav">
-                <button class="tab-btn active" onclick="setTab('overview')">Overview</button>
-                <button class="tab-btn" onclick="setTab('daily')">Daily</button>
-                <button class="tab-btn" onclick="setTab('weekly')">Weekly</button>
-                <button class="tab-btn" onclick="setTab('monthly')">Monthly</button>
-            </div>
-            
-            
-            <!-- Activities & Leaderboard Grid -->
-            <div class="activities-container">
-                <!-- Recent Activities -->
-                <div class="glass-card" style="padding: 1.5rem;">
-                    <div class="section-title">
-                        <h3>Recent Activities</h3>
-                        <button class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i>
-                            Add
-                        </button>
+                <div id="activitiesList" class="activity-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
                     </div>
-                    <div id="activities-list">
-                        <div class="activity-item activity-completed">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 500;">Client Meeting</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-muted);">2h ago</div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 600; color: var(--primary);">+50</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">points</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item activity-completed">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 500;">Proposal Sent</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-muted);">4h ago</div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 600; color: var(--primary);">+30</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">points</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(156, 163, 175, 0.2); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-clock" style="color: var(--text-muted);"></i>
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 500;">Follow-up Call</div>
-                                    <div style="font-size: 0.875rem; color: var(--text-muted);">Due today</div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div style="font-weight: 600; color: var(--text-muted);">+20</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">points</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Team Leaderboard -->
-                <div class="glass-card" style="padding: 1.5rem;">
-                    <div class="section-title">
-                        <h3>Team Leaderboard</h3>
-                        <span style="font-size: 0.875rem; color: var(--text-muted);">This Week</span>
-                    </div>
-                    <div id="leaderboard-list">
-                        <div class="leaderboard-item">
-                            <div class="rank-badge rank-1">1</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
-                                SC
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500;">Sarah Chen</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">1,250 points</div>
-                            </div>
-                            <div style="color: var(--success); font-size: 0.875rem;">↑</div>
-                        </div>
-                        
-                        <div class="leaderboard-item">
-                            <div class="rank-badge rank-2">2</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
-                                MJ
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500;">Mike Johnson</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">1,180 points</div>
-                            </div>
-                            <div style="color: var(--success); font-size: 0.875rem;">↑</div>
-                        </div>
-                        
-                        <div class="leaderboard-item">
-                            <div class="rank-badge rank-3">3</div>
-                            <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: linear-gradient(135deg, #00CE7C 0%, #FFD340 100%); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.875rem;">
-                                ED
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500;">Emily Davis</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">950 points</div>
-                            </div>
-                            <div style="color: var(--danger); font-size: 0.875rem;">↓</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Achievement Banner -->
-            <div class="achievement-banner">
-                <div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Keep up the great work!</h3>
-                        <p style="color: var(--text-secondary);">You're only 250 points away from your next achievement</p>
-                    </div>
-                    <i class="fas fa-trophy float-animation" style="font-size: 4rem; color: var(--accent);"></i>
                 </div>
             </div>
         </main>
     </div>
     
+    <!-- Add Activity Modal -->
+    <div id="addActivityModal" class="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Activity</h3>
+                <button class="modal-close" onclick="hideAddActivityModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="addActivityForm" onsubmit="submitActivity(event)">
+                <div class="form-group">
+                    <label class="form-label">Activity Type</label>
+                    <div class="activity-type-grid">
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('call', 10)">
+                            <div class="activity-type-icon">📞</div>
+                            <div class="activity-type-name">Call</div>
+                            <div class="activity-type-points">10 pts</div>
+                        </button>
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('email', 5)">
+                            <div class="activity-type-icon">📧</div>
+                            <div class="activity-type-name">Email</div>
+                            <div class="activity-type-points">5 pts</div>
+                        </button>
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('meeting', 20)">
+                            <div class="activity-type-icon">🤝</div>
+                            <div class="activity-type-name">Meeting</div>
+                            <div class="activity-type-points">20 pts</div>
+                        </button>
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('proposal', 30)">
+                            <div class="activity-type-icon">📄</div>
+                            <div class="activity-type-name">Proposal</div>
+                            <div class="activity-type-points">30 pts</div>
+                        </button>
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('demo', 25)">
+                            <div class="activity-type-icon">🎯</div>
+                            <div class="activity-type-name">Demo</div>
+                            <div class="activity-type-points">25 pts</div>
+                        </button>
+                        <button type="button" class="activity-type-btn" onclick="selectActivityType('deal', 50)">
+                            <div class="activity-type-icon">💰</div>
+                            <div class="activity-type-name">Deal</div>
+                            <div class="activity-type-points">50 pts</div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="customerName">Customer Name</label>
+                    <input type="text" id="customerName" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="activityNote">Notes (Optional)</label>
+                    <textarea id="activityNote" class="form-textarea" placeholder="Add any additional details..."></textarea>
+                </div>
+                
+                <input type="hidden" id="selectedActivityType" required>
+                <input type="hidden" id="selectedActivityPoints" required>
+                
+                <button type="submit" class="submit-btn" id="submitActivityBtn">
+                    Add Activity
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Version Badge -->
+    <div class="version-badge">v3.7.16</div>
+    
     <script>
-        // State Management
-        let currentView = 'dashboard';
-        let currentTab = 'overview';
+        // Global variables
+        let currentUser = null;
         let activities = [];
-        let user = null;
+        let selectedActivity = null;
         
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Sales Tracker Pro - Glassmorphism Edition');
-            
-            // Check authentication
-            const token = localStorage.getItem('authToken');
-            const userId = localStorage.getItem('userId');
-            
-            if (!userId) {
-                // Create a new demo user
-                const newUserId = 'demo_user_' + Date.now();
-                localStorage.setItem('userId', newUserId);
-                console.log('Created new demo user:', newUserId);
-            }
-            
-            // Test button clickability
-            document.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
-                    console.log('Button clicked:', e.target);
-                }
+        // Activity type configurations
+        const activityTypes = {
+            call: { icon: '📞', name: 'Call', points: 10 },
+            email: { icon: '📧', name: 'Email', points: 5 },
+            meeting: { icon: '🤝', name: 'Meeting', points: 20 },
+            proposal: { icon: '📄', name: 'Proposal', points: 30 },
+            demo: { icon: '🎯', name: 'Demo', points: 25 },
+            deal: { icon: '💰', name: 'Deal', points: 50 }
+        };
+        
+        // Initialize Google Sign-In
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: window.CONFIG.GOOGLE_CLIENT_ID,
+                callback: handleGoogleSignIn,
+                auto_select: false,
+                context: 'signin'
             });
             
-            initializeApp();
-        });
-        
-        async function initializeApp() {
-            console.log('Initializing app...');
-            
-            // Load user data first (this will also handle authentication)
-            await loadUserData();
-            
-            // Then load activities
-            await loadActivities();
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Start animations
-            startAnimations();
-            
-            // Initialize Google Sign-In after a delay to ensure library is loaded
-            setTimeout(checkAndInitializeGoogle, 1000);
-            
-            // Add error handling for uncaught errors
-            window.addEventListener('error', function(e) {
-                console.error('Global error:', e.error);
-            });
-            
-            console.log('App initialization complete');
-        }
-        
-        function checkAndInitializeGoogle() {
-            if (typeof google !== 'undefined' && google.accounts) {
-                initializeGoogleSignIn();
-            } else {
-                console.log('Waiting for Google library...');
-                setTimeout(checkAndInitializeGoogle, 500);
-            }
-        }
-        
-        function initializeGoogleSignIn() {
-            console.log('Initializing Google Sign-In...');
-            console.log('Google Client ID:', window.CONFIG?.googleClientId);
-            
-            const googleBtn = document.getElementById('google-signin-btn');
-            
-            if (window.CONFIG?.googleClientId && window.CONFIG.googleClientId !== 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-                try {
-                    google.accounts.id.initialize({
-                        client_id: window.CONFIG.googleClientId,
-                        callback: handleGoogleSignIn
-                    });
-                    console.log('Google Sign-In initialized successfully');
-                    
-                    // Update button to show it's ready
-                    if (googleBtn) {
-                        googleBtn.style.opacity = '1';
-                        googleBtn.title = 'Click to sign in with Google';
-                    }
-                } catch (error) {
-                    console.error('Error initializing Google Sign-In:', error);
-                    if (googleBtn) {
-                        googleBtn.style.opacity = '0.5';
-                        googleBtn.title = 'Google Sign-In initialization failed';
-                    }
+            google.accounts.id.renderButton(
+                document.getElementById('googleSignInButton'),
+                { 
+                    theme: 'outline', 
+                    size: 'large',
+                    width: 280,
+                    text: 'continue_with',
+                    shape: 'rectangular'
                 }
-            } else {
-                // Google Client ID not configured
-                if (googleBtn) {
-                    googleBtn.style.opacity = '0.5';
-                    googleBtn.title = 'Google Sign-In not configured';
-                }
+            );
+            
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showApp();
             }
-        }
+        };
         
-        function signInWithGoogle() {
-            console.log('Sign in with Google clicked');
-            console.log('Config:', window.CONFIG);
-            
-            if (!window.CONFIG?.googleClientId || window.CONFIG.googleClientId === 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com') {
-                alert('Google Sign-In is not configured. Please add your Google Client ID to config.js');
-                return;
-            }
-            
-            if (typeof google === 'undefined' || !google.accounts) {
-                alert('Google Sign-In library is not loaded. Please refresh the page.');
-                return;
-            }
-            
-            try {
-                google.accounts.id.prompt();
-                console.log('Google Sign-In prompt shown');
-            } catch (error) {
-                console.error('Error showing Google Sign-In:', error);
-                alert('Error: ' + error.message);
-            }
-        }
-        
+        // Handle Google Sign-In
         async function handleGoogleSignIn(response) {
-            console.log('Google Sign-In response received');
-            
             try {
-                // Send the Google ID token to backend for verification
-                const res = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/google`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        idToken: response.credential
-                    })
-                });
+                // Decode JWT token
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
                 
-                const data = await res.json();
-                console.log('Backend response:', data);
-                
-                if (res.ok) {
-                    // Store auth token and user info
-                    if (data.token) {
-                        localStorage.setItem('authToken', data.token);
-                    }
-                    localStorage.setItem('userId', data.user.googleId || data.user.email);
-                    localStorage.setItem('userEmail', data.user.email);
-                    localStorage.setItem('userName', data.user.name || data.user.displayName);
-                    localStorage.setItem('userPicture', data.user.pictureUrl || '');
-                    
-                    // Show success message
-                    alert(`Welcome ${data.user.name || data.user.displayName}! You're now signed in.`);
-                    
-                    // Reload the page to apply the new auth
-                    location.reload();
-                } else {
-                    console.error('Backend error:', data);
-                    alert('Google Sign-In failed: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Google Sign-In error:', error);
-                alert('Failed to sign in with Google. Please try again.');
-            }
-        }
-        
-        async function loadUserData() {
-            let userId = localStorage.getItem('userId');
-            if (!userId) {
-                userId = 'demo_user_' + Date.now();
-                localStorage.setItem('userId', userId);
-            }
-            
-            console.log('Current user ID:', userId);
-            
-            // Display username in header
-            const userDisplay = document.getElementById('user-display');
-            const userName = localStorage.getItem('userName');
-            const userEmail = localStorage.getItem('userEmail');
-            const authMethod = localStorage.getItem('authMethod');
-            
-            if (userDisplay) {
-                if (userName) {
-                    userDisplay.innerHTML = `${userName}`;
-                } else if (userEmail) {
-                    userDisplay.innerHTML = `${userEmail}`;
-                } else {
-                    userDisplay.innerHTML = `${userId}`;
-                }
-            }
-            
-            // If no auth token, try to login first
-            let token = localStorage.getItem('authToken');
-            if (!token) {
-                console.log('No auth token, attempting to login...');
-                await loginUser(userId, userName || 'Demo User');
-                token = localStorage.getItem('authToken');
-            }
-            
-            try {
-                const headers = {};
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-                
-                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/users/${userId}`, { headers });
-                if (response.ok) {
-                    user = await response.json();
-                } else if (response.status === 404) {
-                    // Create user if doesn't exist
-                    await createUser(userId);
-                } else {
-                    console.error('Failed to load user:', response.status);
-                    // Use demo data as fallback
-                    user = {
-                        id: userId,
-                        displayName: userName || 'Demo User',
-                        points: 0,
-                        currentStreak: 0,
-                        level: 1
-                    };
-                }
-            } catch (error) {
-                console.error('Error loading user:', error);
-                // Use demo data as fallback
-                user = {
-                    id: userId,
-                    displayName: userName || 'Demo User',
-                    points: 0,
-                    currentStreak: 0,
-                    level: 1
+                currentUser = {
+                    email: payload.email,
+                    name: payload.name,
+                    picture: payload.picture,
+                    googleId: payload.sub
                 };
-            }
-            updateUserDisplay();
-        }
-        
-        async function createUser(userId) {
-            try {
-                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/users`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        lineUserId: userId,
-                        displayName: 'Demo User',
-                        teamId: 'default_team'
-                    })
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    user = data.user;
-                    
-                    // Login to get JWT token
-                    await loginUser(userId, 'Demo User');
-                }
+                
+                // Save to localStorage
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Register/update user in backend
+                await registerUser();
+                
+                showApp();
             } catch (error) {
-                console.error('Error creating user:', error);
+                console.error('Sign-in error:', error);
+                alert('Failed to sign in. Please try again.');
             }
         }
         
-        async function loginUser(userId, displayName) {
+        // Register user with backend
+        async function registerUser() {
             try {
-                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/auth/login`, {
+                const response = await fetch(`${window.CONFIG.API_URL}/api/users`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        lineUserId: userId,
-                        displayName: displayName
+                        email: currentUser.email,
+                        name: currentUser.name,
+                        picture: currentUser.picture,
+                        lineUserId: currentUser.googleId // Using googleId as unique identifier
                     })
                 });
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('authToken', data.token);
-                    console.log('Login successful, token stored');
-                }
+                if (!response.ok) throw new Error('Failed to register user');
+                
+                const data = await response.json();
+                currentUser.userId = data.user.id;
             } catch (error) {
-                console.error('Error logging in:', error);
+                console.error('User registration error:', error);
             }
         }
         
+        // Show main app
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').style.display = 'block';
+            
+            // Update UI with user info
+            updateUserInfo();
+            
+            // Load activities
+            loadActivities();
+        }
+        
+        // Update user info in UI
+        function updateUserInfo() {
+            if (!currentUser) return;
+            
+            // Update avatar
+            const avatar = document.getElementById('userAvatar');
+            if (currentUser.picture) {
+                avatar.innerHTML = `<img src="${currentUser.picture}" alt="${currentUser.name}">`;
+            } else {
+                document.getElementById('userInitial').textContent = currentUser.name.charAt(0).toUpperCase();
+            }
+            
+            // Update name
+            document.getElementById('userName').textContent = currentUser.name;
+        }
+        
+        // Load activities
         async function loadActivities() {
-            const userId = localStorage.getItem('userId') || 'demo_user';
-            console.log('Loading activities for user:', userId);
             try {
-                // Fix: Use URL parameter instead of query parameter
-                const url = `${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/activities/${userId}`;
-                console.log('Fetching from:', url);
+                const response = await fetch(`${window.CONFIG.API_URL}/api/activities?userId=${currentUser.googleId}`);
+                if (!response.ok) throw new Error('Failed to load activities');
                 
-                // Get auth token
-                const token = localStorage.getItem('authToken');
-                const headers = {};
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                } else {
-                    console.warn('No auth token found - API call may fail');
-                }
+                const data = await response.json();
+                activities = data.activities || [];
                 
-                const response = await fetch(url, { headers });
-                console.log('Response status:', response.status);
-                if (response.ok) {
-                    activities = await response.json();
-                    console.log('Loaded activities:', activities);
-                    displayActivities();
-                } else if (response.status === 401) {
-                    console.error('Authentication required - please login');
-                    // Try to login with current user
-                    await loginUser(userId, 'Demo User');
-                    // Retry loading activities
-                    return loadActivities();
-                } else {
-                    console.error('Failed to load activities:', response.status, response.statusText);
-                    activities = [];
-                    displayActivities();
-                }
+                updateStats();
+                renderActivities();
             } catch (error) {
-                console.error('Error loading activities:', error);
-                activities = [];
-                displayActivities();
+                console.error('Load activities error:', error);
+                document.getElementById('activitiesList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle empty-icon"></i><p>Failed to load activities</p></div>';
             }
         }
         
-        function displayActivities() {
-            const activitiesList = document.getElementById('activities-list');
-            console.log('Display activities - list element:', activitiesList);
-            console.log('Display activities - activities array:', activities);
+        // Update statistics
+        function updateStats() {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekStart = new Date(todayStart);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
             
-            if (!activitiesList) {
-                console.error('activities-list element not found!');
+            let todayPoints = 0;
+            let weekPoints = 0;
+            let monthPoints = 0;
+            
+            activities.forEach(activity => {
+                const activityDate = new Date(activity.timestamp);
+                if (activityDate >= todayStart) todayPoints += activity.points;
+                if (activityDate >= weekStart) weekPoints += activity.points;
+                if (activityDate >= monthStart) monthPoints += activity.points;
+            });
+            
+            document.getElementById('todayPoints').textContent = todayPoints;
+            document.getElementById('weekPoints').textContent = weekPoints;
+            document.getElementById('monthPoints').textContent = monthPoints;
+            document.getElementById('totalActivities').textContent = activities.length;
+            document.getElementById('userPoints').textContent = `${monthPoints} points`;
+        }
+        
+        // Render activities list
+        function renderActivities() {
+            const list = document.getElementById('activitiesList');
+            
+            if (activities.length === 0) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-inbox empty-icon"></i><p>No activities yet. Add your first activity!</p></div>';
                 return;
             }
             
-            if (!activities.length) {
-                console.log('No activities to display');
-                return;
-            }
+            // Sort by timestamp descending
+            const sortedActivities = [...activities].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
             
-            // Clear existing activities
-            const existingItems = activitiesList.querySelectorAll('.activity-item');
-            existingItems.forEach(item => item.remove());
+            // Show only recent 10 activities
+            const recentActivities = sortedActivities.slice(0, 10);
             
-            // Add new activities
-            activities.slice(0, 5).forEach(activity => {
-                const activityElement = document.createElement('div');
-                activityElement.className = 'activity-item activity-completed';
-                activityElement.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(16, 185, 129, 0.2); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+            list.innerHTML = recentActivities.map(activity => {
+                const type = activityTypes[activity.type] || activityTypes.call;
+                const timeAgo = getTimeAgo(activity.timestamp);
+                
+                return `
+                    <div class="activity-item">
+                        <div class="activity-info">
+                            <div class="activity-icon">${type.icon}</div>
+                            <div class="activity-details">
+                                <div class="activity-type">${type.name} - ${activity.customerName || 'Customer'}</div>
+                                ${activity.note ? `<div class="activity-note">${activity.note}</div>` : ''}
+                                <div class="activity-time">${timeAgo}</div>
+                            </div>
                         </div>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 500;">${activity.title}</div>
-                            <div style="font-size: 0.875rem; color: var(--text-muted);">${getTimeAgo(activity.timestamp || activity.createdAt)}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 600; color: var(--primary);">+${activity.points}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">points</div>
-                        </div>
+                        <div class="activity-points">+${activity.points} pts</div>
                     </div>
                 `;
-                activitiesList.appendChild(activityElement);
+            }).join('');
+        }
+        
+        // Get time ago string
+        function getTimeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days}d ago`;
+            if (hours > 0) return `${hours}h ago`;
+            if (minutes > 0) return `${minutes}m ago`;
+            return 'Just now';
+        }
+        
+        // Show add activity modal
+        function showAddActivityModal() {
+            const modal = document.getElementById('addActivityModal');
+            modal.classList.add('show');
+            
+            // Reset form
+            document.getElementById('addActivityForm').reset();
+            document.querySelectorAll('.activity-type-btn').forEach(btn => {
+                btn.classList.remove('selected');
             });
-            
-            // Update user display with new totals
-            updateUserDisplay();
+            selectedActivity = null;
         }
         
-        function updateUserDisplay() {
-            // Calculate total points and breakdown by activity type
-            let totalPoints = 0;
-            const breakdown = {};
-            
-            if (activities && activities.length > 0) {
-                activities.forEach(activity => {
-                    totalPoints += activity.points || 0;
-                    const type = activity.type || activity.activityType || 'other';
-                    if (!breakdown[type]) {
-                        breakdown[type] = { count: 0, points: 0 };
-                    }
-                    breakdown[type].count++;
-                    breakdown[type].points += activity.points || 0;
-                });
-            }
-            
-            // Update total points display
-            const statValue = document.querySelector('.stat-value');
-            if (statValue) {
-                statValue.textContent = totalPoints.toLocaleString();
-            }
-            
-            // Update activity count
-            const activityCount = document.getElementById('activity-count');
-            if (activityCount) {
-                activityCount.textContent = activities ? activities.length : 0;
-            }
-            
-            // Update activity breakdown
-            const breakdownDiv = document.getElementById('activity-breakdown');
-            if (breakdownDiv) {
-                breakdownDiv.innerHTML = '';
-                
-                // Activity type icons and colors (matching backend mapping)
-                const typeConfig = {
-                    phone: { icon: '📞', name: 'Calls', color: '#3b82f6' },
-                    call: { icon: '📞', name: 'Calls', color: '#3b82f6' },
-                    email: { icon: '📧', name: 'Emails', color: '#8b5cf6' },
-                    meeting: { icon: '🤝', name: 'Meetings', color: '#10b981' },
-                    quote: { icon: '📄', name: 'Quotes', color: '#f59e0b' },
-                    proposal: { icon: '📄', name: 'Proposals', color: '#f59e0b' },
-                    collab: { icon: '📢', name: 'Collaboration', color: '#06b6d4' },
-                    present: { icon: '🎯', name: 'Presentations', color: '#ef4444' },
-                    demo: { icon: '🎯', name: 'Demos', color: '#ef4444' },
-                    deal: { icon: '💰', name: 'Deals', color: '#06b6d4' },
-                    other: { icon: '📌', name: 'Other', color: '#6b7280' }
-                };
-                
-                // Create breakdown cards
-                Object.entries(breakdown).forEach(([type, data]) => {
-                    const config = typeConfig[type] || typeConfig.other;
-                    const card = document.createElement('div');
-                    card.className = 'glass-card';
-                    card.style.cssText = 'padding: 1rem; text-align: center; background: rgba(255, 255, 255, 0.05);';
-                    card.innerHTML = `
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">${config.icon}</div>
-                        <div style="font-weight: 600; color: ${config.color};">${data.points} pts</div>
-                        <div style="font-size: 0.875rem; color: var(--text-muted);">${data.count} ${config.name}</div>
-                    `;
-                    breakdownDiv.appendChild(card);
-                });
-                
-                // If no activities yet
-                if (Object.keys(breakdown).length === 0) {
-                    breakdownDiv.innerHTML = `
-                        <div style="text-align: center; color: var(--text-muted); grid-column: 1 / -1; padding: 2rem;">
-                            <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; display: block;"></i>
-                            No activities yet. Click "Add Activity" to get started!
-                        </div>
-                    `;
-                }
-            }
-            
-            // Update user object
-            if (user) {
-                user.points = totalPoints;
-            }
+        // Hide add activity modal
+        function hideAddActivityModal() {
+            const modal = document.getElementById('addActivityModal');
+            modal.classList.remove('show');
         }
         
-        function getTimeAgo(dateString) {
-            if (!dateString) return 'Recently';
+        // Select activity type
+        function selectActivityType(type, points) {
+            // Update UI
+            document.querySelectorAll('.activity-type-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.closest('.activity-type-btn').classList.add('selected');
+            
+            // Update hidden fields
+            document.getElementById('selectedActivityType').value = type;
+            document.getElementById('selectedActivityPoints').value = points;
+            selectedActivity = { type, points };
+        }
+        
+        // Submit activity
+        async function submitActivity(event) {
+            event.preventDefault();
+            
+            if (!selectedActivity) {
+                alert('Please select an activity type');
+                return;
+            }
+            
+            const btn = document.getElementById('submitActivityBtn');
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
             
             try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return 'Recently';
-                
-                const now = new Date();
-                const diff = now - date;
-                const minutes = Math.floor(diff / 60000);
-                const hours = Math.floor(minutes / 60);
-                const days = Math.floor(hours / 24);
-                
-                if (days > 0) return `${days}d ago`;
-                if (hours > 0) return `${hours}h ago`;
-                if (minutes > 0) return `${minutes}m ago`;
-                return 'Just now';
-            } catch (error) {
-                console.error('Error parsing date:', dateString, error);
-                return 'Recently';
-            }
-        }
-        
-        function setupEventListeners() {
-            // Handle window resize
-            window.addEventListener('resize', handleResize);
-            
-            // Handle clicks outside sidebar
-            document.addEventListener('click', (e) => {
-                const sidebar = document.getElementById('sidebar');
-                if (!sidebar.contains(e.target) && !e.target.closest('.mobile-menu-btn')) {
-                    sidebar.classList.remove('open');
-                }
-            });
-        }
-        
-        function handleResize() {
-            if (window.innerWidth > 768) {
-                document.getElementById('sidebar').classList.remove('open');
-            }
-        }
-        
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-        }
-        
-        function setView(view) {
-            currentView = view;
-            console.log('Switching to view:', view);
-            
-            // Update nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.textContent.toLowerCase().includes(view)) {
-                    item.classList.add('active');
-                }
-            });
-            
-            // Close sidebar on mobile
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('open');
-            }
-            
-            // Update content based on view
-            updateContent();
-        }
-        
-        function setTab(tab) {
-            currentTab = tab;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.toLowerCase() === tab) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            // Update content based on tab
-            updateContent();
-        }
-        
-        function updateContent() {
-            console.log(`Updating content for view: ${currentView}, tab: ${currentTab}`);
-            // In a real app, this would fetch and display different content
-        }
-        
-        function showAddActivity() {
-            // For now, create a simple activity with prompt
-            const activityType = prompt('Select activity type:\n1. phone (20 pts)\n2. meeting (50 pts)\n3. quote (30 pts)\n4. collab (10 pts)\n5. present (40 pts)\n6. other (10 pts)\n\nEnter type:');
-            if (!activityType) return;
-            
-            const title = prompt('Enter activity description:');
-            if (!title) return;
-            
-            const subtitle = prompt('Enter client name (optional):') || '';
-            
-            // Map activity types to points (matching backend)
-            const pointsMap = {
-                phone: 20,
-                meeting: 50,
-                quote: 30,
-                collab: 10,
-                present: 40,
-                other: 10
-            };
-            
-            const points = pointsMap[activityType] || 10;
-            
-            // Submit to backend
-            submitActivity(activityType, title, subtitle, points);
-        }
-        
-        async function submitActivity(activityType, title, subtitle, points) {
-            console.log('Submitting activity:', { activityType, title, subtitle, points });
-            try {
-                // Get auth token
-                const token = localStorage.getItem('authToken');
-                
-                const headers = {
-                    'Content-Type': 'application/json'
+                const activityData = {
+                    type: selectedActivity.type,
+                    customerName: document.getElementById('customerName').value,
+                    note: document.getElementById('activityNote').value,
+                    points: selectedActivity.points,
+                    userId: currentUser.googleId,
+                    timestamp: new Date().toISOString()
                 };
                 
-                // Add auth header if token exists
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                    console.log('Using auth token');
-                } else {
-                    console.log('No auth token found');
-                }
-                
-                const response = await fetch(`${window.CONFIG?.apiBaseUrl || 'http://localhost:10000/api'}/activities`, {
+                const response = await fetch(`${window.CONFIG.API_URL}/api/activities`, {
                     method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify({
-                        lineUserId: localStorage.getItem('userId') || 'demo_user',
-                        activityType: activityType,
-                        title: title,
-                        subtitle: subtitle,
-                        points: points,
-                        count: 1,
-                        date: new Date().toISOString().split('T')[0]
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(activityData)
                 });
                 
-                console.log('Response status:', response.status);
+                if (!response.ok) throw new Error('Failed to add activity');
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Activity created:', data);
-                    alert('Activity added successfully! +' + points + ' points');
-                    // Reload activities without page refresh
-                    await loadActivities();
-                    await loadUserData();
-                } else {
-                    const error = await response.json();
-                    console.error('Failed to add activity:', error);
-                    alert('Failed to add activity: ' + (error.error || error.message || 'Unknown error'));
-                }
+                const data = await response.json();
+                
+                // Add to local array
+                activities.unshift(data.activity);
+                
+                // Update UI
+                updateStats();
+                renderActivities();
+                hideAddActivityModal();
+                
+                // Show success (optional)
+                // alert('Activity added successfully!');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Add activity error:', error);
                 alert('Failed to add activity. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Add Activity';
             }
         }
         
-        function showLeaderboard() {
-            setView('leaderboard');
-        }
-        
-        function showAchievements() {
-            setView('achievements');
-        }
-        
-        function showTeam() {
-            console.log('Show team view');
-            alert('Team view coming soon!');
-        }
-        
-        function switchUser() {
-            const currentUser = localStorage.getItem('userId');
-            const newUser = prompt(`Current user: ${currentUser}\n\nEnter new user ID (or leave empty for new user):`);
-            
-            if (newUser !== null) {
-                if (newUser.trim() === '') {
-                    // Generate new user
-                    const newUserId = 'demo_user_' + Date.now();
-                    localStorage.setItem('userId', newUserId);
-                    alert('Switched to new user: ' + newUserId);
-                } else {
-                    // Use specified user
-                    localStorage.setItem('userId', newUser.trim());
-                    alert('Switched to user: ' + newUser.trim());
-                }
-                location.reload();
-            }
-        }
-        
-        function showNotifications() {
-            console.log('Notifications clicked');
-            alert('Notifications feature coming soon!');
-        }
-        
-        function showProfile() {
-            console.log('Profile clicked');
-            const userId = localStorage.getItem('userId');
-            const userName = localStorage.getItem('userName') || 'Demo User';
-            const userEmail = localStorage.getItem('userEmail') || 'Not logged in';
-            const userPicture = localStorage.getItem('userPicture') || '';
-            const authMethod = localStorage.getItem('authMethod') || 'unknown';
-            
-            alert(`Profile:\n\nName: ${userName}\nEmail: ${userEmail}\nUser ID: ${userId}\nAuth Method: ${authMethod}`);
-        }
-        
+        // Logout
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                // Clear all auth data
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('userId');
-                localStorage.removeItem('userName');
-                localStorage.removeItem('userEmail');
-                localStorage.removeItem('userPicture');
-                localStorage.removeItem('authMethod');
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                activities = [];
                 
-                // Redirect to login
-                window.location.href = '/login.html';
+                // Reset UI
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('loginScreen').classList.remove('hidden');
+                
+                // Sign out from Google
+                google.accounts.id.disableAutoSelect();
             }
         }
         
-        function startAnimations() {
-            // Add staggered animations to elements
-            const cards = document.querySelectorAll('.stats-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-            
-            // Animate activities
-            const activityItems = document.querySelectorAll('.activity-item');
-            activityItems.forEach((item, index) => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateX(-20px)';
-                setTimeout(() => {
-                    item.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                }, 300 + index * 100);
-            });
-            
-            // Animate leaderboard
-            const leaderboardItems = document.querySelectorAll('.leaderboard-item');
-            leaderboardItems.forEach((item, index) => {
-                item.style.opacity = '0';
-                item.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    item.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateX(0)';
-                }, 600 + index * 100);
-            });
-        }
+        // Handle modal backdrop clicks
+        document.getElementById('addActivityModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAddActivityModal();
+            }
+        });
     </script>
-    
-    <!-- Backend Integration Fixed -->
-    <!-- <script src="app-integration-fixed.js"></script> -->
 </body>
 </html>
